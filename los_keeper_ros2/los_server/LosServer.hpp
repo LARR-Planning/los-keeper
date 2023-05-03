@@ -5,6 +5,9 @@ namespace los_keeper {
 class LosServer {
 private:
   Wrapper wrapper_;
+
+public:
+  LosServer() { wrapper_.GetName(); }
 };
 
 } // namespace los_keeper

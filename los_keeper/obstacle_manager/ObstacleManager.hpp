@@ -11,6 +11,10 @@ class ObstacleManager {
 private:
   pcl::PointCloud<pcl::PointXYZ> cloud_;
   Eigen::Affine3d pose_;
+  std::string name_{"ObstacleManager"};
+
+public:
+  std::string GetName() const;
 };
 } // namespace los_keeper
 #endif /* HEADER_OBSTACLEMANAGER */

@@ -18,6 +18,11 @@ function(add_los_ros2_library library_folder dependency_list)
   target_link_libraries(${library_folder} ${dependency_list})
 endfunction()
 
-add_los_ros2_library(los_server los_keeper::target_manager
-                     los_keeper::obstacle_manager)
+add_los_ros2_library(los_server los_keeper::los_keeper)
+
+add_executable(los_keeper_node main.cpp)
+target_link_libraries(los_keeper_node los_server)
+ament_target_dependencies(los_keeper_node rclcpp std_msgs)
+install(TARGETS los_keeper_node DESTINATION lib/${PROJECT_NAME})
+
 ament_package()
