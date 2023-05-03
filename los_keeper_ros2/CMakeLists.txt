@@ -3,8 +3,7 @@ project(los_keeper_ros2)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(target_manager REQUIRED)
-find_package(obstacle_manager REQUIRED)
+find_package(los_keeper REQUIRED)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -19,5 +18,6 @@ function(add_los_ros2_library library_folder dependency_list)
   target_link_libraries(${library_folder} ${dependency_list})
 endfunction()
 
-add_los_ros2_library(los_server target_manager obstacle_manager)
+add_los_ros2_library(los_server los_keeper::target_manager
+                     los_keeper::obstacle_manager)
 ament_package()
