@@ -3,7 +3,6 @@
 
 #include <string>
 
-#include <chasing_planner/ChasingPlanner.hpp>
 #include <obstacle_manager/ObstacleManager.hpp>
 #include <target_manager/TargetManager.hpp>
 
@@ -13,10 +12,9 @@ private:
   std::string name_{"Wrapper"};
   ObstacleManager obstacle_manager_;
   TargetManager target_manager_;
-  ChasingPlanner chasing_planner_;
 
 public:
-  std::string GetName() const;
+  bool Plan() const;
 };
 } // namespace los_keeper
 

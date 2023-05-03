@@ -1,6 +1,6 @@
 #include "Wrapper.hpp"
 
-std::string los_keeper::Wrapper::GetName() const {
-  return name_ + ": " + chasing_planner_.GetName() + " " +
-         target_manager_.GetName() + " " + obstacle_manager_.GetName();
+bool los_keeper::Wrapper::Plan() const {
+  return target_manager_.GetName() == "TargetManager" &&
+         obstacle_manager_.GetName() == "ObstacleManager";
 }
