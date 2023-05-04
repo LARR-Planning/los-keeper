@@ -1,6 +1,7 @@
 #include "los_server/los_server.h"
+#include "los_server.h"
 
-los_keeper::LosServer::LosServer() {
+using namespace los_keeper;
+bool LosServer::Update() { return wrapper_.Plan(); }
 
-  { obstacle_manager_.GetName(); }
-}
+LosServer::LosServer() {}
