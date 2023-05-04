@@ -8,7 +8,6 @@ find_package(los_keeper REQUIRED)
 enable_testing()
 find_package(GTest REQUIRED)
 
-message("cmake current source: ${CMAKE_CURRENT_SOURCE_DIR}")
 add_library(los_server los_server/los_server.cc)
 target_include_directories(
   los_server PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)

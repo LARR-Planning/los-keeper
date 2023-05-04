@@ -6,7 +6,8 @@ target_link_libraries(obstacle_manager PUBLIC ${PCL_LIBRARIES})
 
 target_include_directories(
   obstacle_manager
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> $<INSTALL_INTERFACE:include>
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+         $<INSTALL_INTERFACE:include/los_keeper> $<INSTALL_INTERFACE:include>
          ${EIGEN_INCLUDE_DIR} ${PCL_INCLUDE_DIRS})
 
 install(
