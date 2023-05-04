@@ -1,5 +1,5 @@
-#ifndef HEADER_OBSTACLEMANAGER
-#define HEADER_OBSTACLEMANAGER
+#ifndef HEADER_OBSTACLE_MANAGER
+#define HEADER_OBSTACLE_MANAGER
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -17,4 +17,4 @@ public:
   std::string GetName() const;
 };
 } // namespace los_keeper
-#endif /* HEADER_OBSTACLEMANAGER */
+#endif /* HEADER_OBSTACLE_MANAGER */

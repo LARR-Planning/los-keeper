@@ -1,4 +1,4 @@
-#include "wrapper/Wrapper.hpp"
+#include "wrapper/wrapper.h"
 #include "gtest/gtest.h"
 #include <Eigen/Core>
 

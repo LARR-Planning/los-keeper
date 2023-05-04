@@ -1,6 +1,6 @@
-#ifndef HEADER_TARGETMANAGER
-#define HEADER_TARGETMANAGER
-#include "obstacle_manager/ObstacleManager.hpp"
+#ifndef HEADER_TARGET_MANAGER
+#define HEADER_TARGET_MANAGER
+#include "obstacle_manager/obstacle_manager.h"
 #include <Eigen/Core>
 #include <string>
 
@@ -16,4 +16,4 @@ public:
 };
 } // namespace los_keeper
 
-#endif /* HEADER_TARGETMANAGER */
+#endif /* HEADER_TARGET_MANAGER */

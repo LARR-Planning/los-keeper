@@ -1,3 +1,3 @@
-#include "obstacle_manager/ObstacleManager.hpp"
+#include "obstacle_manager/obstacle_manager.h"
 
 std::string los_keeper::ObstacleManager::GetName() const { return name_; }

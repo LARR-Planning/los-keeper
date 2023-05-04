@@ -5,24 +5,17 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(los_keeper REQUIRED)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+enable_testing()
+find_package(GTest REQUIRED)
 
-function(add_los_ros2_library library_folder dependency_list)
-  message("found library: ${library_folder}")
-  file(GLOB LIBRARY_SOURCES
-       "${CMAKE_CURRENT_SOURCE_DIR}/${library_folder}/*.cpp")
-  file(GLOB LIBRARY_HEADERS
-       "${CMAKE_CURRENT_SOURCE_DIR}/${library_folder}/*.hpp")
-  add_library(${library_folder} SHARED ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
-  ament_target_dependencies(${library_folder} rclcpp)
-  target_link_libraries(${library_folder} ${dependency_list})
-endfunction()
+message("cmake current source: ${CMAKE_CURRENT_SOURCE_DIR}")
+add_library(los_server los_server/los_server.cc)
+target_include_directories(
+  los_server PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+target_link_libraries(los_server los_keeper::obstacle_manager)
 
-add_los_ros2_library(los_server los_keeper::los_keeper)
-
-add_executable(los_keeper_node main.cpp)
-target_link_libraries(los_keeper_node los_server)
-ament_target_dependencies(los_keeper_node rclcpp std_msgs)
-install(TARGETS los_keeper_node DESTINATION lib/${PROJECT_NAME})
+add_executable(los_server_test los_server/los_server_test.cc)
+target_link_libraries(los_server_test los_server GTest::GTest GTest::Main)
+add_test(los_server_test los_server_test)
 
 ament_package()

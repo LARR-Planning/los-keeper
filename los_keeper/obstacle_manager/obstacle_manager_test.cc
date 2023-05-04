@@ -1,4 +1,4 @@
-#include "obstacle_manager/ObstacleManager.hpp"
+#include "obstacle_manager/obstacle_manager.h"
 #include "gtest/gtest.h"
 
 namespace los_keeper {
