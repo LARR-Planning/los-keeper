@@ -1,11 +1,9 @@
 #include "los_keeper/obstacle_manager/obstacle_manager.h"
-#include "los_server/los_server.h"
 #include "gtest/gtest.h"
-#include <Eigen/Core>
 
 namespace los_keeper {
 
-TEST(LosServerTest, IsObstacleManagerIncludedAutomatically) {
+TEST(ObstacleTest, NameShouldCorrect) {
 
   ObstacleManager obstacle_manager;
   EXPECT_EQ(obstacle_manager.GetName(), "ObstacleManager");

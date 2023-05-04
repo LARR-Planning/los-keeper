@@ -1,5 +1,4 @@
-#include "los_server/LosServer.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "los_keeper_ros2/los_server/los_server.h"
 
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);

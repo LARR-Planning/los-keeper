@@ -1,6 +1,6 @@
 #ifndef HEADER_TARGET_MANAGER
 #define HEADER_TARGET_MANAGER
-#include "obstacle_manager/obstacle_manager.h"
+#include "los_keeper/obstacle_manager/obstacle_manager.h"
 #include <Eigen/Core>
 #include <string>
 

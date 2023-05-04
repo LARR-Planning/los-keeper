@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "obstacle_manager/obstacle_manager.h"
-#include "target_manager/target_manager.h"
+#include "los_keeper/obstacle_manager/obstacle_manager.h"
+#include "los_keeper/target_manager/target_manager.h"
 
 namespace los_keeper {
 class Wrapper {
