@@ -19,6 +19,10 @@ add_executable(los_server_node src/los_server/los_server_node.cc)
 target_link_libraries(los_server_node los_server)
 install(TARGETS los_server_node DESTINATION lib/${PROJECT_NAME})
 
+add_executable(test_publisher_node src/test_publisher/test_publisher_node.cc)
+ament_target_dependencies(test_publisher_node rclcpp std_msgs)
+install(TARGETS test_publisher_node DESTINATION lib/${PROJECT_NAME})
+
 enable_testing()
 find_package(GTest REQUIRED)
 

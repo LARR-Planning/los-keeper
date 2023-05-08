@@ -12,7 +12,16 @@ class LosServer : public rclcpp::Node {
 private:
   Wrapper wrapper_;
 
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub_;
+  void ProcessMessage(const std_msgs::msg::String::SharedPtr msg);
+
+  rclcpp::CallbackGroup::SharedPtr reentrant_callback_group_;
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr short_subscriber_;
+  void ShortTopicCallback(const std_msgs::msg::String::SharedPtr msg);
+  void LongTopicCallback(const std_msgs::msg::String::SharedPtr msg);
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr long_subscriber_;
+
   rclcpp::TimerBase::SharedPtr timer_;
 
 public:

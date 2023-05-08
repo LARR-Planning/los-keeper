@@ -12,9 +12,14 @@ private:
   std::string name_{"Wrapper"};
   ObstacleManager obstacle_manager_;
   TargetManager target_manager_;
+  std::string long_string_;
+  std::string short_string_;
 
 public:
   bool Plan() const;
+  void SetLongString(const std::string &long_string);
+  void SetShortString(const std::string &short_string);
+  std::string GetConcatString() const;
 };
 } // namespace los_keeper
 
