@@ -11,7 +11,9 @@ void Wrapper::SetLongString(const std::string &long_string) {
 
   for (char c : long_string) {
     long_string_.push_back(c);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    long_string_ += ' ';
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 };
 void Wrapper::SetShortString(const std::string &short_string) {
@@ -19,7 +21,9 @@ void Wrapper::SetShortString(const std::string &short_string) {
 
   for (char c : short_string) {
     short_string_.push_back(c);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    short_string_ += ' ';
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 };
 
