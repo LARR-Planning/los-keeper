@@ -4,7 +4,7 @@ int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
 
   auto los_server = std::make_shared<los_keeper::LosServer>();
-  rclcpp::executors::MultiThreadedExecutor executor;
+  rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(los_server);
   executor.spin();
   rclcpp::shutdown();
