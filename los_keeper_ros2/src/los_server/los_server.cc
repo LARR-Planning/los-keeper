@@ -44,4 +44,7 @@ LosServer::LosServer() : Node("los_server_node") {
       "/long_topic", rclcpp::QoS(10),
       std::bind(&LosServer::LongTopicCallback, this, std::placeholders::_1),
       options);
+
+  timer_ =
+      this->create_wall_timer(1s, std::bind(&LosServer::TimerCallback, this));
 }
