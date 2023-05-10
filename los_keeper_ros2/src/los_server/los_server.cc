@@ -24,7 +24,6 @@ void LosServer::LongTopicCallback(const std_msgs::msg::String::SharedPtr msg) {
 bool LosServer::Update() { return wrapper_.Plan(); }
 void LosServer::TimerCallback() {
   if (Update()) {
-
     auto concat_string = wrapper_.GetConcatString();
     RCLCPP_INFO(this->get_logger(), "Concat string = %s",
                 concat_string.c_str());
@@ -32,16 +31,18 @@ void LosServer::TimerCallback() {
 }
 
 LosServer::LosServer() : Node("los_server_node") {
-  reentrant_callback_group_ =
-      create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
   rclcpp::SubscriptionOptions options;
-  options.callback_group = reentrant_callback_group_;
+  options.callback_group =
+      create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   short_subscriber_ = create_subscription<std_msgs::msg::String>(
       "/short_topic", rclcpp::QoS(10),
       std::bind(&LosServer::ShortTopicCallback, this, std::placeholders::_1),
       options);
+
+  options.callback_group =
+      create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   long_subscriber_ = create_subscription<std_msgs::msg::String>(
       "/long_topic", rclcpp::QoS(10),
@@ -49,6 +50,5 @@ LosServer::LosServer() : Node("los_server_node") {
       options);
 
   timer_ =
-      this->create_wall_timer(1s, std::bind(&LosServer::TimerCallback, this),
-                              reentrant_callback_group_);
+      this->create_wall_timer(1s, std::bind(&LosServer::TimerCallback, this));
 }
