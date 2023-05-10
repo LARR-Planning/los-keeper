@@ -7,10 +7,20 @@ bool Wrapper::Plan() const {
 }
 
 void Wrapper::SetLongString(const std::string &long_string) {
-  long_string_ = long_string;
+  long_string_.clear();
+
+  for (char c : long_string) {
+    long_string_.push_back(c);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
 };
 void Wrapper::SetShortString(const std::string &short_string) {
-  short_string_ = short_string;
+  short_string_.clear();
+
+  for (char c : short_string) {
+    short_string_.push_back(c);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
 };
 
 std::string Wrapper::GetConcatString() const {
