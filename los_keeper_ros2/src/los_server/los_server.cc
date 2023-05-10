@@ -32,8 +32,11 @@ void LosServer::TimerCallback() {
 }
 
 LosServer::LosServer() : Node("los_server_node") {
+  reentrant_callback_group_ =
+      create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
   rclcpp::SubscriptionOptions options;
+  options.callback_group = reentrant_callback_group_;
 
   short_subscriber_ = create_subscription<std_msgs::msg::String>(
       "/short_topic", rclcpp::QoS(10),
@@ -46,5 +49,6 @@ LosServer::LosServer() : Node("los_server_node") {
       options);
 
   timer_ =
-      this->create_wall_timer(1s, std::bind(&LosServer::TimerCallback, this));
+      this->create_wall_timer(1s, std::bind(&LosServer::TimerCallback, this),
+                              reentrant_callback_group_);
 }
