@@ -7,22 +7,38 @@ void LosServer::ShortTopicCallback(const std_msgs::msg::String::SharedPtr msg) {
   std::string received_string =
       msg->data + " (" + std::to_string(current_time.seconds()) + ")";
 
-  RCLCPP_INFO(this->get_logger(), "Could set short message: %s",
-              received_string.c_str());
-  this->wrapper_.SetShortString(received_string);
+  std::unique_lock<std::mutex> lock(mutex_list_.short_topic, std::defer_lock);
+  if (lock.try_lock()) {
+    RCLCPP_INFO(this->get_logger(), "Could set short message: %s",
+                received_string.c_str());
+    this->wrapper_.SetShortString(received_string);
+  } else {
+    RCLCPP_INFO(this->get_logger(),
+                "Unlock failed when setting short message: %s",
+                received_string.c_str());
+  }
 };
 void LosServer::LongTopicCallback(const std_msgs::msg::String::SharedPtr msg) {
   auto current_time = now();
   std::string received_string =
       msg->data + " (" + std::to_string(current_time.seconds()) + ")";
 
-  RCLCPP_INFO(this->get_logger(), "Could set long message: %s",
-              received_string.c_str());
-  this->wrapper_.SetLongString(received_string);
+  std::unique_lock<std::mutex> lock(mutex_list_.short_topic, std::defer_lock);
+  if (lock.try_lock()) {
+    RCLCPP_INFO(this->get_logger(), "Could set long message: %s",
+                received_string.c_str());
+    this->wrapper_.SetLongString(received_string);
+  } else {
+    RCLCPP_INFO(this->get_logger(),
+                "Unlock failed when setting long message: %s",
+                received_string.c_str());
+  }
 };
 
 bool LosServer::Update() { return wrapper_.Plan(); }
 void LosServer::TimerCallback() {
+  std::scoped_lock<std::mutex, std::mutex> lock(mutex_list_.long_topic,
+                                                mutex_list_.short_topic);
   if (Update()) {
     auto concat_string = wrapper_.GetConcatString();
     RCLCPP_INFO(this->get_logger(), "Concat string = %s",
