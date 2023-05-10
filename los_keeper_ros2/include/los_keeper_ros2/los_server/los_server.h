@@ -13,7 +13,7 @@ class LosServer : public rclcpp::Node {
 private:
   Wrapper wrapper_;
 
-  void ProcessMessage(const std_msgs::msg::String::SharedPtr msg);
+  std::string ProcessMessage(const std::string &raw_string);
 
   rclcpp::CallbackGroup::SharedPtr reentrant_callback_group_;
 
