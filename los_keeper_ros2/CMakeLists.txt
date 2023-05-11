@@ -5,9 +5,10 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(los_keeper REQUIRED)
+find_package(los_keeper_msgs REQUIRED)
 
 add_library(los_server src/los_server/los_server.cc)
-ament_target_dependencies(los_server rclcpp)
+ament_target_dependencies(los_server rclcpp los_keeper_msgs)
 target_include_directories(
   los_server PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                     $<INSTALL_INTERFACE:include>)
