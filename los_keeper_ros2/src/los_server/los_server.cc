@@ -36,7 +36,7 @@ void LosServer::LongTopicCallback(const std_msgs::msg::String::SharedPtr msg) {
       msg->data + " (" + std::to_string(current_time.seconds()) + ")";
   auto processed_string = ProcessMessage(received_string);
   {
-    std::unique_lock<std::mutex> lock(mutex_list_.short_topic, std::defer_lock);
+    std::unique_lock<std::mutex> lock(mutex_list_.long_topic, std::defer_lock);
     if (lock.try_lock()) {
       RCLCPP_INFO(this->get_logger(), "Could set long message: %s",
                   processed_string.c_str());
