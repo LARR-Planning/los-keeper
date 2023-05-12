@@ -2,8 +2,11 @@
 
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<los_keeper::LosServer>());
 
+  auto los_server = std::make_shared<los_keeper::LosServer>();
+  rclcpp::executors::MultiThreadedExecutor executor;
+  executor.add_node(los_server);
+  executor.spin();
   rclcpp::shutdown();
   return 0;
 }
