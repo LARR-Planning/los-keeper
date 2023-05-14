@@ -1,0 +1,8 @@
+los_keeper_simulator_node:
+  ros__parameters:
+    map_frame_id: map
+    is_2d_simulation: false
+    simulation_dt: 0.005
+    object_size: 0.15
+    num_object: 70
+    target_id: 7
