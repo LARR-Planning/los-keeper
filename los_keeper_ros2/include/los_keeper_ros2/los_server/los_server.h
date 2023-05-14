@@ -1,6 +1,12 @@
 #ifndef HEADER_LOS_SERVER
 #define HEADER_LOS_SERVER
 #include "los_keeper/wrapper/wrapper.h"
+#include "los_keeper_msgs/msg/drone_state.hpp"
+#include "los_keeper_msgs/msg/object_state.hpp"
+#include "los_keeper_msgs/msg/object_state_array.hpp"
+#include "los_keeper_msgs/msg/jerk_control_input.hpp"
+
+
 #include <rclcpp/rclcpp.hpp>
 #include <shared_mutex>
 #include <std_msgs/msg/string.hpp>
