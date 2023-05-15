@@ -9,7 +9,7 @@ int nchoosek(int n, int r);
 
 class BernsteinPoly{
 private:
-  float time_interval_[2]; // initial time and terminal time
+  float time_interval_[3]; // initial time and terminal time
   float* bernstein_coeff_; // bernstein coefficient
   int degree_; // The degree of a polynomial
 public:
