@@ -5,6 +5,7 @@
 #define LOS_KEEPER_BERNSTEIN_POLYNOMIAL_UTILS_H
 int factorial(int num);
 int nchoosek(int n, int r);
+#include <cmath>
 
 class BernsteinPoly{
 private:
