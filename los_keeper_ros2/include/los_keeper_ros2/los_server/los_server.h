@@ -2,43 +2,48 @@
 #define HEADER_LOS_SERVER
 #include "los_keeper/wrapper/wrapper.h"
 #include "los_keeper_msgs/msg/drone_state.hpp"
+#include "los_keeper_msgs/msg/jerk_control_input.hpp"
 #include "los_keeper_msgs/msg/object_state.hpp"
 #include "los_keeper_msgs/msg/object_state_array.hpp"
-#include "los_keeper_msgs/msg/jerk_control_input.hpp"
 
-
+#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <shared_mutex>
-#include <std_msgs/msg/string.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include <chrono>
+#include <mutex>
+
 using namespace std::chrono_literals;
+using PoseStampedMsg = geometry_msgs::msg::PoseStamped;
+using PointCloudMsg = sensor_msgs::msg::PointCloud2;
+using PointCloudSubscriber =
+    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr;
+using PoseSubscriber =
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr;
+using RosTimer = rclcpp::TimerBase::SharedPtr;
 
 namespace los_keeper {
 class LosServer : public rclcpp::Node {
 private:
   Wrapper wrapper_;
 
-  std::string ProcessMessage(const std::string &raw_string);
+  PointCloudSubscriber points_subscriber_;
+  PoseSubscriber pose_subscriber_;
 
-  rclcpp::CallbackGroup::SharedPtr reentrant_callback_group_;
-
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr short_subscriber_;
-  void ShortTopicCallback(const std_msgs::msg::String::SharedPtr msg);
-  void LongTopicCallback(const std_msgs::msg::String::SharedPtr msg);
-
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr long_subscriber_;
-
-  rclcpp::TimerBase::SharedPtr timer_;
+  RosTimer timer_;
   struct {
-    std::mutex long_topic;
-    std::mutex short_topic;
+    std::mutex pose;
+    std::mutex pointcloud;
   } mutex_list_;
+
+  void PoseCallback(const PoseStampedMsg::SharedPtr msg);
+  void PointsCallback(const PointCloudMsg::SharedPtr msg);
+  void TimerCallback();
+
+  std::string ProcessPointCloud(const std::string &raw_string);
 
 public:
   LosServer();
-  bool Update();
-  void TimerCallback();
 };
 
 } // namespace los_keeper
