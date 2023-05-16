@@ -10,6 +10,7 @@ namespace los_keeper {
 
 class TargetManager {
 private:
+protected:
   // INGREDIENT
   std::vector<StatePoly> structured_obstacle_poly_list_;
   pcl::PointCloud<pcl::PointXYZ> cloud_;
@@ -28,21 +29,43 @@ private:
   std::vector<std::vector<StatePoly>> primitives_list_;
 
   // FUNCTION
-  void PredictTargetTrajectory();
-  void SampleEndPoints();
-  void ComputePrimitives();
-  void CalculateCloseObstacleIndex();
-  void CheckCollision();
-  void CalculateCentroid();
+  virtual bool PredictTargetTrajectory()=0; // Return true if at least one possible target trajectory exists
+  virtual void SampleEndPoints();
+  virtual void ComputePrimitives();
+  virtual void CalculateCloseObstacleIndex(); // Return true if at least one non-colliding target trajectory exists
+  virtual bool CheckCollision()=0;
+  virtual void  CalculateCentroid();
 
 public:
-  TargetManager(); //TODO: Make classes TargetManager2D and TargetManager3D which inherit TargetManager
+  TargetManager();
   std::string GetName() const;
   bool CheckCollision(const ObstacleManager &obstacle_manager) const;
   void SetTargetState(const std::vector<ObjectState> & target_state_list);
   void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud, std::vector<StatePoly> structured_obstacle_poly_list);
 
 };
+
+class TargetManager2D: public TargetManager{
+protected:
+  bool PredictTargetTrajectory() override;
+  void SampleEndPoints() override;
+  void ComputePrimitives() override;
+  void CalculateCloseObstacleIndex() override;
+  bool CheckCollision() override;
+  void CalculateCentroid();
+public:
+
+};
+class TargetManager3D: public TargetManager{
+  bool PredictTargetTrajectory() override;
+  void SampleEndPoints() override;
+  void ComputePrimitives() override;
+  void CalculateCloseObstacleIndex() override;
+  bool CheckCollision() override;
+  void CalculateCentroid();
+public:
+};
+
 } // namespace los_keeper
 
 #endif /* HEADER_TARGET_MANAGER */

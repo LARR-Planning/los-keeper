@@ -80,8 +80,85 @@ void los_keeper::TargetManager::SampleEndPoints() {
     }
   }
 }
+//
+//void los_keeper::TargetManager::ComputePrimitives() {}
+//void los_keeper::TargetManager::CalculateCloseObstacleIndex() {}
+//void los_keeper::TargetManager::CheckCollision() {}
+//void los_keeper::TargetManager::CalculateCentroid() {}
 
-void los_keeper::TargetManager::ComputePrimitives() {}
-void los_keeper::TargetManager::CalculateCloseObstacleIndex() {}
-void los_keeper::TargetManager::CheckCollision() {}
-void los_keeper::TargetManager::CalculateCentroid() {}
+bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
+  SampleEndPoints();
+  ComputePrimitives();
+  CalculateCloseObstacleIndex();
+  bool is_safe_traj_exist = CheckCollision();
+  CalculateCentroid();
+  return is_safe_traj_exist;
+}
+void los_keeper::TargetManager2D::SampleEndPoints() {
+  for(int i =0;i<target_state_list_.size();i++){
+    Point end_point_center{float(target_state_list_[i].px+target_state_list_[i].vx*planning_horizon_),
+                           float(target_state_list_[i].py+target_state_list_[i].vy*planning_horizon_),
+                           float(target_state_list_[i].pz+target_state_list_[i].vz*planning_horizon_)};
+
+    uint n_cols = 2;
+    uint n_rows = num_sample_;
+    using namespace Eigen;
+    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> gaussian_data_eigen;
+    gaussian_data_eigen.setZero(n_rows,n_cols);
+    Eigen::Vector2f mean;
+    Eigen::Matrix2f covar;
+    mean<<end_point_center.x, end_point_center.y;
+    covar<< (0.5f*0.33333333f*acc_max_*planning_horizon_*planning_horizon_), 0,
+        0, (0.5f*0.33333333f*acc_max_*planning_horizon_*planning_horizon_);
+    Eigen::EigenMultivariateNormal<float> normX_solver1(mean,covar);
+    Point tempPoint{end_point_center.x, end_point_center.y, end_point_center.z};
+    std::vector<Point> end_points_temp;
+    for(int j = 0;j<n_rows;j++){
+      tempPoint.x = gaussian_data_eigen.coeffRef(j,0);
+      tempPoint.y = gaussian_data_eigen.coeffRef(j,1);
+      tempPoint.z = end_point_center.z;
+      end_points_temp.push_back(tempPoint);
+    }
+    end_points_.push_back(end_points_temp);
+
+  }
+}
+
+bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
+  SampleEndPoints();
+  ComputePrimitives();
+  CalculateCloseObstacleIndex();
+  bool is_safe_traj_exist = CheckCollision();
+  CalculateCentroid();
+  return is_safe_traj_exist;
+}
+void los_keeper::TargetManager3D::SampleEndPoints() {
+  for(int i =0;i<target_state_list_.size();i++){
+    Point end_point_center{float(target_state_list_[i].px+target_state_list_[i].vx*planning_horizon_),
+                           float(target_state_list_[i].py+target_state_list_[i].vy*planning_horizon_),
+                           float(target_state_list_[i].pz+target_state_list_[i].vz*planning_horizon_)};
+    uint n_cols = 3;
+    uint n_rows = num_sample_;
+    using namespace Eigen;
+    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> gaussian_data_eigen;
+    gaussian_data_eigen.setZero(n_rows,n_cols);
+    Eigen::Vector3f mean;
+    Eigen::Matrix3f covar;
+    mean<<end_point_center.x, end_point_center.y, end_point_center.z;
+    covar<< (0.5f*0.33333333f*acc_max_*planning_horizon_*planning_horizon_), 0, 0,
+        0, (0.5f*0.33333333f*acc_max_*planning_horizon_*planning_horizon_), 0,
+        0, 0, (0.5f*0.33333333f*acc_max_*planning_horizon_*planning_horizon_);
+    Eigen::EigenMultivariateNormal<float> normX_solver1(mean,covar);
+    gaussian_data_eigen<< normX_solver1.samples(n_rows).transpose();
+
+    Point tempPoint{end_point_center.x, end_point_center.y, end_point_center.z};
+    std::vector<Point> end_points_temp;
+    for(int j = 0;j<n_rows;j++){
+      tempPoint.x = gaussian_data_eigen.coeffRef(j,0);
+      tempPoint.y = gaussian_data_eigen.coeffRef(j,1);
+      tempPoint.z = gaussian_data_eigen.coeffRef(j,2);
+      end_points_temp.push_back(tempPoint);
+    }
+    end_points_.push_back(end_points_temp);
+  }
+}

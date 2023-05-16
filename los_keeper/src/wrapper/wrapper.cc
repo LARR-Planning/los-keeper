@@ -20,8 +20,10 @@ void Wrapper::SetProblem(
     const pcl::PointCloud<pcl::PointXYZ>& cloud,
     const std::vector<ObjectState> &structured_obstacle_state_list, const std::vector<ObjectState>& target_state_list) {
   obstacle_manager_.SetObstacleInformation(cloud,structured_obstacle_state_list);
-  target_manager_.SetObstacleState(obstacle_manager_.GetPcl(),obstacle_manager_.GetStructuredObstaclePolyList());
-  target_manager_.SetTargetState(target_state_list);
+  target_manager_->SetObstacleState(obstacle_manager_.GetPcl(),obstacle_manager_.GetStructuredObstaclePolyList());
+  target_manager_->SetTargetState(target_state_list);
 
 }
-
+Wrapper::Wrapper() {
+  target_manager_ = new los_keeper::TargetManager2D;
+}

@@ -15,13 +15,14 @@ class Wrapper {
 private:
   std::string name_{"Wrapper"};
   ObstacleManager obstacle_manager_;
-  TargetManager target_manager_;
+  TargetManager* target_manager_;
   TrajectoryPlanner trajectory_planner_;
 
   std::string long_string_;
   std::string short_string_;
 
 public:
+  Wrapper();
   bool Plan() const;
   void SetProblem(const pcl::PointCloud<pcl::PointXYZ>& cloud, const std::vector<ObjectState>& structured_obstacle_state_list, const std::vector<ObjectState>& target_state_list);
   void SetLongString(const std::string &long_string);
