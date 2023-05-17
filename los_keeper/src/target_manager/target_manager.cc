@@ -163,7 +163,7 @@ void los_keeper::TargetManager2D::ComputePrimitives() {
   }
 }
 void los_keeper::TargetManager2D::CalculateCloseObstacleIndex() {
-  primitive_close_obstacle_index_.clear();
+  close_obstacle_index_.clear();
   bool is_close;
   for(int i =0;i<num_target_;i++){
     std::vector<int> close_obstacle_index_temp;
@@ -173,14 +173,57 @@ void los_keeper::TargetManager2D::CalculateCloseObstacleIndex() {
       if(is_close)
         close_obstacle_index_temp.push_back(j);
     }
-    primitive_close_obstacle_index_.push_back(close_obstacle_index_temp);
+    close_obstacle_index_.push_back(close_obstacle_index_temp);
   }
 }
 bool los_keeper::TargetManager2D::CheckCollision() {
+  primitive_safe_total_index_.clear();
   bool is_cloud_empty = cloud_.points.empty();
   bool is_structured_obstacle_empty = structured_obstacle_poly_list_.empty();
   if(not is_cloud_empty){
     CheckPclCollision();
+  }
+  if(not is_structured_obstacle_empty){
+    CheckStructuredObstacleCollision();
+  }
+  if(is_cloud_empty and is_structured_obstacle_empty){ // Case I: No Obstacle
+    for(int i =0;i<num_target_;i++){
+      std::vector<int> primitive_safe_total_index_temp_;
+      for(int j=0;j<num_sample_;j++){
+        primitive_safe_total_index_temp_.push_back(j);
+      }
+      primitive_safe_total_index_.push_back(primitive_safe_total_index_temp_);
+    }
+  }
+  if(is_cloud_empty and (not is_structured_obstacle_empty)){
+    primitive_safe_total_index_ = primitive_safe_structured_obstacle_index_;
+  }
+  if((not is_cloud_empty) and is_structured_obstacle_empty){
+    primitive_safe_total_index_ = primitive_safe_pcl_index_;
+  }
+  if (not is_cloud_empty and not is_structured_obstacle_empty){
+    std::vector<std::vector<bool>> is_primitive_safe_pcl;
+    std::vector<std::vector<bool>> is_primitive_safe_structured_obstacle;
+    for(int i =0;i<num_target_;i++){
+      std::vector<bool> is_primitive_safe_pcl_temp;
+      std::vector<bool> is_primitive_safe_structured_obstacle_temp;
+      std::vector<int> primitive_safe_total_index_temp;
+      for(int j =0;j<num_sample_;j++){
+        is_primitive_safe_pcl_temp.push_back(false);
+        is_primitive_safe_structured_obstacle_temp.push_back(false);
+      }
+      for(int j : primitive_safe_structured_obstacle_index_[i]){
+        is_primitive_safe_structured_obstacle_temp[j] = true;
+      }
+      for(int j : primitive_safe_pcl_index_[i]){
+        is_primitive_safe_pcl_temp[j] = true;
+      }
+      for(int j =0;j<num_sample_;j++){
+        if(is_primitive_safe_pcl_temp[j] and is_primitive_safe_structured_obstacle_temp[j])
+          primitive_safe_total_index_temp.push_back(j);
+      }
+      primitive_safe_total_index_.push_back(primitive_safe_total_index_temp);
+    }
   }
   return true;
 }
@@ -189,10 +232,57 @@ void los_keeper::TargetManager2D::CalculateCentroid() {
 }
 void los_keeper::TargetManager2D::CheckPclCollision() {
   std::vector<LinearConstraint2D> safe_corridor = GenLinearConstraint();
-  GetSafePclIndex(safe_corridor);
+  CalculateSafePclIndex(safe_corridor);
 }
 void los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
-
+  primitive_safe_structured_obstacle_index_.clear();
+  for(int i =0;i<num_target_;i++){
+    bool flag_store_in = true;
+    bool flag_store_out = true;
+    float value;
+    std::vector<int> primitive_safe_structured_obstacle_index_temp;
+    for(int j =0;j<primitives_list_[i].size();j++){
+      for(int k =0;k<close_obstacle_index_[i].size();k++){
+        flag_store_out = true;
+        for(int l = 0;l<=2*3;l++){
+          flag_store_in = true;
+          value = 0.0f;
+          for(int m = std::max(0,l-3);m<=std::min(3,l);m++){
+            value += (float)nchoosek(3,m)*(float)nchoosek(3,l-m)/(float)nchoosek(2*3,l)*
+                     (primitives_list_[i][j].px.GetBernsteinCoefficient()[m]*
+                      primitives_list_[i][j].px.GetBernsteinCoefficient()[l-m]-
+                      primitives_list_[i][j].px.GetBernsteinCoefficient()[m]*
+                      structured_obstacle_poly_list_[close_obstacle_index_[i][k]].px.GetBernsteinCoefficient()[l-m]-
+                      primitives_list_[i][j].px.GetBernsteinCoefficient()[l-m]*
+                      structured_obstacle_poly_list_[close_obstacle_index_[i][k]].px.GetBernsteinCoefficient()[m]+
+                      structured_obstacle_poly_list_[close_obstacle_index_[i][k]].px.GetBernsteinCoefficient()[m]*
+                      structured_obstacle_poly_list_[close_obstacle_index_[i][k]].px.GetBernsteinCoefficient()[l-m]+ // x-component
+                      primitives_list_[i][j].py.GetBernsteinCoefficient()[m]*
+                      primitives_list_[i][j].py.GetBernsteinCoefficient()[l-m]-
+                      primitives_list_[i][j].py.GetBernsteinCoefficient()[m]*
+                      structured_obstacle_poly_list_[close_obstacle_index_[i][k]].py.GetBernsteinCoefficient()[l-m]-
+                      primitives_list_[i][j].py.GetBernsteinCoefficient()[l-m]*
+                      structured_obstacle_poly_list_[close_obstacle_index_[i][k]].py.GetBernsteinCoefficient()[m]+
+                      structured_obstacle_poly_list_[close_obstacle_index_[i][k]].py.GetBernsteinCoefficient()[m]*
+                      structured_obstacle_poly_list_[close_obstacle_index_[i][k]].py.GetBernsteinCoefficient()[l-m] // y-component
+                     );
+          }
+          if(value<powf(structured_obstacle_poly_list_[close_obstacle_index_[i][k]].rx+primitives_list_[i][j].rx,2)+
+                   powf(structured_obstacle_poly_list_[close_obstacle_index_[i][k]].ry+primitives_list_[i][j].ry,2)){
+            flag_store_in = false;
+            break;
+          }
+        }
+        if(not flag_store_in){
+          flag_store_out = false;
+          break;
+        }
+      }
+      if(flag_store_in and flag_store_out)
+        primitive_safe_structured_obstacle_index_temp.push_back(j);
+    }
+    primitive_safe_structured_obstacle_index_.push_back(primitive_safe_structured_obstacle_index_temp);
+  }
 }
 std::vector<LinearConstraint2D> los_keeper::TargetManager2D::GenLinearConstraint() {
   Vec2f pcl_points_temp;
@@ -217,7 +307,7 @@ std::vector<LinearConstraint2D> los_keeper::TargetManager2D::GenLinearConstraint
   }
   return linear_constraint_temp;
 }
-void los_keeper::TargetManager2D::GetSafePclIndex(
+void los_keeper::TargetManager2D::CalculateSafePclIndex(
     const std::vector<LinearConstraint2D> &safe_corridor_list) {
   primitive_safe_pcl_index_.clear();
   int num_total_primitives = num_sample_;
@@ -243,8 +333,8 @@ void los_keeper::TargetManager2D::GetSafePclIndex(
       for(int k=0;k<(int)LinearConstraintA.size();k++){
         for(int l=0;l<4;l++){
           temp_value = LinearConstraintA[k].coeffRef(0,0)*primitives_list_[i][j].px.GetBernsteinCoefficient()[l]+
-              LinearConstraintA[k].coeffRef(1,0)*primitives_list_[i][j].py.GetBernsteinCoefficient()[l]-
-              LinearConstraintB[k];
+                       LinearConstraintA[k].coeffRef(1,0)*primitives_list_[i][j].py.GetBernsteinCoefficient()[l]-
+                       LinearConstraintB[k];
           if(temp_value>0.0f){
             is_safe = false;
             break;
@@ -299,19 +389,19 @@ void los_keeper::TargetManager3D::SampleEndPoints() {
   }
 }
 void los_keeper::TargetManager3D::CalculateCloseObstacleIndex() {
-  primitive_close_obstacle_index_.clear();
+  close_obstacle_index_.clear();
   bool is_close;
   for(int i =0;i<num_target_;i++){
     std::vector<int> close_obstacle_index_temp;
     for(int j =0;j<structured_obstacle_poly_list_.size();j++){
       is_close = powf(target_state_list_[i].px-structured_obstacle_poly_list_[j].px.GetInitialValue(),2)+
-                     powf(target_state_list_[i].py-structured_obstacle_poly_list_[j].py.GetInitialValue(),2)+
-                     powf(target_state_list_[i].pz-structured_obstacle_poly_list_[j].pz.GetInitialValue(),2)
+                 powf(target_state_list_[i].py-structured_obstacle_poly_list_[j].py.GetInitialValue(),2)+
+                 powf(target_state_list_[i].pz-structured_obstacle_poly_list_[j].pz.GetInitialValue(),2)
                  <detect_range_*detect_range_;
       if(is_close)
         close_obstacle_index_temp.push_back(j);
     }
-    primitive_close_obstacle_index_.push_back(close_obstacle_index_temp);
+    close_obstacle_index_.push_back(close_obstacle_index_temp);
   }
 }
 bool los_keeper::TargetManager3D::CheckCollision() {
@@ -319,6 +409,48 @@ bool los_keeper::TargetManager3D::CheckCollision() {
   bool is_structured_obstacle_empty = structured_obstacle_poly_list_.empty();
   if(not is_cloud_empty){
     CheckPclCollision();
+  }
+  if(not is_structured_obstacle_empty){
+    CheckStructuredObstacleCollision();
+  }
+  if(is_cloud_empty and is_structured_obstacle_empty){ // Case I: No Obstacle
+    for(int i =0;i<num_target_;i++){
+      std::vector<int> primitive_safe_total_index_temp_;
+      for(int j=0;j<num_sample_;j++){
+        primitive_safe_total_index_temp_.push_back(j);
+      }
+      primitive_safe_total_index_.push_back(primitive_safe_total_index_temp_);
+    }
+  }
+  if(is_cloud_empty and (not is_structured_obstacle_empty)){
+    primitive_safe_total_index_ = primitive_safe_structured_obstacle_index_;
+  }
+  if((not is_cloud_empty) and is_structured_obstacle_empty){
+    primitive_safe_total_index_ = primitive_safe_pcl_index_;
+  }
+  if (not is_cloud_empty and not is_structured_obstacle_empty){
+    std::vector<std::vector<bool>> is_primitive_safe_pcl;
+    std::vector<std::vector<bool>> is_primitive_safe_structured_obstacle;
+    for(int i =0;i<num_target_;i++){
+      std::vector<bool> is_primitive_safe_pcl_temp;
+      std::vector<bool> is_primitive_safe_structured_obstacle_temp;
+      std::vector<int> primitive_safe_total_index_temp;
+      for(int j =0;j<num_sample_;j++){
+        is_primitive_safe_pcl_temp.push_back(false);
+        is_primitive_safe_structured_obstacle_temp.push_back(false);
+      }
+      for(int j : primitive_safe_structured_obstacle_index_[i]){
+        is_primitive_safe_structured_obstacle_temp[j] = true;
+      }
+      for(int j : primitive_safe_pcl_index_[i]){
+        is_primitive_safe_pcl_temp[j] = true;
+      }
+      for(int j =0;j<num_sample_;j++){
+        if(is_primitive_safe_pcl_temp[j] and is_primitive_safe_structured_obstacle_temp[j])
+          primitive_safe_total_index_temp.push_back(j);
+      }
+      primitive_safe_total_index_.push_back(primitive_safe_total_index_temp);
+    }
   }
   return true;
 }
@@ -363,10 +495,96 @@ void los_keeper::TargetManager3D::CalculateCentroid() {
 }
 void los_keeper::TargetManager3D::CheckPclCollision() {
   std::vector<LinearConstraint3D> safe_corridor = GenLinearConstraint();
-  GetSafePclIndex(safe_corridor);
+  CalculateSafePclIndex(safe_corridor);
 }
 void los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
-
+  primitive_safe_structured_obstacle_index_.clear();
+  for (int i = 0; i < num_target_; i++) {
+    bool flag_store_in = true;
+    bool flag_store_out = true;
+    float value;
+    std::vector<int> primitive_safe_structured_obstacle_index_temp;
+    for (int j = 0; j < primitives_list_[i].size(); j++) {
+      for (int k = 0; k < close_obstacle_index_[i].size(); k++) {
+        flag_store_out = true;
+        for (int l = 0; l <= 2 * 3; l++) {
+          flag_store_in = true;
+          value = 0.0f;
+          for (int m = std::max(0, l - 3); m <= std::min(3, l); m++) {
+            value +=
+                (float)nchoosek(3, m) * (float)nchoosek(3, l - m) /
+                (float)nchoosek(2 * 3, l) *
+                (primitives_list_[i][j].px.GetBernsteinCoefficient()[m] *
+                 primitives_list_[i][j]
+                     .px.GetBernsteinCoefficient()[l - m] -
+                 primitives_list_[i][j].px.GetBernsteinCoefficient()[m] *
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .px.GetBernsteinCoefficient()[l - m] -
+                 primitives_list_[i][j].px.GetBernsteinCoefficient()[l - m] *
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .px.GetBernsteinCoefficient()[m] +
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .px.GetBernsteinCoefficient()[m] *
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .px.GetBernsteinCoefficient()[l - m] + // x-component
+                 primitives_list_[i][j].py.GetBernsteinCoefficient()[m] *
+                 primitives_list_[i][j]
+                     .py.GetBernsteinCoefficient()[l - m] -
+                 primitives_list_[i][j].py.GetBernsteinCoefficient()[m] *
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .py.GetBernsteinCoefficient()[l - m] -
+                 primitives_list_[i][j].py.GetBernsteinCoefficient()[l - m] *
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .py.GetBernsteinCoefficient()[m] +
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .py.GetBernsteinCoefficient()[m] *
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .py.GetBernsteinCoefficient()[l - m] + // y-component
+                 primitives_list_[i][j].pz.GetBernsteinCoefficient()[m] *
+                 primitives_list_[i][j]
+                     .pz.GetBernsteinCoefficient()[l - m] -
+                 primitives_list_[i][j].pz.GetBernsteinCoefficient()[m] *
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .pz.GetBernsteinCoefficient()[l - m] -
+                 primitives_list_[i][j].pz.GetBernsteinCoefficient()[l - m] *
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .pz.GetBernsteinCoefficient()[m] +
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .pz.GetBernsteinCoefficient()[m] *
+                 structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                     .pz.GetBernsteinCoefficient()[l - m] // y-component
+                );
+          }
+          if (value <
+              powf(structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
+                       .rx +
+                   primitives_list_[i][j].rx,
+                   2) +
+              powf(structured_obstacle_poly_list_[close_obstacle_index_[i]
+                   [k]]
+                       .ry +
+                   primitives_list_[i][j].ry,
+                   2) +
+              powf(structured_obstacle_poly_list_[close_obstacle_index_[i]
+                   [k]]
+                       .rz +
+                   primitives_list_[i][j].rz,
+                   2)) {
+            flag_store_in = false;
+            break;
+          }
+        }
+        if (not flag_store_in) {
+          flag_store_out = false;
+          break;
+        }
+      }
+      if (flag_store_in and flag_store_out)
+        primitive_safe_structured_obstacle_index_temp.push_back(j);
+    }
+    primitive_safe_structured_obstacle_index_.push_back(
+        primitive_safe_structured_obstacle_index_temp);
+  }
 }
 std::vector<LinearConstraint3D>
 los_keeper::TargetManager3D::GenLinearConstraint() {
@@ -393,7 +611,7 @@ los_keeper::TargetManager3D::GenLinearConstraint() {
   }
   return linear_constraint_temp;
 }
-void los_keeper::TargetManager3D::GetSafePclIndex(
+void los_keeper::TargetManager3D::CalculateSafePclIndex(
     const std::vector<LinearConstraint3D> &safe_corridor_list) {
   primitive_safe_pcl_index_.clear();
   int num_total_primitives = num_sample_;

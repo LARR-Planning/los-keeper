@@ -21,7 +21,6 @@ protected:
   std::vector<ObjectState> target_state_list_;
   int num_target_;
 
-
   // PARAMETER
   int num_sample_;
   float planning_horizon_;
@@ -36,8 +35,10 @@ protected:
 
   std::vector<std::vector<Point>> end_points_;
   std::vector<std::vector<StatePoly>> primitives_list_;
-  std::vector<std::vector<int>> primitive_close_obstacle_index_;
+  std::vector<std::vector<int>> close_obstacle_index_;
   std::vector<std::vector<int>> primitive_safe_pcl_index_;
+  std::vector<std::vector<int>> primitive_safe_structured_obstacle_index_;
+  std::vector<std::vector<int>> primitive_safe_total_index_;
 
   // FUNCTION
   virtual bool PredictTargetTrajectory()=0; // Return true if at least one possible target trajectory exists
@@ -60,7 +61,6 @@ public:
 
 class TargetManager2D: public TargetManager{
 private:
-
   std::vector<LinearConstraint2D> GenLinearConstraint();
   vec_E<Polyhedron2D> polys;
   void SampleEndPoints() override;
@@ -70,7 +70,7 @@ private:
   void CheckPclCollision() override;
   void CheckStructuredObstacleCollision() override;
   void CalculateCentroid() override;
-  void GetSafePclIndex(const std::vector<LinearConstraint2D> & safe_corridor_list);
+  void CalculateSafePclIndex(const std::vector<LinearConstraint2D> & safe_corridor_list);
 public:
   bool PredictTargetTrajectory() override;
 };
@@ -85,7 +85,7 @@ private:
   void CheckPclCollision() override;
   void CheckStructuredObstacleCollision() override;
   void CalculateCentroid() override;
-  void GetSafePclIndex(const std::vector<LinearConstraint3D> & safe_corridor_list);
+  void CalculateSafePclIndex(const std::vector<LinearConstraint3D> & safe_corridor_list);
 public:
   bool PredictTargetTrajectory() override;
 };
