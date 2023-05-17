@@ -66,7 +66,7 @@ int BernsteinPoly::GetDegree() const
   return degree_;
 }
 
-float BernsteinPoly::getValue(float t)
+float BernsteinPoly::GetValue(float t)
 {
   int poly_order = this->degree_;
   float value = 0.0f;
