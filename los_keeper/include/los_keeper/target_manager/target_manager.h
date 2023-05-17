@@ -3,6 +3,9 @@
 #include "los_keeper/obstacle_manager/obstacle_manager.h"
 #include "los_keeper/type_manager/type_manager.h"
 #include "los_keeper/math_utils/eigenmvn.h"
+#include "los_keeper/third_party/decomp_util/decomp_util/ellipsoid_decomp.h"
+#include "los_keeper/third_party/decomp_util/decomp_util/decomp_base.h"
+
 #include <Eigen/Core>
 #include <string>
 
@@ -22,11 +25,13 @@ protected:
   float planning_horizon_;
   float acc_max_;
   bool is_2d_;
+  float detect_range_;
 
   std::string name_{"TargetManager"};
 
   std::vector<std::vector<Point>> end_points_;
   std::vector<std::vector<StatePoly>> primitives_list_;
+  std::vector<std::vector<int>> close_obstacle_index_;
 
   // FUNCTION
   virtual bool PredictTargetTrajectory()=0; // Return true if at least one possible target trajectory exists
@@ -52,7 +57,7 @@ protected:
   void ComputePrimitives() override;
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
-  void CalculateCentroid();
+  void CalculateCentroid() override;
 public:
 
 };
@@ -62,7 +67,7 @@ class TargetManager3D: public TargetManager{
   void ComputePrimitives() override;
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
-  void CalculateCentroid();
+  void CalculateCentroid() override;
 public:
 };
 

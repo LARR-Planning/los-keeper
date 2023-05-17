@@ -35,6 +35,9 @@ struct StatePoly{
   float ry;
   float rz;
   void SetDegree(const int &degree) {px.SetDegree(degree),py.SetDegree(degree),pz.SetDegree(degree);};
+  void SetTimeInterval(float time_interval[2]){px.SetTimeInterval(time_interval),
+        py.SetTimeInterval(time_interval),
+        pz.SetTimeInterval(time_interval);};
 };
 struct Point{
   float x;
