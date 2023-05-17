@@ -12,12 +12,29 @@ void LosServer::TimerCallback() {
 }
 
 void LosServer::StateCallback(const DroneStateMsg::SharedPtr msg) {
-  RCLCPP_INFO(get_logger(), "received position (%f, %f, %f)", msg->px, msg->py,
-              msg->pz);
+  // auto pure_drone_state = ConverToState(msg);
+  // processed_state = Process(pure_drone_state);
+  {
+    std::unique_lock<std::mutex> lock(mutex_list_.pose, std::defer_lock);
+    if (lock.try_lock()) {
+      // wrapper_.SetState(processed_state);
+    }
+  };
 };
 void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
-  RCLCPP_INFO(get_logger(), "received size %d points",
-              msg->width * msg->height);
+
+  // auto pure_drone_state = ConverToState(msg);
+  // processed_state = Process(pure_drone_state);
+
+  pcl::PCLPointCloud2::Ptr cloud_ptr(new pcl::PCLPointCloud2);
+  pcl_conversions::toPCL(*msg, *cloud_ptr);
+
+  {
+    std::unique_lock<std::mutex> lock(mutex_list_.pose, std::defer_lock);
+    if (lock.try_lock()) {
+      // wrapper_.SetPointCloud(*cloud_ptr);
+    }
+  };
 };
 
 LosServer::LosServer() : Node("los_server_node") {

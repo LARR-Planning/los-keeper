@@ -6,6 +6,8 @@
 #include "los_keeper_msgs/msg/object_state.hpp"
 #include "los_keeper_msgs/msg/object_state_array.hpp"
 
+#include <pcl/PCLPointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
