@@ -14,10 +14,12 @@ void los_keeper::TargetManager::SetTargetState(
 void los_keeper::TargetManager::SetObstacleState(
     pcl::PointCloud<pcl::PointXYZ> cloud,
     std::vector<StatePoly> structured_obstacle_poly_list) {
-  cloud_.points.clear();
+
   structured_obstacle_poly_list_.clear();
-  cloud_.points = cloud.points;
   structured_obstacle_poly_list_ = structured_obstacle_poly_list;
+  cloud_.points.clear();
+  cloud_.points = cloud.points;
+
 }
 bool los_keeper::TargetManager::PredictTargetTrajectory() {
   SampleEndPoints();
@@ -86,6 +88,8 @@ los_keeper::TargetManager::TargetManager() { //Abstract Target Manager
 void los_keeper::TargetManager::ComputePrimitives() {}
 void los_keeper::TargetManager::CalculateCloseObstacleIndex() {}
 void los_keeper::TargetManager::CalculateCentroid() {}
+void los_keeper::TargetManager::CheckPclCollision() {}
+void los_keeper::TargetManager::CheckStructuredObstacleCollision() {}
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
   SampleEndPoints();
@@ -159,7 +163,7 @@ void los_keeper::TargetManager2D::ComputePrimitives() {
   }
 }
 void los_keeper::TargetManager2D::CalculateCloseObstacleIndex() {
-  close_obstacle_index_.clear();
+  primitive_close_obstacle_index_.clear();
   bool is_close;
   for(int i =0;i<num_target_;i++){
     std::vector<int> close_obstacle_index_temp;
@@ -169,12 +173,91 @@ void los_keeper::TargetManager2D::CalculateCloseObstacleIndex() {
       if(is_close)
         close_obstacle_index_temp.push_back(j);
     }
-    close_obstacle_index_.push_back(close_obstacle_index_temp);
+    primitive_close_obstacle_index_.push_back(close_obstacle_index_temp);
   }
 }
-bool los_keeper::TargetManager2D::CheckCollision() { return false; }
+bool los_keeper::TargetManager2D::CheckCollision() {
+  bool is_cloud_empty = cloud_.points.empty();
+  bool is_structured_obstacle_empty = structured_obstacle_poly_list_.empty();
+  if(not is_cloud_empty){
+    CheckPclCollision();
+  }
+  return true;
+}
 void los_keeper::TargetManager2D::CalculateCentroid() {
-  TargetManager::CalculateCentroid();
+
+}
+void los_keeper::TargetManager2D::CheckPclCollision() {
+  std::vector<LinearConstraint2D> safe_corridor = GenLinearConstraint();
+  GetSafePclIndex(safe_corridor);
+}
+void los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
+
+}
+std::vector<LinearConstraint2D> los_keeper::TargetManager2D::GenLinearConstraint() {
+  Vec2f pcl_points_temp;
+  vec_Vec2f obstacle_pcl;
+  for(const auto & point : cloud_.points){
+    pcl_points_temp.coeffRef(0,0) = point.x;
+    pcl_points_temp.coeffRef(1,0) = point.y;
+    obstacle_pcl.push_back(pcl_points_temp);
+  }
+  polys.clear();
+  std::vector<LinearConstraint2D> linear_constraint_temp;
+  for(int i =0;i<num_target_;i++){
+    Vec2f seed = Eigen::Matrix<double,2,1> {target_state_list_[i].px,target_state_list_[i].py};
+    SeedDecomp2D decomp_util(seed);
+    decomp_util.set_obs(obstacle_pcl);
+    decomp_util.set_local_bbox(Vec2f(0.5f*virtual_pcl_zone_width_,0.5f*virtual_pcl_zone_width_));
+    decomp_util.dilate(0.1);
+    polys.push_back(decomp_util.get_polyhedron());
+    auto poly_hedrons = decomp_util.get_polyhedron();
+    LinearConstraint2D safe_corridor_constraint(seed,poly_hedrons.hyperplanes());
+    linear_constraint_temp.push_back(safe_corridor_constraint);
+  }
+  return linear_constraint_temp;
+}
+void los_keeper::TargetManager2D::GetSafePclIndex(
+    const std::vector<LinearConstraint2D> &safe_corridor_list) {
+  primitive_safe_pcl_index_.clear();
+  int num_total_primitives = num_sample_;
+  for(int i =0;i<num_target_;i++){
+    int num_constraints = (int)safe_corridor_list[i].A().rows();
+    int num_vars = (int)safe_corridor_list[i].A().cols(); //2D
+    std::vector<int> safe_pcl_index_temp_;
+    Eigen::Vector2f A_comp_temp{0.0,0.0};
+    float b_comp_temp{0.0};
+    std::vector<Eigen::Vector2f> LinearConstraintA;
+    std::vector<float> LinearConstraintB;
+    for(int j=0;j<num_constraints;j++){
+      A_comp_temp[0] = (float)safe_corridor_list[i].A().coeffRef(j,0);
+      A_comp_temp[1] = (float)safe_corridor_list[i].A().coeffRef(j,1);
+      b_comp_temp =(float)safe_corridor_list[i].b().coeffRef(j,0);
+      LinearConstraintA.push_back(A_comp_temp);
+      LinearConstraintB.push_back(b_comp_temp);
+    }
+    float temp_value = 0.0f;
+    bool is_safe = true;
+    for(int j=0;j<num_sample_;j++){
+      is_safe = true;
+      for(int k=0;k<(int)LinearConstraintA.size();k++){
+        for(int l=0;l<4;l++){
+          temp_value = LinearConstraintA[k].coeffRef(0,0)*primitives_list_[i][j].px.GetBernsteinCoefficient()[l]+
+              LinearConstraintA[k].coeffRef(1,0)*primitives_list_[i][j].py.GetBernsteinCoefficient()[l]-
+              LinearConstraintB[k];
+          if(temp_value>0.0f){
+            is_safe = false;
+            break;
+          }
+        }
+        if(not is_safe)
+          break;
+      }
+      if(is_safe)
+        safe_pcl_index_temp_.push_back(j);
+    }
+    primitive_safe_pcl_index_.push_back(safe_pcl_index_temp_);
+  }
 }
 
 bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
@@ -216,7 +299,7 @@ void los_keeper::TargetManager3D::SampleEndPoints() {
   }
 }
 void los_keeper::TargetManager3D::CalculateCloseObstacleIndex() {
-  close_obstacle_index_.clear();
+  primitive_close_obstacle_index_.clear();
   bool is_close;
   for(int i =0;i<num_target_;i++){
     std::vector<int> close_obstacle_index_temp;
@@ -228,10 +311,17 @@ void los_keeper::TargetManager3D::CalculateCloseObstacleIndex() {
       if(is_close)
         close_obstacle_index_temp.push_back(j);
     }
-    close_obstacle_index_.push_back(close_obstacle_index_temp);
+    primitive_close_obstacle_index_.push_back(close_obstacle_index_temp);
   }
 }
-bool los_keeper::TargetManager3D::CheckCollision() { return false; }
+bool los_keeper::TargetManager3D::CheckCollision() {
+  bool is_cloud_empty = cloud_.points.empty();
+  bool is_structured_obstacle_empty = structured_obstacle_poly_list_.empty();
+  if(not is_cloud_empty){
+    CheckPclCollision();
+  }
+  return true;
+}
 void los_keeper::TargetManager3D::ComputePrimitives() {
   primitives_list_.clear();
   StatePoly primitive_temp;
@@ -269,5 +359,81 @@ void los_keeper::TargetManager3D::ComputePrimitives() {
   }
 }
 void los_keeper::TargetManager3D::CalculateCentroid() {
-  TargetManager::CalculateCentroid();
+
+}
+void los_keeper::TargetManager3D::CheckPclCollision() {
+  std::vector<LinearConstraint3D> safe_corridor = GenLinearConstraint();
+  GetSafePclIndex(safe_corridor);
+}
+void los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
+
+}
+std::vector<LinearConstraint3D>
+los_keeper::TargetManager3D::GenLinearConstraint() {
+  Vec3f pcl_points_temp;
+  vec_Vec3f obstacle_pcl;
+  for(const auto & point : cloud_.points){
+    pcl_points_temp.coeffRef(0,0) = point.x;
+    pcl_points_temp.coeffRef(1,0) = point.y;
+    pcl_points_temp.coeffRef(2,0) = point.z;
+    obstacle_pcl.push_back(pcl_points_temp);
+  }
+  polys.clear();
+  std::vector<LinearConstraint3D> linear_constraint_temp;
+  for(int i =0;i<num_target_;i++){
+    Vec3f seed = Eigen::Matrix<double,3,1> {target_state_list_[i].px,target_state_list_[i].py, target_state_list_[i].pz};
+    SeedDecomp3D decomp_util(seed);
+    decomp_util.set_obs(obstacle_pcl);
+    decomp_util.set_local_bbox(Vec3f(0.5f*virtual_pcl_zone_width_,0.5f*virtual_pcl_zone_width_,0.5f*virtual_pcl_zone_height_));
+    decomp_util.dilate(0.1);
+    polys.push_back(decomp_util.get_polyhedron());
+    auto poly_hedrons = decomp_util.get_polyhedron();
+    LinearConstraint3D safe_corridor_constraint(seed,poly_hedrons.hyperplanes());
+    linear_constraint_temp.push_back(safe_corridor_constraint);
+  }
+  return linear_constraint_temp;
+}
+void los_keeper::TargetManager3D::GetSafePclIndex(
+    const std::vector<LinearConstraint3D> &safe_corridor_list) {
+  primitive_safe_pcl_index_.clear();
+  int num_total_primitives = num_sample_;
+  for(int i =0;i<num_target_;i++){
+    int num_constraints = (int)safe_corridor_list[i].A().rows();
+    int num_vars = (int)safe_corridor_list[i].A().cols(); //3D
+    std::vector<int> safe_pcl_index_temp_;
+    Eigen::Vector3f A_comp_temp{0.0,0.0, 0.0};
+    float b_comp_temp{0.0};
+    std::vector<Eigen::Vector3f> LinearConstraintA;
+    std::vector<float> LinearConstraintB;
+    for(int j=0;j<num_constraints;j++){
+      A_comp_temp[0] = (float)safe_corridor_list[i].A().coeffRef(j,0);
+      A_comp_temp[1] = (float)safe_corridor_list[i].A().coeffRef(j,1);
+      A_comp_temp[2] = (float)safe_corridor_list[i].A().coeffRef(j,2);
+      b_comp_temp =(float)safe_corridor_list[i].b().coeffRef(j,0);
+      LinearConstraintA.push_back(A_comp_temp);
+      LinearConstraintB.push_back(b_comp_temp);
+    }
+    float temp_value = 0.0f;
+    bool is_safe = true;
+    for(int j=0;j<num_sample_;j++){
+      is_safe = true;
+      for(int k=0;k<(int)LinearConstraintA.size();k++){
+        for(int l=0;l<4;l++){
+          temp_value = LinearConstraintA[k].coeffRef(0,0)*primitives_list_[i][j].px.GetBernsteinCoefficient()[l]+
+                       LinearConstraintA[k].coeffRef(1,0)*primitives_list_[i][j].py.GetBernsteinCoefficient()[l]+
+                       LinearConstraintA[k].coeffRef(1,0)*primitives_list_[i][j].pz.GetBernsteinCoefficient()[l]-
+                       LinearConstraintB[k];
+          if(temp_value>0.0f){
+            is_safe = false;
+            break;
+          }
+        }
+        if(not is_safe)
+          break;
+      }
+      if(is_safe)
+        safe_pcl_index_temp_.push_back(j);
+    }
+    primitive_safe_pcl_index_.push_back(safe_pcl_index_temp_);
+  }
 }
