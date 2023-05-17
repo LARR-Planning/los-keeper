@@ -11,8 +11,14 @@ void LosServer::TimerCallback() {
   // input_publisher_.publish(ConvertToInputMsg(control_input));
 }
 
-void LosServer::StateCallback(const DroneStateMsg::SharedPtr msg){};
-void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg){};
+void LosServer::StateCallback(const DroneStateMsg::SharedPtr msg) {
+  RCLCPP_INFO(get_logger(), "received position (%f, %f, %f)", msg->px, msg->py,
+              msg->pz);
+};
+void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
+  RCLCPP_INFO(get_logger(), "received size %d points",
+              msg->width * msg->height);
+};
 
 LosServer::LosServer() : Node("los_server_node") {
 
@@ -21,7 +27,7 @@ LosServer::LosServer() : Node("los_server_node") {
       create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   state_subscriber_ = create_subscription<DroneStateMsg>(
-      "pose", rclcpp::QoS(10),
+      "~/state", rclcpp::QoS(10),
       std::bind(&LosServer::StateCallback, this, std::placeholders::_1),
       options);
 
@@ -29,7 +35,7 @@ LosServer::LosServer() : Node("los_server_node") {
       create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   points_subscriber_ = create_subscription<PointCloudMsg>(
-      "points", rclcpp::QoS(10),
+      "~/points", rclcpp::QoS(10),
       std::bind(&LosServer::PointsCallback, this, std::placeholders::_1),
       options);
 
