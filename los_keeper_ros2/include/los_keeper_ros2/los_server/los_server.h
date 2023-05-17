@@ -6,7 +6,6 @@
 #include "los_keeper_msgs/msg/object_state.hpp"
 #include "los_keeper_msgs/msg/object_state_array.hpp"
 
-#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
@@ -14,12 +13,13 @@
 #include <mutex>
 
 using namespace std::chrono_literals;
-using PoseStampedMsg = geometry_msgs::msg::PoseStamped;
+using DroneStateMsg = los_keeper_msgs::msg::DroneState;
+using InputMsg = los_keeper_msgs::msg::JerkControlInput;
 using PointCloudMsg = sensor_msgs::msg::PointCloud2;
 using PointCloudSubscriber =
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr;
-using PoseSubscriber =
-    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr;
+using StateSubscriber = rclcpp::Subscription<DroneStateMsg>::SharedPtr;
+using InputPublisher = rclcpp::Publisher<InputMsg>::SharedPtr;
 using RosTimer = rclcpp::TimerBase::SharedPtr;
 
 namespace los_keeper {
@@ -28,7 +28,8 @@ private:
   Wrapper wrapper_;
 
   PointCloudSubscriber points_subscriber_;
-  PoseSubscriber pose_subscriber_;
+  StateSubscriber state_subscriber_;
+  InputPublisher input_publisher_;
 
   RosTimer timer_;
   struct {
@@ -36,7 +37,7 @@ private:
     std::mutex pointcloud;
   } mutex_list_;
 
-  void PoseCallback(const PoseStampedMsg::SharedPtr msg);
+  void StateCallback(const DroneStateMsg::SharedPtr msg);
   void PointsCallback(const PointCloudMsg::SharedPtr msg);
   void TimerCallback();
 

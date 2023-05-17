@@ -5,9 +5,13 @@ using namespace los_keeper;
 void LosServer::TimerCallback() {
   std::scoped_lock<std::mutex, std::mutex> lock(mutex_list_.pose,
                                                 mutex_list_.pointcloud);
+  // TODO(Jeon): getter and publish
+  // wrapper_.Plan();
+  // auto control_input = wrapper_.GetControlInput(now());
+  // input_publisher_.publish(ConvertToInputMsg(control_input));
 }
 
-void LosServer::PoseCallback(const PoseStampedMsg::SharedPtr msg){};
+void LosServer::StateCallback(const DroneStateMsg::SharedPtr msg){};
 void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg){};
 
 LosServer::LosServer() : Node("los_server_node") {
@@ -16,9 +20,9 @@ LosServer::LosServer() : Node("los_server_node") {
   options.callback_group =
       create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
-  pose_subscriber_ = create_subscription<PoseStampedMsg>(
+  state_subscriber_ = create_subscription<DroneStateMsg>(
       "pose", rclcpp::QoS(10),
-      std::bind(&LosServer::PoseCallback, this, std::placeholders::_1),
+      std::bind(&LosServer::StateCallback, this, std::placeholders::_1),
       options);
 
   options.callback_group =
