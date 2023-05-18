@@ -11,6 +11,7 @@ TEST(TargetTest, NameShouldCorrect) {
 
   TargetManager* target_manager;
   EXPECT_EQ(target_manager->CheckCollision(obstacle_manager), true);
+
 }
 
 } // namespace los_keeper

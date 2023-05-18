@@ -5,6 +5,7 @@
 #include "los_keeper/math_utils/eigenmvn.h"
 #include "los_keeper/third_party/decomp_util/decomp_util/ellipsoid_decomp.h"
 #include "los_keeper/third_party/decomp_util/decomp_util/decomp_base.h"
+#include "los_keeper/third_party/decomp_util/decomp_util/seed_decomp.h"
 
 #include <Eigen/Core>
 #include <string>
@@ -26,12 +27,19 @@ protected:
   float acc_max_;
   bool is_2d_;
   float detect_range_;
+  float virtual_pcl_zone_width_;
+  float virtual_pcl_zone_height_;
+  bool is_lite;
 
   std::string name_{"TargetManager"};
 
-  std::vector<std::vector<Point>> end_points_;
-  std::vector<std::vector<StatePoly>> primitives_list_;
+  std::vector<std::vector<Point>> end_points_;  // Sampled End Points from Dynamics Model
+  std::vector<std::vector<StatePoly>> primitives_list_; // Raw primitives from
   std::vector<std::vector<int>> close_obstacle_index_;
+  std::vector<std::vector<int>> primitive_safe_pcl_index_;
+  std::vector<std::vector<int>> primitive_safe_structured_obstacle_index_;
+  std::vector<std::vector<int>> primitive_safe_total_index_;
+  std::vector<int> primitive_best_index_;
 
   // FUNCTION
   virtual bool PredictTargetTrajectory()=0; // Return true if at least one possible target trajectory exists
@@ -39,6 +47,8 @@ protected:
   virtual void ComputePrimitives();
   virtual void CalculateCloseObstacleIndex(); // Return true if at least one non-colliding target trajectory exists
   virtual bool CheckCollision()=0;
+  virtual void CheckPclCollision();
+  virtual void CheckStructuredObstacleCollision();
   virtual void  CalculateCentroid();
 
 public:
@@ -51,24 +61,34 @@ public:
 };
 
 class TargetManager2D: public TargetManager{
-protected:
-  bool PredictTargetTrajectory() override;
+private:
+  std::vector<LinearConstraint2D> GenLinearConstraint();
+  vec_E<Polyhedron2D> polys;
   void SampleEndPoints() override;
   void ComputePrimitives() override;
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
+  void CheckPclCollision() override;
+  void CheckStructuredObstacleCollision() override;
   void CalculateCentroid() override;
+  void CalculateSafePclIndex(const std::vector<LinearConstraint2D> & safe_corridor_list);
 public:
-
+  bool PredictTargetTrajectory() override;
 };
 class TargetManager3D: public TargetManager{
-  bool PredictTargetTrajectory() override;
+private:
+  std::vector<LinearConstraint3D> GenLinearConstraint();
+  vec_E<Polyhedron3D> polys;
   void SampleEndPoints() override;
   void ComputePrimitives() override;
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
+  void CheckPclCollision() override;
+  void CheckStructuredObstacleCollision() override;
   void CalculateCentroid() override;
+  void CalculateSafePclIndex(const std::vector<LinearConstraint3D> & safe_corridor_list);
 public:
+  bool PredictTargetTrajectory() override;
 };
 
 } // namespace los_keeper
