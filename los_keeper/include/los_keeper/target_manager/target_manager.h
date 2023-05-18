@@ -33,12 +33,13 @@ protected:
 
   std::string name_{"TargetManager"};
 
-  std::vector<std::vector<Point>> end_points_;
-  std::vector<std::vector<StatePoly>> primitives_list_;
+  std::vector<std::vector<Point>> end_points_;  // Sampled End Points from Dynamics Model
+  std::vector<std::vector<StatePoly>> primitives_list_; // Raw primitives from
   std::vector<std::vector<int>> close_obstacle_index_;
   std::vector<std::vector<int>> primitive_safe_pcl_index_;
   std::vector<std::vector<int>> primitive_safe_structured_obstacle_index_;
   std::vector<std::vector<int>> primitive_safe_total_index_;
+  std::vector<int> primitive_best_index_;
 
   // FUNCTION
   virtual bool PredictTargetTrajectory()=0; // Return true if at least one possible target trajectory exists

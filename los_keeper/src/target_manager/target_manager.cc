@@ -96,7 +96,8 @@ bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
   ComputePrimitives();
   CalculateCloseObstacleIndex();
   bool is_safe_traj_exist = CheckCollision();
-  CalculateCentroid();
+  if(is_safe_traj_exist)
+    CalculateCentroid();
   return is_safe_traj_exist;
 }
 void los_keeper::TargetManager2D::SampleEndPoints() {
@@ -202,8 +203,6 @@ bool los_keeper::TargetManager2D::CheckCollision() {
     primitive_safe_total_index_ = primitive_safe_pcl_index_;
   }
   if (not is_cloud_empty and not is_structured_obstacle_empty){
-    std::vector<std::vector<bool>> is_primitive_safe_pcl;
-    std::vector<std::vector<bool>> is_primitive_safe_structured_obstacle;
     for(int i =0;i<num_target_;i++){
       std::vector<bool> is_primitive_safe_pcl_temp;
       std::vector<bool> is_primitive_safe_structured_obstacle_temp;
@@ -225,10 +224,30 @@ bool los_keeper::TargetManager2D::CheckCollision() {
       primitive_safe_total_index_.push_back(primitive_safe_total_index_temp);
     }
   }
-  return true;
+  return not primitive_safe_total_index_.empty();
 }
 void los_keeper::TargetManager2D::CalculateCentroid() {
-
+  primitive_best_index_.clear();
+  for(int i =0;i<num_target_;i++){
+    primitive_best_index_.push_back(0);
+    float distance_sum_list [(int)primitive_safe_total_index_[i].size()];
+    for(int j=0;j<(int)primitive_safe_total_index_[i].size();j++){
+      distance_sum_list[j] = 0.0f;
+      for(int k=0;k<(int)primitive_safe_total_index_[i].size();k++){
+        distance_sum_list[j]+= (primitives_list_[i][primitive_safe_total_index_[i][j]].px.GetTerminalValue()-primitives_list_[i][primitive_safe_total_index_[i][k]].px.GetTerminalValue())*
+                                    (primitives_list_[i][primitive_safe_total_index_[i][j]].px.GetTerminalValue()-primitives_list_[i][primitive_safe_total_index_[i][k]].px.GetTerminalValue())+
+                                (primitives_list_[i][primitive_safe_total_index_[i][j]].py.GetTerminalValue()-primitives_list_[i][primitive_safe_total_index_[i][k]].py.GetTerminalValue())*
+                                    (primitives_list_[i][primitive_safe_total_index_[i][j]].py.GetTerminalValue()-primitives_list_[i][primitive_safe_total_index_[i][k]].py.GetTerminalValue());
+      }
+    }
+    double min_value =99999999.0f;
+    for(int j=0;j<(int)primitive_safe_total_index_[i].size();j++){
+      if(min_value>distance_sum_list[j]){
+        min_value = distance_sum_list[j];
+        primitive_best_index_[i] = primitive_safe_total_index_[i][j];
+      }
+    }
+  }
 }
 void los_keeper::TargetManager2D::CheckPclCollision() {
   std::vector<LinearConstraint2D> safe_corridor = GenLinearConstraint();
@@ -355,7 +374,8 @@ bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
   ComputePrimitives();
   CalculateCloseObstacleIndex();
   bool is_safe_traj_exist = CheckCollision();
-  CalculateCentroid();
+  if(is_safe_traj_exist)
+    CalculateCentroid();
   return is_safe_traj_exist;
 }
 void los_keeper::TargetManager3D::SampleEndPoints() {
@@ -429,8 +449,6 @@ bool los_keeper::TargetManager3D::CheckCollision() {
     primitive_safe_total_index_ = primitive_safe_pcl_index_;
   }
   if (not is_cloud_empty and not is_structured_obstacle_empty){
-    std::vector<std::vector<bool>> is_primitive_safe_pcl;
-    std::vector<std::vector<bool>> is_primitive_safe_structured_obstacle;
     for(int i =0;i<num_target_;i++){
       std::vector<bool> is_primitive_safe_pcl_temp;
       std::vector<bool> is_primitive_safe_structured_obstacle_temp;
@@ -452,7 +470,7 @@ bool los_keeper::TargetManager3D::CheckCollision() {
       primitive_safe_total_index_.push_back(primitive_safe_total_index_temp);
     }
   }
-  return true;
+  return not primitive_safe_total_index_.empty();
 }
 void los_keeper::TargetManager3D::ComputePrimitives() {
   primitives_list_.clear();
@@ -491,7 +509,29 @@ void los_keeper::TargetManager3D::ComputePrimitives() {
   }
 }
 void los_keeper::TargetManager3D::CalculateCentroid() {
-
+  primitive_best_index_.clear();
+  for(int i =0;i<num_target_;i++){
+    primitive_best_index_.push_back(0);
+    float distance_sum_list [(int)primitive_safe_total_index_[i].size()];
+    for(int j=0;j<(int)primitive_safe_total_index_[i].size();j++){
+      distance_sum_list[j] = 0.0f;
+      for(int k=0;k<(int)primitive_safe_total_index_[i].size();k++){
+        distance_sum_list[j]+= (primitives_list_[i][primitive_safe_total_index_[i][j]].px.GetTerminalValue()-primitives_list_[i][primitive_safe_total_index_[i][k]].px.GetTerminalValue())*
+                               (primitives_list_[i][primitive_safe_total_index_[i][j]].px.GetTerminalValue()-primitives_list_[i][primitive_safe_total_index_[i][k]].px.GetTerminalValue())+
+                               (primitives_list_[i][primitive_safe_total_index_[i][j]].py.GetTerminalValue()-primitives_list_[i][primitive_safe_total_index_[i][k]].py.GetTerminalValue())*
+                               (primitives_list_[i][primitive_safe_total_index_[i][j]].py.GetTerminalValue()-primitives_list_[i][primitive_safe_total_index_[i][k]].py.GetTerminalValue())+
+                               (primitives_list_[i][primitive_safe_total_index_[i][j]].pz.GetTerminalValue()-primitives_list_[i][primitive_safe_total_index_[i][k]].pz.GetTerminalValue())*
+                               (primitives_list_[i][primitive_safe_total_index_[i][j]].pz.GetTerminalValue()-primitives_list_[i][primitive_safe_total_index_[i][k]].pz.GetTerminalValue());
+      }
+    }
+    double min_value =99999999.0f;
+    for(int j=0;j<(int)primitive_safe_total_index_[i].size();j++){
+      if(min_value>distance_sum_list[j]){
+        min_value = distance_sum_list[j];
+        primitive_best_index_[i] = primitive_safe_total_index_[i][j];
+      }
+    }
+  }
 }
 void los_keeper::TargetManager3D::CheckPclCollision() {
   std::vector<LinearConstraint3D> safe_corridor = GenLinearConstraint();
