@@ -2,7 +2,7 @@ name: Ros build
 
 on:
   pull_request:
-    branches: ["master"]
+    branches: [ "master" ]
 
 jobs:
   build:
@@ -10,7 +10,6 @@ jobs:
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-20.04
-
     steps:
       - uses: actions/checkout@v3
       - uses: ros-tooling/setup-ros@v0.6
@@ -21,11 +20,15 @@ jobs:
         with:
           package-name: los_keeper los_keeper_msgs los_keeper_ros2
           target-ros2-distro: foxy
-      - name: Run clang-format style check for C/C++/Protobuf programs.
-        uses: DoozyX/clang-format-lint-action@v0.16.1
+
+  style:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: DoozyX/clang-format-lint-action@v0.16.1
         with:
           source: '.'
-          extensions: 'cc'
+          extensions: 'cc,h'
           style: file
           clangFormatVersion: '10'
           check-path: '.'
