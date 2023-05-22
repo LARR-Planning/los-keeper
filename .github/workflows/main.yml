@@ -1,8 +1,6 @@
 name: Ros build
 
 on:
-  push:
-    branches: ["master"]
   pull_request:
     branches: ["master"]
 
@@ -23,3 +21,11 @@ jobs:
         with:
           package-name: los_keeper los_keeper_msgs los_keeper_ros2
           target-ros2-distro: foxy
+      - name: Run clang-format style check for C/C++/Protobuf programs.
+        uses: DoozyX/clang-format-lint-action@v0.16.1
+        with:
+          source: '.'
+          extensions: 'cc'
+          style: file
+          clangFormatVersion: '10'
+          check-path: '.'

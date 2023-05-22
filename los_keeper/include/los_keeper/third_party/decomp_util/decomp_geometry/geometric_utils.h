@@ -5,9 +5,9 @@
 #ifndef DECOMP_GEOMETRIC_UTILS_H
 #define DECOMP_GEOMETRIC_UTILS_H
 
-#include <Eigen/Eigenvalues>
 #include "los_keeper/third_party/decomp_util/decomp_basis/data_utils.h"
 #include "los_keeper/third_party/decomp_util/decomp_geometry/polyhedron.h"
+#include <Eigen/Eigenvalues>
 
 #include <iostream>
 
