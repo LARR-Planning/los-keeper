@@ -4,15 +4,13 @@
 
 #ifndef LOS_KEEPER_TRAJECTORY_PLANNER_H
 #define LOS_KEEPER_TRAJECTORY_PLANNER_H
-#include "los_keeper/type_manager/type_manager.h"
 #include "los_keeper/math_utils/eigenmvn.h"
+#include "los_keeper/type_manager/type_manager.h"
 
-class TrajectoryPlanner{
+class TrajectoryPlanner {
 private:
-
 public:
   TrajectoryPlanner();
 };
-
 
 #endif // LOS_KEEPER_TRAJECTORY_PLANNER_H

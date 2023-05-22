@@ -22,11 +22,14 @@ private:
 
 public:
   std::string GetName() const;
-  void SetObstacleInformation(const pcl::PointCloud<pcl::PointXYZ>& cloud, const std::vector<ObjectState>& structured_obstacle_state_list);
+  void SetObstacleInformation(
+      const pcl::PointCloud<pcl::PointXYZ> &cloud,
+      const std::vector<ObjectState> &structured_obstacle_state_list);
   void TranslateStateToPoly();
-  std::vector<StatePoly> GetStructuredObstaclePolyList(){return structured_obstacle_poly_list_;};
-  pcl::PointCloud<pcl::PointXYZ> GetPcl(){return cloud_;};
-
+  std::vector<StatePoly> GetStructuredObstaclePolyList() {
+    return structured_obstacle_poly_list_;
+  };
+  pcl::PointCloud<pcl::PointXYZ> GetPcl() { return cloud_; };
 };
 } // namespace los_keeper
 #endif /* HEADER_OBSTACLE_MANAGER */
