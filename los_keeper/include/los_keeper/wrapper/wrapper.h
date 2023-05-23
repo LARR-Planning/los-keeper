@@ -5,16 +5,16 @@
 #include <string>
 #include <thread>
 
-#include "los_keeper/wrapper/store.h"
 #include "los_keeper/obstacle_manager/obstacle_manager.h"
 #include "los_keeper/target_manager/target_manager.h"
 #include "los_keeper/trajectory_planner/trajectory_planner.h"
 #include "los_keeper/type_manager/type_manager.h"
+#include "los_keeper/wrapper/store.h"
 
 namespace los_keeper {
 
 class Wrapper {
- private:
+private:
   State state_;
 
   std::string name_{"Wrapper"};
@@ -33,10 +33,9 @@ class Wrapper {
   void ApplyResetAction(State &state);
   void ApplyUpdateAction(State &state);
 
- public:
+public:
   Wrapper();
   void ApplyAction(const Action &action);
-
 };
 } // namespace los_keeper
 

@@ -17,12 +17,7 @@ struct State {
   PlanningResult planning_result;
 };
 
-enum Action {
-  kStart,
-  kPause,
-  kReset,
-  kUpdate
-};
+enum Action { kStart, kPause, kReset, kUpdate };
 
 } // namespace los_keeper
 

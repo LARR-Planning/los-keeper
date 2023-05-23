@@ -19,30 +19,24 @@ void Wrapper::SetProblem(
 
 Wrapper::Wrapper() { target_manager_.reset(new TargetManager2D); }
 
-void Wrapper::ApplyStartAction(State &state) {
-
-}
-
-void Wrapper::ApplyPauseAction(State &state) {
-
-}
-void Wrapper::ApplyResetAction(State &state) {
-
-}
-void Wrapper::ApplyUpdateAction(State &state) {
-
-}
+void Wrapper::ApplyStartAction(State &state) {}
+void Wrapper::ApplyPauseAction(State &state) {}
+void Wrapper::ApplyResetAction(State &state) {}
+void Wrapper::ApplyUpdateAction(State &state) {}
 
 void Wrapper::ApplyAction(const los_keeper::Action &action) {
   switch (action) {
-    case Action::kStart: ApplyStartAction(state_);
-      break;
-    case Action::kPause: ApplyPauseAction(state_);
-      break;
-    case Action::kReset: ApplyResetAction(state_);
-      break;
-    case Action::kUpdate: ApplyUpdateAction(state_);
-      break;
+  case Action::kStart:
+    ApplyStartAction(state_);
+    break;
+  case Action::kPause:
+    ApplyPauseAction(state_);
+    break;
+  case Action::kReset:
+    ApplyResetAction(state_);
+    break;
+  case Action::kUpdate:
+    ApplyUpdateAction(state_);
+    break;
   }
 }
-
