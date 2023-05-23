@@ -1,10 +1,10 @@
 #ifndef HEADER_TARGET_MANAGER
 #define HEADER_TARGET_MANAGER
-#include "los_keeper/obstacle_manager/obstacle_manager.h"
-#include "los_keeper/type_manager/type_manager.h"
 #include "los_keeper/math_utils/eigenmvn.h"
-#include "los_keeper/third_party/decomp_util/decomp_util/ellipsoid_decomp.h"
+#include "los_keeper/obstacle_manager/obstacle_manager.h"
 #include "los_keeper/third_party/decomp_util/decomp_util/decomp_base.h"
+#include "los_keeper/third_party/decomp_util/decomp_util/ellipsoid_decomp.h"
+#include "los_keeper/type_manager/type_manager.h"
 
 #include <Eigen/Core>
 #include <string>
@@ -34,23 +34,27 @@ protected:
   std::vector<std::vector<int>> close_obstacle_index_;
 
   // FUNCTION
-  virtual bool PredictTargetTrajectory()=0; // Return true if at least one possible target trajectory exists
+  virtual bool
+  PredictTargetTrajectory() = 0; // Return true if at least one possible target
+                                 // trajectory exists
   virtual void SampleEndPoints();
   virtual void ComputePrimitives();
-  virtual void CalculateCloseObstacleIndex(); // Return true if at least one non-colliding target trajectory exists
-  virtual bool CheckCollision()=0;
-  virtual void  CalculateCentroid();
+  virtual void
+  CalculateCloseObstacleIndex(); // Return true if at least one non-colliding
+                                 // target trajectory exists
+  virtual bool CheckCollision() = 0;
+  virtual void CalculateCentroid();
 
 public:
   TargetManager();
   std::string GetName() const;
   bool CheckCollision(const ObstacleManager &obstacle_manager) const;
-  void SetTargetState(const std::vector<ObjectState> & target_state_list);
-  void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud, std::vector<StatePoly> structured_obstacle_poly_list);
-
+  void SetTargetState(const std::vector<ObjectState> &target_state_list);
+  void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud,
+                        std::vector<StatePoly> structured_obstacle_poly_list);
 };
 
-class TargetManager2D: public TargetManager{
+class TargetManager2D : public TargetManager {
 protected:
   bool PredictTargetTrajectory() override;
   void SampleEndPoints() override;
@@ -58,16 +62,17 @@ protected:
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
   void CalculateCentroid() override;
-public:
 
+public:
 };
-class TargetManager3D: public TargetManager{
+class TargetManager3D : public TargetManager {
   bool PredictTargetTrajectory() override;
   void SampleEndPoints() override;
   void ComputePrimitives() override;
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
   void CalculateCentroid() override;
+
 public:
 };
 

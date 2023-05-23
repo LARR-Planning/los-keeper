@@ -4,7 +4,7 @@
 #ifndef LOS_KEEPER_TYPE_MANAGER_H
 #define LOS_KEEPER_TYPE_MANAGER_H
 #include "los_keeper/bernstein_polynomial_utils/bernstein_polynomial_utils.h"
-struct ObjectState{
+struct ObjectState {
   float px;
   float py;
   float pz;
@@ -15,7 +15,7 @@ struct ObjectState{
   float ry;
   float rz;
 };
-struct DroneState{
+struct DroneState {
   float px;
   float py;
   float pz;
@@ -27,19 +27,22 @@ struct DroneState{
   float az;
 };
 
-struct StatePoly{
+struct StatePoly {
   BernsteinPoly px;
   BernsteinPoly py;
   BernsteinPoly pz;
   float rx;
   float ry;
   float rz;
-  void SetDegree(const int &degree) {px.SetDegree(degree),py.SetDegree(degree),pz.SetDegree(degree);};
-  void SetTimeInterval(float time_interval[2]){px.SetTimeInterval(time_interval),
-        py.SetTimeInterval(time_interval),
-        pz.SetTimeInterval(time_interval);};
+  void SetDegree(const int &degree) {
+    px.SetDegree(degree), py.SetDegree(degree), pz.SetDegree(degree);
+  };
+  void SetTimeInterval(float time_interval[2]) {
+    px.SetTimeInterval(time_interval), py.SetTimeInterval(time_interval),
+        pz.SetTimeInterval(time_interval);
+  };
 };
-struct Point{
+struct Point {
   float x;
   float y;
   float z;
