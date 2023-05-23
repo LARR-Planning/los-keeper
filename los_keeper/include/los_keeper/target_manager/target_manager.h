@@ -11,6 +11,12 @@
 #include <string>
 
 namespace los_keeper {
+typedef std::vector<int> IndexList;
+typedef std::vector<IndexList> IndexListSet;
+typedef std::vector<Point> PointList;
+typedef std::vector<PointList> PointListSet;
+typedef std::vector<StatePoly> PrimitiveList;
+typedef std::vector<PrimitiveList> PrimitiveListSet;
 
 class TargetManager {
 private:
@@ -33,24 +39,21 @@ protected:
 
   std::string name_{"TargetManager"};
 
-  std::vector<std::vector<Point>>
-      end_points_; // Sampled End Points from Dynamics Model
-  std::vector<std::vector<StatePoly>> primitives_list_; // Raw primitives from
-  std::vector<std::vector<int>> close_obstacle_index_;
-  std::vector<std::vector<int>> primitive_safe_pcl_index_;
-  std::vector<std::vector<int>> primitive_safe_structured_obstacle_index_;
-  std::vector<std::vector<int>> primitive_safe_total_index_;
-  std::vector<int> primitive_best_index_;
+  PointListSet end_points_;          // Sampled End Points from Dynamics Model
+  PrimitiveListSet primitives_list_; // Raw primitives from
+  IndexListSet close_obstacle_index_;
+  IndexListSet primitive_safe_pcl_index_;
+  IndexListSet primitive_safe_structured_obstacle_index_;
+  IndexListSet primitive_safe_total_index_;
+  IndexList primitive_best_index_;
 
   // FUNCTION
-  virtual bool
-  PredictTargetTrajectory() = 0; // Return true if at least one possible target
-                                 // trajectory exists
+  virtual bool PredictTargetTrajectory() = 0; // Return true if at least one possible target
+                                              // trajectory exists
   virtual void SampleEndPoints();
   virtual void ComputePrimitives();
-  virtual void
-  CalculateCloseObstacleIndex(); // Return true if at least one non-colliding
-                                 // target trajectory exists
+  virtual void CalculateCloseObstacleIndex(); // Return true if at least one non-colliding
+                                              // target trajectory exists
   virtual bool CheckCollision() = 0;
   virtual void CheckPclCollision();
   virtual void CheckStructuredObstacleCollision();
@@ -62,7 +65,7 @@ public:
   bool CheckCollision(const ObstacleManager &obstacle_manager) const;
   void SetTargetState(const std::vector<ObjectState> &target_state_list);
   void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud,
-                        std::vector<StatePoly> structured_obstacle_poly_list);
+                        const PrimitiveList &structured_obstacle_poly_list);
 };
 
 class TargetManager2D : public TargetManager {
