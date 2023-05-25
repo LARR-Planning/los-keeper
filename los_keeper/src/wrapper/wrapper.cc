@@ -1,42 +1,51 @@
 #include "los_keeper/wrapper/wrapper.h"
 using namespace los_keeper;
 
-bool Wrapper::Plan() const {
-  return target_manager_->GetName() == "TargetManager";
+store::State los_keeper::Wrapper::HandleUpdateMonitorAction(
+    store::State &previous_state) const {
+  return store::State();
+}
+store::State los_keeper::Wrapper::HandleInitializeAction(
+    store::State &previous_state) const {
+  return store::State();
 }
 
-void Wrapper::SetProblem(
-    const pcl::PointCloud<pcl::PointXYZ> &cloud,
-    const std::vector<ObjectState> &structured_obstacle_state_list,
-    const std::vector<ObjectState> &target_state_list) {
-  obstacle_manager_->SetObstacleInformation(cloud,
-                                            structured_obstacle_state_list);
-  target_manager_->SetObstacleState(
-      obstacle_manager_->GetPcl(),
-      obstacle_manager_->GetStructuredObstaclePolyList());
-  target_manager_->SetTargetState(target_state_list);
+store::State
+los_keeper::Wrapper::HandleReplanAction(store::State &previous_state) const {
+  return store::State();
 }
 
 Wrapper::Wrapper() { target_manager_.reset(new TargetManager2D); }
 
-void Wrapper::ApplyStartAction(State &state) {}
-void Wrapper::ApplyPauseAction(State &state) {}
-void Wrapper::ApplyResetAction(State &state) {}
-void Wrapper::ApplyUpdateAction(State &state) {}
-
-void Wrapper::ApplyAction(const los_keeper::Action &action) {
+void Wrapper::OnPlanningTimerCallback() {
+  using namespace store;
+  auto action = DecideAction(state_);
+  store::State new_state;
   switch (action) {
-  case Action::kStart:
-    ApplyStartAction(state_);
-    break;
-  case Action::kPause:
-    ApplyPauseAction(state_);
-    break;
-  case Action::kReset:
-    ApplyResetAction(state_);
-    break;
-  case Action::kUpdate:
-    ApplyUpdateAction(state_);
-    break;
+  case Action::kUpdateMonitor:
+    new_state = HandleUpdateMonitorAction(state_);
+  case Action::kInitialize:
+    new_state = HandleInitializeAction(state_);
+  case Action::kReplan:
+    new_state = HandleReplanAction(state_);
+  }
+  state_ = new_state;
+}
+
+void los_keeper::Wrapper::SetPoints(
+    const pcl::PointCloud<pcl::PointXYZ> &points) {
+  std::unique_lock<std::mutex> lock(mutex_list_.pointcloud, std::defer_lock);
+  if (lock.try_lock()) {
+    // TODO(@): set whoever need this
+    // obstacle_manager_->SetObstaclePoints(points)
   }
 }
+
+void los_keeper::Wrapper::SetDroneState(const DroneState &drone_state) {
+  std::unique_lock<std::mutex> lock(mutex_list_.drone_state, std::defer_lock);
+  if (lock.try_lock()) {
+    // TODO(@): set whoever need this
+  }
+}
+
+int los_keeper::Wrapper::GetControlInput(double time) const { return 0; }

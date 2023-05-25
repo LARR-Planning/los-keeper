@@ -1,8 +1,8 @@
 //
 // Created by larr-planning on 23. 5. 16.
 //
-#ifndef LOS_KEEPER_TYPE_MANAGER_H
-#define LOS_KEEPER_TYPE_MANAGER_H
+#ifndef HEADER_TYPE_MANAGER
+#define HEADER_TYPE_MANAGER
 #include "los_keeper/bernstein_polynomial_utils/bernstein_polynomial_utils.h"
 struct ObjectState {
   float px;
@@ -42,10 +42,11 @@ struct StatePoly {
         pz.SetTimeInterval(time_interval);
   };
 };
+
 struct Point {
   float x;
   float y;
   float z;
 };
 
-#endif // LOS_KEEPER_TYPE_MANAGER_H
+#endif /* HEADER_TYPE_MANAGER */

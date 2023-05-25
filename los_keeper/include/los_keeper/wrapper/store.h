@@ -1,24 +1,25 @@
-//
-// Created by junbs on 2023-05-22.
-//
+#ifndef HEADER_STORE
+#define HEADER_STORE
 
-#ifndef LOS_KEEPER_STORE_H
-#define LOS_KEEPER_STORE_H
+#include "los_keeper/type_manager/type_manager.h"
 
 namespace los_keeper {
-enum PlanningResult {
-  // TODO(Lee): consider other result
-  kSuccess,
-  kFailure
-};
+namespace store {
 
 struct State {
-  bool is_receiving_data{false};
-  PlanningResult planning_result;
+  StatePoly planning_output;
+  bool is_all_data_received{false};
+  bool is_planning_valid{false};
 };
 
-enum Action { kStart, kPause, kReset, kUpdate };
+enum Action {
+  kUpdateMonitor,
+  kInitialize,
+  kReplan,
+};
 
+Action DecideAction(const State &state);
+} // namespace store
 } // namespace los_keeper
 
-#endif // LOS_KEEPER_STORE_H
+#endif /* HEADER_STORE */

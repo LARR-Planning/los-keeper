@@ -8,13 +8,13 @@ file(GLOB_RECURSE LIBRARY_HDRS "include/los_keeper/*.h")
 file(GLOB_RECURSE LIBRARY_SRCS "src/*.cc")
 file(GLOB TEST_SRCS "test/*.cc")
 
-add_library(${PROJECT_NAME} STATIC ${LIBRARY_SRCS} ${LIBRARY_HDRS} include/los_keeper/wrapper/store.h src/wrapper/store.cpp)
+add_library(${PROJECT_NAME} STATIC ${LIBRARY_SRCS} ${LIBRARY_HDRS})
 target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES})
 target_include_directories(
   ${PROJECT_NAME}
   PUBLIC ${EIGEN_INCLUDE_DIR} ${PCL_INCLUDE_DIRS}
          $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-         $<INSTALL_INTERFACE:include> )
+         $<INSTALL_INTERFACE:include>)
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include DESTINATION .)
 install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Config)
