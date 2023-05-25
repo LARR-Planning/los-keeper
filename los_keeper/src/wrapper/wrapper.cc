@@ -19,7 +19,7 @@ Wrapper::Wrapper() { target_manager_.reset(new TargetManager2D); }
 
 void Wrapper::OnPlanningTimerCallback() {
   using namespace store;
-  auto action = DecideAction(state_);
+  auto action = DecideActionForCallback(state_);
   store::State new_state;
   switch (action) {
   case Action::kUpdateMonitor:
@@ -30,6 +30,11 @@ void Wrapper::OnPlanningTimerCallback() {
     new_state = HandleReplanAction(state_);
   }
   state_ = new_state;
+}
+
+void Wrapper::OnStartServiceCallback() {
+  using namespace store;
+  // state_ = HandleStartAction(state_);
 }
 
 void los_keeper::Wrapper::SetPoints(

@@ -2,7 +2,7 @@
 
 namespace los_keeper {
 namespace store {
-Action DecideAction(const State &state) {
+Action DecideActionForCallback(const State &state) {
   if (!state.is_planning_valid)
     return Action::kReplan;
 }

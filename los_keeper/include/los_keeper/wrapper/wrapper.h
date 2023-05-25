@@ -39,6 +39,7 @@ public:
   int GetControlInput(double time) const; // TODO(Lee): change to jerk input
 
   void OnPlanningTimerCallback();
+  void OnStartServiceCallback();
 };
 } // namespace los_keeper
 

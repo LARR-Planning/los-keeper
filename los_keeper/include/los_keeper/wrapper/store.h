@@ -18,7 +18,7 @@ enum Action {
   kReplan,
 };
 
-Action DecideAction(const State &state);
+Action DecideActionForCallback(const State &state);
 } // namespace store
 } // namespace los_keeper
 
