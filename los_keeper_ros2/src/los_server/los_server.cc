@@ -2,39 +2,42 @@
 
 using namespace los_keeper;
 
-void LosServer::TimerCallback() {
-  std::scoped_lock<std::mutex, std::mutex> lock(mutex_list_.pose,
-                                                mutex_list_.pointcloud);
-  // TODO(Jeon): getter and publish
-  // wrapper_.Plan();
-  // auto control_input = wrapper_.GetControlInput(now());
-  // input_publisher_.publish(ConvertToInputMsg(control_input));
+DroneState
+los_keeper::ConverToDroneState(const DroneStateMsg &drone_state_msg) {
+  return DroneState();
 }
 
-void LosServer::StateCallback(const DroneStateMsg::SharedPtr msg) {
-  // auto pure_drone_state = ConverToState(msg);
-  // processed_state = Process(pure_drone_state);
-  {
-    std::unique_lock<std::mutex> lock(mutex_list_.pose, std::defer_lock);
-    if (lock.try_lock()) {
-      // wrapper_.SetState(processed_state);
-    }
-  };
-};
-void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
-
-  // auto pure_drone_state = ConverToState(msg);
-  // processed_state = Process(pure_drone_state);
+pcl::PointCloud<pcl::PointXYZ>
+los_keeper::ConvertToPointCloud(const PointCloudMsg &point_cloud_msg) {
 
   pcl::PCLPointCloud2::Ptr cloud_ptr(new pcl::PCLPointCloud2);
-  pcl_conversions::toPCL(*msg, *cloud_ptr);
+  pcl_conversions::toPCL(point_cloud_msg, *cloud_ptr);
 
-  {
-    std::unique_lock<std::mutex> lock(mutex_list_.pose, std::defer_lock);
-    if (lock.try_lock()) {
-      // wrapper_.SetPointCloud(*cloud_ptr);
-    }
-  };
+  // TODO(@): convert pcl
+  return pcl::PointCloud<pcl::PointXYZ>();
+}
+
+InputMsg los_keeper::ConverToInputMsg(const int drone_input) {
+
+  // TODO(@): change argument
+  return InputMsg();
+}
+
+void LosServer::PlanningTimerCallback() { wrapper_.OnPlanningTimerCallback(); }
+
+void LosServer::ControlTimerCallback() {
+  auto t = now();
+  auto control_input = wrapper_.GenerateControlInputFromPlanning(t.seconds());
+}
+
+void LosServer::DroneStateCallback(const DroneStateMsg::SharedPtr msg) {
+  auto drone_state = ConverToDroneState(*msg);
+  wrapper_.SetDroneState(drone_state);
+};
+
+void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
+  auto points = ConvertToPointCloud(*msg);
+  wrapper_.SetPoints(points);
 };
 
 LosServer::LosServer() : Node("los_server_node") {
@@ -45,7 +48,7 @@ LosServer::LosServer() : Node("los_server_node") {
 
   state_subscriber_ = create_subscription<DroneStateMsg>(
       "~/state", rclcpp::QoS(10),
-      std::bind(&LosServer::StateCallback, this, std::placeholders::_1),
+      std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1),
       options);
 
   options.callback_group =
@@ -56,6 +59,9 @@ LosServer::LosServer() : Node("los_server_node") {
       std::bind(&LosServer::PointsCallback, this, std::placeholders::_1),
       options);
 
-  timer_ =
-      this->create_wall_timer(1s, std::bind(&LosServer::TimerCallback, this));
+  planning_timer_ = this->create_wall_timer(
+      10ms, std::bind(&LosServer::PlanningTimerCallback, this));
+
+  control_timer_ = this->create_wall_timer(
+      10ms, std::bind(&LosServer::ControlTimerCallback, this));
 }

@@ -12,7 +12,6 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include <chrono>
-#include <mutex>
 
 using namespace std::chrono_literals;
 using DroneStateMsg = los_keeper_msgs::msg::DroneState;
@@ -25,6 +24,12 @@ using InputPublisher = rclcpp::Publisher<InputMsg>::SharedPtr;
 using RosTimer = rclcpp::TimerBase::SharedPtr;
 
 namespace los_keeper {
+
+DroneState ConverToDroneState(const DroneStateMsg &drone_state_msg);
+pcl::PointCloud<pcl::PointXYZ>
+ConvertToPointCloud(const PointCloudMsg &point_cloud_msg);
+InputMsg ConverToInputMsg(const int drone_input);
+
 class LosServer : public rclcpp::Node {
 private:
   Wrapper wrapper_;
@@ -33,17 +38,13 @@ private:
   StateSubscriber state_subscriber_;
   InputPublisher input_publisher_;
 
-  RosTimer timer_;
-  struct {
-    std::mutex pose;
-    std::mutex pointcloud;
-  } mutex_list_;
+  RosTimer planning_timer_;
+  RosTimer control_timer_;
 
-  void StateCallback(const DroneStateMsg::SharedPtr msg);
+  void DroneStateCallback(const DroneStateMsg::SharedPtr msg);
   void PointsCallback(const PointCloudMsg::SharedPtr msg);
-  void TimerCallback();
-
-  std::string ProcessPointCloud(const std::string &raw_string);
+  void PlanningTimerCallback();
+  void ControlTimerCallback();
 
 public:
   LosServer();

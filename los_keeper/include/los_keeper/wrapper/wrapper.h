@@ -2,35 +2,49 @@
 #define HEADER_WRAPPER
 
 #include <chrono>
+#include <mutex>
 #include <string>
 #include <thread>
 
 #include "los_keeper/obstacle_manager/obstacle_manager.h"
 #include "los_keeper/target_manager/target_manager.h"
 #include "los_keeper/trajectory_planner/trajectory_planner.h"
-#include "los_keeper/type_manager/type_manager.h"
+#include "los_keeper/wrapper/store.h"
 
 namespace los_keeper {
+
 class Wrapper {
 private:
-  std::string name_{"Wrapper"};
-  ObstacleManager obstacle_manager_;
-  TargetManager *target_manager_;
-  TrajectoryPlanner trajectory_planner_;
+  DroneState robot_state_;
+  store::State state_;
+  PlanningOutput planning_output_;
 
-  std::string long_string_;
-  std::string short_string_;
+  struct {
+    std::mutex drone_state;
+    std::mutex pointcloud;
+    std::mutex control;
+  } mutex_list_;
+
+  std::shared_ptr<ObstacleManager> obstacle_manager_;
+  std::shared_ptr<TargetManager> target_manager_;
+  std::shared_ptr<TrajectoryPlanner> trajectory_planner_;
+
+  bool UpdateState(store::State &state);
+
+  void HandleStopAction() const;
+  void HandleInitializeAction() const;
+  void HandleReplanAction() const;
 
 public:
   Wrapper();
-  bool Plan() const;
-  void
-  SetProblem(const pcl::PointCloud<pcl::PointXYZ> &cloud,
-             const std::vector<ObjectState> &structured_obstacle_state_list,
-             const std::vector<ObjectState> &target_state_list);
-  void SetLongString(const std::string &long_string);
-  void SetShortString(const std::string &short_string);
-  std::string GetConcatString() const;
+
+  void SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points);
+  void SetDroneState(const DroneState &drone_state);
+  int GenerateControlInputFromPlanning(
+      double time) const; // TODO(Lee): change to jerk input
+
+  void OnPlanningTimerCallback();
+  void OnStartServiceCallback();
 };
 } // namespace los_keeper
 
