@@ -27,7 +27,7 @@ void LosServer::PlanningTimerCallback() { wrapper_.OnPlanningTimerCallback(); }
 
 void LosServer::ControlTimerCallback() {
   auto t = now();
-  auto control_input = wrapper_.GetControlInput(t.seconds());
+  auto control_input = wrapper_.GenerateControlInputFromPlanning(t.seconds());
 }
 
 void LosServer::DroneStateCallback(const DroneStateMsg::SharedPtr msg) {

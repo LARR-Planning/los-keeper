@@ -15,7 +15,9 @@ namespace los_keeper {
 
 class Wrapper {
 private:
+  DroneState robot_state_;
   store::State state_;
+  PlanningOutput planning_output_;
 
   struct {
     std::mutex drone_state;
@@ -27,16 +29,20 @@ private:
   std::shared_ptr<TargetManager> target_manager_;
   std::shared_ptr<TrajectoryPlanner> trajectory_planner_;
 
-  store::State HandleUpdateMonitorAction(store::State &previous_state) const;
-  store::State HandleInitializeAction(store::State &previous_state) const;
-  store::State HandleReplanAction(store::State &previous_state) const;
+  void UpdateState(store::State &state);
+
+  void HandleStopAction() const;
+  void HandleInitializeAction() const;
+  void HandleReplanAction() const;
 
 public:
   Wrapper();
 
   void SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points);
   void SetDroneState(const DroneState &drone_state);
-  int GetControlInput(double time) const; // TODO(Lee): change to jerk input
+  int GenerateControlInputFromPlanning(
+      const PlanningOutput &planning_output,
+      double time) const; // TODO(Lee): change to jerk input
 
   void OnPlanningTimerCallback();
   void OnStartServiceCallback();

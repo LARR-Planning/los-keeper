@@ -1,35 +1,34 @@
 #include "los_keeper/wrapper/wrapper.h"
 using namespace los_keeper;
 
-store::State los_keeper::Wrapper::HandleUpdateMonitorAction(
-    store::State &previous_state) const {
-  return store::State();
-}
-store::State los_keeper::Wrapper::HandleInitializeAction(
-    store::State &previous_state) const {
-  return store::State();
+void Wrapper::UpdateState(store::State &state) {
+  // state.is_initialized =
+  //     obstacle_manager_->IsInitialized() && target_manager_->IsInitialized();
+  // state.is_currently_safe =
+  //     obstacle_manager_->CheckCollisionOnPosition(drone_state);
+  // state.is_planning_safe =
+  //     obstacle_manager_->CheckCollisionAlongTrajectory(drone_state);
 }
 
-store::State
-los_keeper::Wrapper::HandleReplanAction(store::State &previous_state) const {
-  return store::State();
-}
+void Wrapper::HandleStopAction() const {}
+void Wrapper::HandleInitializeAction() const {}
+void Wrapper::HandleReplanAction() const {}
 
 Wrapper::Wrapper() { target_manager_.reset(new TargetManager2D); }
 
 void Wrapper::OnPlanningTimerCallback() {
-  using namespace store;
-  auto action = DecideActionForCallback(state_);
-  store::State new_state;
+
+  UpdateState(state_);
+  auto action = DecideAction(state_);
+
   switch (action) {
-  case Action::kUpdateMonitor:
-    new_state = HandleUpdateMonitorAction(state_);
-  case Action::kInitialize:
-    new_state = HandleInitializeAction(state_);
-  case Action::kReplan:
-    new_state = HandleReplanAction(state_);
+  case store::Action::kInitialize:
+    HandleInitializeAction();
+  case store::Action::kStop:
+    HandleStopAction();
+  default:
+    HandleReplanAction();
   }
-  state_ = new_state;
 }
 
 void Wrapper::OnStartServiceCallback() {
@@ -37,8 +36,7 @@ void Wrapper::OnStartServiceCallback() {
   // state_ = HandleStartAction(state_);
 }
 
-void los_keeper::Wrapper::SetPoints(
-    const pcl::PointCloud<pcl::PointXYZ> &points) {
+void Wrapper::SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points) {
   std::unique_lock<std::mutex> lock(mutex_list_.pointcloud, std::defer_lock);
   if (lock.try_lock()) {
     // TODO(@): set whoever need this
@@ -46,11 +44,14 @@ void los_keeper::Wrapper::SetPoints(
   }
 }
 
-void los_keeper::Wrapper::SetDroneState(const DroneState &drone_state) {
+void Wrapper::SetDroneState(const DroneState &drone_state) {
   std::unique_lock<std::mutex> lock(mutex_list_.drone_state, std::defer_lock);
   if (lock.try_lock()) {
     // TODO(@): set whoever need this
   }
 }
 
-int los_keeper::Wrapper::GetControlInput(double time) const { return 0; }
+int Wrapper::GenerateControlInputFromPlanning(
+    const PlanningOutput &planning_output, double time) const {
+  return 0;
+}
