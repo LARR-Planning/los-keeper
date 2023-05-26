@@ -29,7 +29,7 @@ private:
   std::shared_ptr<TargetManager> target_manager_;
   std::shared_ptr<TrajectoryPlanner> trajectory_planner_;
 
-  void UpdateState(store::State &state);
+  bool UpdateState(store::State &state);
 
   void HandleStopAction() const;
   void HandleInitializeAction() const;
@@ -41,7 +41,6 @@ public:
   void SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points);
   void SetDroneState(const DroneState &drone_state);
   int GenerateControlInputFromPlanning(
-      const PlanningOutput &planning_output,
       double time) const; // TODO(Lee): change to jerk input
 
   void OnPlanningTimerCallback();

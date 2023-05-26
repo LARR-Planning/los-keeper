@@ -1,13 +1,15 @@
 #include "los_keeper/wrapper/wrapper.h"
 using namespace los_keeper;
 
-void Wrapper::UpdateState(store::State &state) {
+bool Wrapper::UpdateState(store::State &state) {
+  bool is_changed = false;
   // state.is_initialized =
   //     obstacle_manager_->IsInitialized() && target_manager_->IsInitialized();
   // state.is_currently_safe =
   //     obstacle_manager_->CheckCollisionOnPosition(drone_state);
   // state.is_planning_safe =
   //     obstacle_manager_->CheckCollisionAlongTrajectory(drone_state);
+  return is_changed;
 }
 
 void Wrapper::HandleStopAction() const {}
@@ -18,9 +20,10 @@ Wrapper::Wrapper() { target_manager_.reset(new TargetManager2D); }
 
 void Wrapper::OnPlanningTimerCallback() {
 
-  UpdateState(state_);
-  auto action = DecideAction(state_);
+  if (!UpdateState(state_))
+    return;
 
+  auto action = DecideAction(state_);
   switch (action) {
   case store::Action::kInitialize:
     HandleInitializeAction();
@@ -51,7 +54,4 @@ void Wrapper::SetDroneState(const DroneState &drone_state) {
   }
 }
 
-int Wrapper::GenerateControlInputFromPlanning(
-    const PlanningOutput &planning_output, double time) const {
-  return 0;
-}
+int Wrapper::GenerateControlInputFromPlanning(double time) const { return 0; }
