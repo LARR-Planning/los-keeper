@@ -13,15 +13,27 @@
 
 namespace los_keeper {
 
+struct PlanningProblem {
+  DroneState drone_state;
+  PclPointCloud point_cloud;
+  std::vector<StatePoly> structured_obstacle_poly_list;
+  std::vector<ObjectState> target_state_list;
+};
+
+struct PlanningResult {
+  std::optional<StatePoly> chasing_trajectory;
+  std::optional<Point> GetPointAtTime(double t) const;
+};
+
 class Wrapper {
 private:
-  DroneState robot_state_;
+  DroneState drone_state_;
   store::State state_;
-  PlanningOutput planning_output_;
+  PlanningResult planning_result_;
 
   struct {
     std::mutex drone_state;
-    std::mutex pointcloud;
+    std::mutex point_cloud;
     std::mutex control;
   } mutex_list_;
 
@@ -31,17 +43,16 @@ private:
 
   bool UpdateState(store::State &state);
 
-  void HandleStopAction() const;
-  void HandleInitializeAction() const;
-  void HandleReplanAction() const;
+  void HandleStopAction();
+  void HandleActivateAction();
+  void HandleReplanAction();
 
 public:
   Wrapper();
 
   void SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points);
   void SetDroneState(const DroneState &drone_state);
-  int GenerateControlInputFromPlanning(
-      double time) const; // TODO(Lee): change to jerk input
+  std::optional<Point> GenerateControlInputFromPlanning(double time);
 
   void OnPlanningTimerCallback();
   void OnStartServiceCallback();

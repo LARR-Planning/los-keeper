@@ -4,12 +4,12 @@
 #include "los_keeper/type_manager/type_manager.h"
 
 namespace los_keeper {
-typedef StatePoly PlanningOutput;
 
 namespace store {
 
 struct State {
-  bool is_initialized{false};
+  bool is_activated{false};
+  bool is_data_received{false};
   bool is_planning_safe{false};
   bool is_planning_visible{false};
   bool is_planning_expired{false};

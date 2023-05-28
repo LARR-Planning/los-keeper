@@ -1,15 +1,19 @@
 #include "los_keeper/obstacle_manager/obstacle_manager.h"
 
-std::string los_keeper::ObstacleManager::GetName() const { return name_; }
+using namespace los_keeper;
 
-void los_keeper::ObstacleManager::SetObstacleInformation(
-    const pcl::PointCloud<pcl::PointXYZ> &cloud,
-    const std::vector<ObjectState> &structured_obstacle_state_list) {
+void ObstacleManager::SetObstacleCloud(
+    const pcl::PointCloud<pcl::PointXYZ> &cloud) {
   cloud_.points = cloud.points;
+}
+
+void ObstacleManager::SetStructuredObstacleState(
+    const std::vector<ObjectState> &structured_obstacle_state_list) {
   structured_obstacle_state_list_ = structured_obstacle_state_list;
   TranslateStateToPoly();
 }
-void los_keeper::ObstacleManager::TranslateStateToPoly() {
+
+void ObstacleManager::TranslateStateToPoly() {
   structured_obstacle_poly_list_.clear();
   StatePoly temp_state_poly;
   temp_state_poly.SetDegree(3);

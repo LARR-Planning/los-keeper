@@ -3,10 +3,6 @@
 
 namespace los_keeper {
 
-TEST(ObstacleTest, NameShouldCorrect) {
-
-  ObstacleManager obstacle_manager;
-  EXPECT_EQ(obstacle_manager.GetName(), "ObstacleManager");
-}
+TEST(ObstacleTest, NameShouldCorrect) {}
 
 } // namespace los_keeper

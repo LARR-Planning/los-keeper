@@ -1,6 +1,12 @@
 #include "los_keeper/wrapper/wrapper.h"
 using namespace los_keeper;
 
+std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
+  if (!chasing_trajectory)
+    return std::nullopt;
+  return Point();
+}
+
 bool Wrapper::UpdateState(store::State &state) {
   bool is_changed = false;
   // state.is_initialized =
@@ -12,21 +18,47 @@ bool Wrapper::UpdateState(store::State &state) {
   return is_changed;
 }
 
-void Wrapper::HandleStopAction() const {}
-void Wrapper::HandleInitializeAction() const {}
-void Wrapper::HandleReplanAction() const {}
+void Wrapper::HandleStopAction() { state_.is_activated = false; }
+void Wrapper::HandleActivateAction() { state_.is_activated = true; }
+void Wrapper::HandleReplanAction() {
+  PlanningProblem planning_problem;
+  {
+    std::scoped_lock lock(mutex_list_.drone_state, mutex_list_.point_cloud);
+    planning_problem.drone_state = drone_state_;
+    planning_problem.point_cloud = obstacle_manager_->GetPointCloud();
+    // TODO(@): add target_state_list and structure_obstacle_poly_list
+  }
+  const auto &point_cloud = planning_problem.point_cloud;
+  const auto &structured_obstacle_poly_list =
+      planning_problem.structured_obstacle_poly_list;
 
-Wrapper::Wrapper() { target_manager_.reset(new TargetManager2D); }
+  PlanningResult new_planning_result;
+  auto target_prediction_list = target_manager_->PredictTargetList(
+      planning_problem.target_state_list, point_cloud,
+      structured_obstacle_poly_list);
+  if (!target_prediction_list)
+    goto update;
+
+  new_planning_result.chasing_trajectory =
+      trajectory_planner_->ComputeChasingTrajectory(
+          target_prediction_list.value(), point_cloud,
+          structured_obstacle_poly_list);
+
+update : {
+  std::unique_lock<std::mutex> lock(mutex_list_.control);
+  planning_result_ = new_planning_result;
+}
+}
+
+Wrapper::Wrapper() { target_manager_.reset(new TargetManager3D); }
 
 void Wrapper::OnPlanningTimerCallback() {
 
-  if (!UpdateState(state_))
-    return;
-
+  UpdateState(state_);
   auto action = DecideAction(state_);
   switch (action) {
   case store::Action::kInitialize:
-    HandleInitializeAction();
+    HandleActivateAction();
   case store::Action::kStop:
     HandleStopAction();
   default:
@@ -36,14 +68,13 @@ void Wrapper::OnPlanningTimerCallback() {
 
 void Wrapper::OnStartServiceCallback() {
   using namespace store;
-  // state_ = HandleStartAction(state_);
+  HandleActivateAction();
 }
 
 void Wrapper::SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points) {
-  std::unique_lock<std::mutex> lock(mutex_list_.pointcloud, std::defer_lock);
+  std::unique_lock<std::mutex> lock(mutex_list_.point_cloud, std::defer_lock);
   if (lock.try_lock()) {
-    // TODO(@): set whoever need this
-    // obstacle_manager_->SetObstaclePoints(points)
+    obstacle_manager_->SetObstacleCloud(points);
   }
 }
 
@@ -51,7 +82,16 @@ void Wrapper::SetDroneState(const DroneState &drone_state) {
   std::unique_lock<std::mutex> lock(mutex_list_.drone_state, std::defer_lock);
   if (lock.try_lock()) {
     // TODO(@): set whoever need this
+    drone_state_ = drone_state;
   }
 }
 
-int Wrapper::GenerateControlInputFromPlanning(double time) const { return 0; }
+std::optional<Point> Wrapper::GenerateControlInputFromPlanning(double time) {
+  // TODO(@): generate jerk
+  std::optional<Point> control_input;
+  {
+    std::unique_lock<std::mutex> lock(mutex_list_.control);
+    control_input = planning_result_.GetPointAtTime(time);
+  }
+  return control_input;
+}
