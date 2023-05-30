@@ -61,7 +61,9 @@ protected:
   virtual bool CheckCollision() = 0;
   virtual void CheckPclCollision();
   virtual void CheckStructuredObstacleCollision();
+  virtual void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx, const int &end_idx, IndexList &safe_structured_index_sub);
   virtual void CalculateCentroid();
+  virtual void CalculateCentroidSubProcess(const int &target_id, const int &start_idx, const int &end_idx, pair<int, float> &min_dist);
 
 public:
   TargetManager();
@@ -85,7 +87,10 @@ private:
   void CheckPclCollision() override;
   void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint2D& constraints, const int &start_idx, const int &end_idx, IndexList & safe_pcl_index_sub);
   void CheckStructuredObstacleCollision() override;
+  void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx, const int &end_idx, IndexList &safe_structured_index_sub) override;
   void CalculateCentroid() override;
+  void CalculateCentroidSubProcess(const int &target_id, const int &start_idx, const int &end_idx, pair<int, float> &min_dist) override;
+
   void CalculateSafePclIndex(
       const vector<LinearConstraint2D> &safe_corridor_list);
 
@@ -105,7 +110,9 @@ private:
   void CheckPclCollision() override;
   void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint3D& constraints, const int &start_idx, const int &end_idx, IndexList & safe_pcl_index_sub) ;
   void CheckStructuredObstacleCollision() override;
+  void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx, const int &end_idx, IndexList &safe_structured_index_sub) override;
   void CalculateCentroid() override;
+  void CalculateCentroidSubProcess(const int &target_id, const int &start_idx, const int &end_idx, pair<int, float> &min_dist) override;
   void CalculateSafePclIndex(
       const vector<LinearConstraint3D> &safe_corridor_list);
 
