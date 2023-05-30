@@ -4,7 +4,7 @@
 #ifndef LOS_KEEPER_TYPE_MANAGER_H
 #define LOS_KEEPER_TYPE_MANAGER_H
 #include "los_keeper/bernstein_polynomial_utils/bernstein_polynomial_utils.h"
-#include "thread"
+#include <thread>
 struct ObjectState {
   float px;
   float py;

@@ -9,22 +9,23 @@
 
 #include <Eigen/Core>
 #include <string>
+using namespace std;
 
 namespace los_keeper {
-typedef std::vector<int> IndexList;
-typedef std::vector<IndexList> IndexListSet;
-typedef std::vector<Point> PointList;
-typedef std::vector<PointList> PointListSet;
-typedef std::vector<StatePoly> PrimitiveList;
-typedef std::vector<PrimitiveList> PrimitiveListSet;
+typedef vector<int> IndexList;
+typedef vector<IndexList> IndexListSet;
+typedef vector<Point> PointList;
+typedef vector<PointList> PointListSet;
+typedef vector<StatePoly> PrimitiveList;
+typedef vector<PrimitiveList> PrimitiveListSet;
 
 class TargetManager {
 private:
 protected:
   // INGREDIENT
-  std::vector<StatePoly> structured_obstacle_poly_list_;
+  vector<StatePoly> structured_obstacle_poly_list_;
   pcl::PointCloud<pcl::PointXYZ> cloud_;
-  std::vector<ObjectState> target_state_list_;
+  vector<ObjectState> target_state_list_;
   int num_target_;
 
   // PARAMETER
@@ -38,7 +39,7 @@ protected:
   float virtual_pcl_zone_height_;
   bool is_lite;
 
-  std::string name_{"TargetManager"};
+  string name_{"TargetManager"};
 
   PointListSet end_points_;          // Sampled End Points from Dynamics Model
   PrimitiveListSet primitives_list_; // Raw primitives from
@@ -54,6 +55,7 @@ protected:
   virtual void SampleEndPoints();
   virtual void SampleEndPointsSubProcess(const int & target_id, const int &chunk_size, PointList &endpoint_sub);
   virtual void ComputePrimitives();
+  virtual void ComputePrimitivesSubProcess(const int & target_id, const int &start_idx, const int &end_idx, PrimitiveList &primitive_list_sub);
   virtual void CalculateCloseObstacleIndex(); // Return true if at least one non-colliding
                                               // target trajectory exists
   virtual bool CheckCollision() = 0;
@@ -63,45 +65,49 @@ protected:
 
 public:
   TargetManager();
-  std::string GetName() const;
+  string GetName() const;
   bool CheckCollision(const ObstacleManager &obstacle_manager) const;
-  void SetTargetState(const std::vector<ObjectState> &target_state_list);
+  void SetTargetState(const vector<ObjectState> &target_state_list);
   void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud,
                         const PrimitiveList &structured_obstacle_poly_list);
 };
 
 class TargetManager2D : public TargetManager {
 private:
-  std::vector<LinearConstraint2D> GenLinearConstraint();
+  vector<LinearConstraint2D> GenLinearConstraint();
   vec_E<Polyhedron2D> polys;
   void SampleEndPoints() override;
   void SampleEndPointsSubProcess(const int & target_id, const int &chunk_size, PointList &endpoint_sub) override;
   void ComputePrimitives() override;
+  void ComputePrimitivesSubProcess(const int & target_id, const int &start_idx, const int &end_idx, PrimitiveList &primitive_list_sub) override;
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
   void CheckPclCollision() override;
+  void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint2D& constraints, const int &start_idx, const int &end_idx, IndexList & safe_pcl_index_sub);
   void CheckStructuredObstacleCollision() override;
   void CalculateCentroid() override;
   void CalculateSafePclIndex(
-      const std::vector<LinearConstraint2D> &safe_corridor_list);
+      const vector<LinearConstraint2D> &safe_corridor_list);
 
 public:
   bool PredictTargetTrajectory() override;
 };
 class TargetManager3D : public TargetManager {
 private:
-  std::vector<LinearConstraint3D> GenLinearConstraint();
+  vector<LinearConstraint3D> GenLinearConstraint();
   vec_E<Polyhedron3D> polys;
   void SampleEndPoints() override;
   void SampleEndPointsSubProcess(const int & target_id, const int &chunk_size, PointList &endpoint_sub) override;
   void ComputePrimitives() override;
+  void ComputePrimitivesSubProcess(const int & target_id, const int &start_idx, const int &end_idx, PrimitiveList &primitive_list_sub) override;
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
   void CheckPclCollision() override;
+  void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint3D& constraints, const int &start_idx, const int &end_idx, IndexList & safe_pcl_index_sub) ;
   void CheckStructuredObstacleCollision() override;
   void CalculateCentroid() override;
   void CalculateSafePclIndex(
-      const std::vector<LinearConstraint3D> &safe_corridor_list);
+      const vector<LinearConstraint3D> &safe_corridor_list);
 
 public:
   bool PredictTargetTrajectory() override;
