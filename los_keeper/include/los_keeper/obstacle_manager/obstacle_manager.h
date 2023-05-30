@@ -15,16 +15,19 @@ private:
   PclPointCloud cloud_;
   std::vector<ObjectState> structured_obstacle_state_list_;
   std::vector<StatePoly> structured_obstacle_poly_list_;
-  float planning_horizon_;
+  float planning_horizon_{0.0};
 
   Eigen::Affine3d pose_;
   void TranslateStateToPoly();
 
 public:
   void SetObstacleCloud(const PclPointCloud &cloud);
-  void SetStructuredObstacleState(const std::vector<ObjectState> &structured_obstacle_state_list);
-  std::vector<StatePoly> GetStructuredObstaclePolyList() { return structured_obstacle_poly_list_; };
-  PclPointCloud GetPointCloud() { return cloud_; };
+  void SetStructuredObstacleState(
+      const std::vector<ObjectState> &structured_obstacle_state_list);
+  std::vector<StatePoly> GetStructuredObstaclePolyList() {
+    return structured_obstacle_poly_list_;
+  };
+  PclPointCloud GetPointCloud();
 };
 } // namespace los_keeper
 #endif /* HEADER_OBSTACLE_MANAGER */

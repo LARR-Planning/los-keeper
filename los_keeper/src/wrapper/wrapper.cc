@@ -1,6 +1,12 @@
 #include "los_keeper/wrapper/wrapper.h"
 using namespace los_keeper;
 
+Wrapper::Wrapper() {
+  obstacle_manager_ = std::make_shared<ObstacleManager>();
+  target_manager_ = std::make_shared<TargetManager3D>();
+  trajectory_planner_ = std::make_shared<TrajectoryPlanner>();
+}
+
 std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
   if (!chasing_trajectory)
     return std::nullopt;
@@ -21,6 +27,7 @@ bool Wrapper::UpdateState(store::State &state) {
 void Wrapper::HandleStopAction() { state_.is_activated = false; }
 void Wrapper::HandleActivateAction() { state_.is_activated = true; }
 void Wrapper::HandleReplanAction() {
+  printf("Handle ReplanAction\n");
   PlanningProblem planning_problem;
   {
     std::scoped_lock lock(mutex_list_.drone_state, mutex_list_.point_cloud);
@@ -32,6 +39,8 @@ void Wrapper::HandleReplanAction() {
   const auto &structured_obstacle_poly_list = planning_problem.structured_obstacle_poly_list;
 
   PlanningResult new_planning_result;
+  new_planning_result.seq = planning_result_.seq + 1;
+
   auto target_prediction_list = target_manager_->PredictTargetList(
       planning_problem.target_state_list, point_cloud, structured_obstacle_poly_list);
   if (!target_prediction_list)
@@ -46,19 +55,22 @@ update : {
 }
 }
 
-Wrapper::Wrapper() { target_manager_.reset(new TargetManager3D); }
+void Wrapper::HandleIdleAction() { printf("Handle IdleAction\n"); }
 
 void Wrapper::OnPlanningTimerCallback() {
 
   UpdateState(state_);
   auto action = DecideAction(state_);
   switch (action) {
-  case store::Action::kInitialize:
-    HandleActivateAction();
   case store::Action::kStop:
     HandleStopAction();
-  default:
+    break;
+  case store::Action::kReplan:
     HandleReplanAction();
+    break;
+  default:
+    HandleIdleAction();
+    break;
   }
 }
 
