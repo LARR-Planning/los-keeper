@@ -1,5 +1,7 @@
 #include "los_keeper/target_manager/target_manager.h"
 
+using namespace std;
+
 bool los_keeper::TargetManager::CheckCollision(const ObstacleManager &obstacle_manager) const {
   return obstacle_manager.GetName() == "ObstacleManager";
 }
@@ -33,6 +35,9 @@ void los_keeper::TargetManager::CalculateCloseObstacleIndex() {}
 void los_keeper::TargetManager::CalculateCentroid() {}
 void los_keeper::TargetManager::CheckPclCollision() {}
 void los_keeper::TargetManager::CheckStructuredObstacleCollision() {}
+void los_keeper::TargetManager::SampleEndPointsSubProcess(const int &target_id,
+                                                          const int &chunk_size,
+                                                          los_keeper::PointList &endpoint_sub) {}
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
   SampleEndPoints();
@@ -44,31 +49,24 @@ bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
   return is_safe_traj_exist;
 }
 void los_keeper::TargetManager2D::SampleEndPoints() {
+  end_points_.clear();
+  end_points_.reserve(target_state_list_.size()); // TODO: Reserve vs Resize?
   for (int i = 0; i < target_state_list_.size(); i++) {
-    Point end_point_center{
-        float(target_state_list_[i].px + target_state_list_[i].vx * planning_horizon_),
-        float(target_state_list_[i].py + target_state_list_[i].vy * planning_horizon_),
-        float(target_state_list_[i].pz + target_state_list_[i].vz * planning_horizon_)};
-    uint n_cols = 2;
-    uint n_rows = num_sample_;
-    using namespace Eigen;
-    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> gaussian_data_eigen;
-    gaussian_data_eigen.setZero(n_rows, n_cols);
-    Eigen::Vector2f mean;
-    Eigen::Matrix2f covar;
-    mean << end_point_center.x, end_point_center.y;
-    covar << (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_), 0, 0,
-        (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_);
-    Eigen::EigenMultivariateNormal<float> normX_solver1(mean, covar);
-    Point tempPoint{end_point_center.x, end_point_center.y, end_point_center.z};
-    PointList end_points_temp;
-    for (int j = 0; j < n_rows; j++) {
-      tempPoint.x = gaussian_data_eigen.coeffRef(j, 0);
-      tempPoint.y = gaussian_data_eigen.coeffRef(j, 1);
-      tempPoint.z = end_point_center.z;
-      end_points_temp.push_back(tempPoint);
+    int num_chunk = num_sample_ / num_thread_;
+    vector<thread> worker_thread;
+    vector<vector<Point>> end_point_temp(num_thread_);
+    for (int j = 0; j < num_thread_; j++) {
+      worker_thread.emplace_back(&TargetManager2D::SampleEndPointsSubProcess, this, i,
+                                        num_chunk, std::ref(end_point_temp[j]));
     }
-    end_points_.push_back(end_points_temp);
+    for (int j = 0; j < num_thread_; j++) {
+      worker_thread[j].join();
+    }
+    for (int j = 0; j < num_thread_; j++) {
+      for (int k = 0; k < end_point_temp[j].size(); k++) {
+        end_points_[i].push_back(end_point_temp[j][k]);
+      }
+    }
   }
 }
 void los_keeper::TargetManager2D::ComputePrimitives() {
@@ -255,7 +253,7 @@ void los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
                               .py.GetBernsteinCoefficient()[m] *
                           structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
                               .py.GetBernsteinCoefficient()[l - m] // y-component
-                );
+                     );
           }
           if (value < powf(structured_obstacle_poly_list_[close_obstacle_index_[i][k]].rx +
                                primitives_list_[i][j].rx,
@@ -347,6 +345,35 @@ void los_keeper::TargetManager2D::CalculateSafePclIndex(
     primitive_safe_pcl_index_.push_back(safe_pcl_index_temp_);
   }
 }
+void los_keeper::TargetManager2D::SampleEndPointsSubProcess(const int &target_id,
+                                                            const int &chunk_size,
+                                                            los_keeper::PointList &endpoint_sub) {
+  Point end_point_center{float(target_state_list_[target_id].px +
+                               target_state_list_[target_id].vx * planning_horizon_),
+                         float(target_state_list_[target_id].py +
+                               target_state_list_[target_id].vy * planning_horizon_),
+                         float(target_state_list_[target_id].pz +
+                               target_state_list_[target_id].vz * planning_horizon_)};
+  uint n_cols = 2;
+  uint n_rows = num_sample_;
+  using namespace Eigen;
+  Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> gaussian_data_eigen;
+  gaussian_data_eigen.setZero(n_rows, n_cols);
+  Eigen::Vector2f mean;
+  Eigen::Matrix2f covar;
+  mean << end_point_center.x, end_point_center.y;
+  covar << (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_), 0, 0,
+      (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_);
+  Eigen::EigenMultivariateNormal<float> normX_solver1(mean, covar);
+  Point tempPoint{end_point_center.x, end_point_center.y, end_point_center.z};
+  PointList end_points_temp;
+  for (int j = 0; j < n_rows; j++) {
+    tempPoint.x = gaussian_data_eigen.coeffRef(j, 0);
+    tempPoint.y = gaussian_data_eigen.coeffRef(j, 1);
+    tempPoint.z = end_point_center.z;
+    endpoint_sub.push_back(tempPoint);
+  }
+}
 
 bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
   SampleEndPoints();
@@ -358,34 +385,24 @@ bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
   return is_safe_traj_exist;
 }
 void los_keeper::TargetManager3D::SampleEndPoints() {
+  end_points_.clear();
+  end_points_.reserve(target_state_list_.size()); // TODO: Reserve vs Resize?
   for (int i = 0; i < target_state_list_.size(); i++) {
-    Point end_point_center{
-        float(target_state_list_[i].px + target_state_list_[i].vx * planning_horizon_),
-        float(target_state_list_[i].py + target_state_list_[i].vy * planning_horizon_),
-        float(target_state_list_[i].pz + target_state_list_[i].vz * planning_horizon_)};
-    uint n_cols = 3;
-    uint n_rows = num_sample_;
-    using namespace Eigen;
-    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> gaussian_data_eigen;
-    gaussian_data_eigen.setZero(n_rows, n_cols);
-    Eigen::Vector3f mean;
-    Eigen::Matrix3f covar;
-    mean << end_point_center.x, end_point_center.y, end_point_center.z;
-    covar << (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_), 0, 0, 0,
-        (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_), 0, 0, 0,
-        (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_);
-    Eigen::EigenMultivariateNormal<float> normX_solver1(mean, covar);
-    gaussian_data_eigen << normX_solver1.samples(n_rows).transpose();
-
-    Point tempPoint{end_point_center.x, end_point_center.y, end_point_center.z};
-    std::vector<Point> end_points_temp;
-    for (int j = 0; j < n_rows; j++) {
-      tempPoint.x = gaussian_data_eigen.coeffRef(j, 0);
-      tempPoint.y = gaussian_data_eigen.coeffRef(j, 1);
-      tempPoint.z = gaussian_data_eigen.coeffRef(j, 2);
-      end_points_temp.push_back(tempPoint);
+    int num_chunk = num_sample_ / num_thread_;
+    vector<thread> worker_thread;
+    vector<vector<Point>> end_point_temp(num_thread_);
+    for (int j = 0; j < num_thread_; j++) {
+      worker_thread.emplace_back(&TargetManager3D::SampleEndPointsSubProcess, this, i,
+                                        num_chunk, std::ref(end_point_temp[j]));
     }
-    end_points_.push_back(end_points_temp);
+    for (int j = 0; j < num_thread_; j++) {
+      worker_thread[j].join();
+    }
+    for (int j = 0; j < num_thread_; j++) {
+      for (int k = 0; k < end_point_temp[j].size(); k++) {
+        end_points_[i].push_back(end_point_temp[j][k]);
+      }
+    }
   }
 }
 void los_keeper::TargetManager3D::CalculateCloseObstacleIndex() {
@@ -587,7 +604,7 @@ void los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
                               .pz.GetBernsteinCoefficient()[m] *
                           structured_obstacle_poly_list_[close_obstacle_index_[i][k]]
                               .pz.GetBernsteinCoefficient()[l - m] // y-component
-                );
+                     );
           }
           if (value < powf(structured_obstacle_poly_list_[close_obstacle_index_[i][k]].rx +
                                primitives_list_[i][j].rx,
@@ -685,5 +702,36 @@ void los_keeper::TargetManager3D::CalculateSafePclIndex(
         safe_pcl_index_temp_.push_back(j);
     }
     primitive_safe_pcl_index_.push_back(safe_pcl_index_temp_);
+  }
+}
+void los_keeper::TargetManager3D::SampleEndPointsSubProcess(const int &target_id,
+                                                            const int &chunk_size,
+                                                            los_keeper::PointList &endpoint_sub) {
+  Point end_point_center{float(target_state_list_[target_id].px +
+                               target_state_list_[target_id].vx * planning_horizon_),
+                         float(target_state_list_[target_id].py +
+                               target_state_list_[target_id].vy * planning_horizon_),
+                         float(target_state_list_[target_id].pz +
+                               target_state_list_[target_id].vz * planning_horizon_)};
+  uint n_cols = 3;
+  uint n_rows = chunk_size;
+  using namespace Eigen;
+  Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> gaussian_data_eigen;
+  gaussian_data_eigen.setZero(n_rows, n_cols);
+  Eigen::Vector3f mean;
+  Eigen::Matrix3f covar;
+  mean << end_point_center.x, end_point_center.y, end_point_center.z;
+  covar << (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_), 0, 0, 0,
+      (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_), 0, 0, 0,
+      (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_);
+  Eigen::EigenMultivariateNormal<float> normX_solver1(mean, covar);
+  gaussian_data_eigen << normX_solver1.samples(n_rows).transpose();
+
+  Point tempPoint{end_point_center.x, end_point_center.y, end_point_center.z};
+  for (int j = 0; j < n_rows; j++) {
+    tempPoint.x = gaussian_data_eigen.coeffRef(j, 0);
+    tempPoint.y = gaussian_data_eigen.coeffRef(j, 1);
+    tempPoint.z = gaussian_data_eigen.coeffRef(j, 2);
+    endpoint_sub.push_back(tempPoint);
   }
 }
