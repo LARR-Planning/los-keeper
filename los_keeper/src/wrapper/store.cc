@@ -5,7 +5,7 @@ namespace store {
 Action DecideAction(const State &state) {
   if (!state.is_currently_safe) {
     return Action::kStop;
-  } else if (!state.is_initialized) {
+  } else if (!state.is_data_received) {
     return Action::kInitialize;
   } else if (!state.is_planning_expired ||
              (!state.is_planning_safe || !state.is_planning_visible))

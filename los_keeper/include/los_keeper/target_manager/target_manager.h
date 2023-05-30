@@ -1,13 +1,13 @@
 #ifndef HEADER_TARGET_MANAGER
 #define HEADER_TARGET_MANAGER
 #include "los_keeper/math_utils/eigenmvn.h"
-#include "los_keeper/obstacle_manager/obstacle_manager.h"
 #include "los_keeper/third_party/decomp_util/decomp_util/decomp_base.h"
 #include "los_keeper/third_party/decomp_util/decomp_util/ellipsoid_decomp.h"
 #include "los_keeper/third_party/decomp_util/decomp_util/seed_decomp.h"
 #include "los_keeper/type_manager/type_manager.h"
 
 #include <Eigen/Core>
+
 #include <string>
 
 namespace los_keeper {
@@ -15,13 +15,11 @@ namespace los_keeper {
 class TargetManager {
 private:
 protected:
-  // INGREDIENT
   std::vector<StatePoly> structured_obstacle_poly_list_;
   pcl::PointCloud<pcl::PointXYZ> cloud_;
   std::vector<ObjectState> target_state_list_;
   int num_target_;
 
-  // PARAMETER
   int num_sample_;
   float planning_horizon_;
   float acc_max_;
@@ -42,10 +40,10 @@ protected:
   std::vector<std::vector<int>> primitive_safe_total_index_;
   std::vector<int> primitive_best_index_;
 
-  // FUNCTION
-  virtual bool
-  PredictTargetTrajectory() = 0; // Return true if at least one possible target
-                                 // trajectory exists
+  void SetTargetState(const std::vector<ObjectState> &target_state_list);
+  void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud,
+                        std::vector<StatePoly> structured_obstacle_poly_list);
+
   virtual void SampleEndPoints();
   virtual void ComputePrimitives();
   virtual void
@@ -58,11 +56,10 @@ protected:
 
 public:
   TargetManager();
-  std::string GetName() const;
-  bool CheckCollision(const ObstacleManager &obstacle_manager) const;
-  void SetTargetState(const std::vector<ObjectState> &target_state_list);
-  void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud,
-                        std::vector<StatePoly> structured_obstacle_poly_list);
+  virtual std::optional<std::vector<StatePoly>> PredictTargetList(
+      const std::vector<ObjectState> &target_state_list,
+      const PclPointCloud &point_cloud,
+      const std::vector<StatePoly> &structured_obstacle_poly_list) = 0;
 };
 
 class TargetManager2D : public TargetManager {
@@ -80,7 +77,10 @@ private:
       const std::vector<LinearConstraint2D> &safe_corridor_list);
 
 public:
-  bool PredictTargetTrajectory() override;
+  std::optional<std::vector<StatePoly>> PredictTargetList(
+      const std::vector<ObjectState> &target_state_list,
+      const PclPointCloud &point_cloud,
+      const std::vector<StatePoly> &structured_obstacle_poly_list) override;
 };
 class TargetManager3D : public TargetManager {
 private:
@@ -97,7 +97,10 @@ private:
       const std::vector<LinearConstraint3D> &safe_corridor_list);
 
 public:
-  bool PredictTargetTrajectory() override;
+  std::optional<std::vector<StatePoly>> PredictTargetList(
+      const std::vector<ObjectState> &target_state_list,
+      const PclPointCloud &point_cloud,
+      const std::vector<StatePoly> &structured_obstacle_poly_list) override;
 };
 
 } // namespace los_keeper

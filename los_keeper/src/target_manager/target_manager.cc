@@ -1,10 +1,6 @@
 #include "los_keeper/target_manager/target_manager.h"
+using namespace los_keeper;
 
-bool los_keeper::TargetManager::CheckCollision(
-    const ObstacleManager &obstacle_manager) const {
-  return obstacle_manager.GetName() == "ObstacleManager";
-}
-std::string los_keeper::TargetManager::GetName() const { return name_; }
 void los_keeper::TargetManager::SetTargetState(
     const std::vector<ObjectState> &target_state_list) {
   target_state_list_.clear();
@@ -20,14 +16,7 @@ void los_keeper::TargetManager::SetObstacleState(
   cloud_.points.clear();
   cloud_.points = cloud.points;
 }
-bool los_keeper::TargetManager::PredictTargetTrajectory() {
-  SampleEndPoints();
-  ComputePrimitives();
-  CalculateCloseObstacleIndex();
-  CheckCollision();
-  CalculateCentroid();
-  return true;
-}
+
 void los_keeper::TargetManager::SampleEndPoints() {
   for (int i = 0; i < target_state_list_.size(); i++) {
     Point end_point_center{float(target_state_list_[i].px +
@@ -102,15 +91,21 @@ void los_keeper::TargetManager::CalculateCentroid() {}
 void los_keeper::TargetManager::CheckPclCollision() {}
 void los_keeper::TargetManager::CheckStructuredObstacleCollision() {}
 
-bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
+std::optional<std::vector<StatePoly>>
+los_keeper::TargetManager2D::PredictTargetList(
+    const std::vector<ObjectState> &target_state_list,
+    const PclPointCloud &point_cloud,
+    const std::vector<StatePoly> &structured_obstacle_poly_list) {
+  SetTargetState(target_state_list);
+  SetObstacleState(point_cloud, structured_obstacle_poly_list);
   SampleEndPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();
-  bool is_safe_traj_exist = CheckCollision();
-  if (is_safe_traj_exist)
-    CalculateCentroid();
-  return is_safe_traj_exist;
+
+  // TODO (lee) extract and get prediction target
+  return std::optional<std::vector<StatePoly>>{};
 }
+
 void los_keeper::TargetManager2D::SampleEndPoints() {
   for (int i = 0; i < target_state_list_.size(); i++) {
     Point end_point_center{float(target_state_list_[i].px +
@@ -446,15 +441,21 @@ void los_keeper::TargetManager2D::CalculateSafePclIndex(
   }
 }
 
-bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
+std::optional<std::vector<StatePoly>> TargetManager3D::PredictTargetList(
+    const std::vector<ObjectState> &target_state_list,
+    const PclPointCloud &point_cloud,
+    const std::vector<StatePoly> &structured_obstacle_poly_list) {
+
+  SetTargetState(target_state_list);
+  SetObstacleState(point_cloud, structured_obstacle_poly_list);
+
   SampleEndPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();
-  bool is_safe_traj_exist = CheckCollision();
-  if (is_safe_traj_exist)
-    CalculateCentroid();
-  return is_safe_traj_exist;
-}
+  // TODO(Lee): add functions to extract prediction trajectory
+  return std::optional<std::vector<StatePoly>>{};
+};
+
 void los_keeper::TargetManager3D::SampleEndPoints() {
   for (int i = 0; i < target_state_list_.size(); i++) {
     Point end_point_center{float(target_state_list_[i].px +

@@ -4,6 +4,14 @@
 #ifndef HEADER_TYPE_MANAGER
 #define HEADER_TYPE_MANAGER
 #include "los_keeper/bernstein_polynomial_utils/bernstein_polynomial_utils.h"
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
+namespace los_keeper {
+
+typedef pcl::PointXYZ PclPoint;
+typedef pcl::PointCloud<PclPoint> PclPointCloud;
+
 struct ObjectState {
   float px;
   float py;
@@ -27,6 +35,12 @@ struct DroneState {
   float az;
 };
 
+struct Point {
+  float x{0.0};
+  float y{0.0};
+  float z{0.0};
+};
+
 struct StatePoly {
   BernsteinPoly px;
   BernsteinPoly py;
@@ -41,12 +55,8 @@ struct StatePoly {
     px.SetTimeInterval(time_interval), py.SetTimeInterval(time_interval),
         pz.SetTimeInterval(time_interval);
   };
+  Point GetPointAtTime(double time) const { return Point(); };
 };
 
-struct Point {
-  float x;
-  float y;
-  float z;
-};
-
+} // namespace los_keeper
 #endif /* HEADER_TYPE_MANAGER */
