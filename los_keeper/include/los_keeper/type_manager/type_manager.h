@@ -1,12 +1,12 @@
 //
 // Created by larr-planning on 23. 5. 16.
 //
-#ifndef HEADER_TYPE_MANAGER
-#define HEADER_TYPE_MANAGER
+#ifndef LOS_KEEPER_TYPE_MANAGER_H
+#define LOS_KEEPER_TYPE_MANAGER_H
 #include "los_keeper/bernstein_polynomial_utils/bernstein_polynomial_utils.h"
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-
+#include "thread"
 namespace los_keeper {
 
 typedef pcl::PointXYZ PclPoint;
@@ -58,5 +58,4 @@ struct StatePoly {
   Point GetPointAtTime(double time) const { return Point(); };
 };
 
-} // namespace los_keeper
-#endif /* HEADER_TYPE_MANAGER */
+#endif // LOS_KEEPER_TYPE_MANAGER_H

@@ -23,6 +23,7 @@ protected:
 
   // PARAMETER
   int num_sample_;
+  int num_thread_;
   float planning_horizon_;
   float acc_max_;
   bool is_2d_;
@@ -45,6 +46,7 @@ protected:
   virtual bool PredictTargetTrajectory() = 0; // Return true if at least one possible target
                                               // trajectory exists
   virtual void SampleEndPoints();
+  virtual void SampleEndPointsSubProcess(const int & target_id, const int &chunk_size, PointList &endpoint_sub);
   virtual void ComputePrimitives();
   virtual void CalculateCloseObstacleIndex(); // Return true if at least one non-colliding
                                               // target trajectory exists
@@ -72,6 +74,7 @@ private:
   std::vector<LinearConstraint2D> GenLinearConstraint();
   vec_E<Polyhedron2D> polys;
   void SampleEndPoints() override;
+  void SampleEndPointsSubProcess(const int & target_id, const int &chunk_size, PointList &endpoint_sub) override;
   void ComputePrimitives() override;
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
@@ -92,6 +95,7 @@ private:
   std::vector<LinearConstraint3D> GenLinearConstraint();
   vec_E<Polyhedron3D> polys;
   void SampleEndPoints() override;
+  void SampleEndPointsSubProcess(const int & target_id, const int &chunk_size, PointList &endpoint_sub) override;
   void ComputePrimitives() override;
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
