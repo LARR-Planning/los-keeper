@@ -53,17 +53,22 @@ protected:
   virtual bool PredictTargetTrajectory() = 0; // Return true if at least one possible target
                                               // trajectory exists
   virtual void SampleEndPoints();
-  virtual void SampleEndPointsSubProcess(const int & target_id, const int &chunk_size, PointList &endpoint_sub);
+  virtual void SampleEndPointsSubProcess(const int &target_id, const int &chunk_size,
+                                         PointList &endpoint_sub);
   virtual void ComputePrimitives();
-  virtual void ComputePrimitivesSubProcess(const int & target_id, const int &start_idx, const int &end_idx, PrimitiveList &primitive_list_sub);
+  virtual void ComputePrimitivesSubProcess(const int &target_id, const int &start_idx,
+                                           const int &end_idx, PrimitiveList &primitive_list_sub);
   virtual void CalculateCloseObstacleIndex(); // Return true if at least one non-colliding
                                               // target trajectory exists
   virtual bool CheckCollision() = 0;
   virtual void CheckPclCollision();
   virtual void CheckStructuredObstacleCollision();
-  virtual void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx, const int &end_idx, IndexList &safe_structured_index_sub);
+  virtual void CheckStructuredObstacleCollisionSubProcess(const int &target_id,
+                                                          const int &start_idx, const int &end_idx,
+                                                          IndexList &safe_structured_index_sub);
   virtual void CalculateCentroid();
-  virtual void CalculateCentroidSubProcess(const int &target_id, const int &start_idx, const int &end_idx, pair<int, float> &min_dist);
+  virtual void CalculateCentroidSubProcess(const int &target_id, const int &start_idx,
+                                           const int &end_idx, pair<int, float> &min_dist);
 
 public:
   TargetManager();
@@ -84,20 +89,26 @@ private:
   vector<LinearConstraint2D> GenLinearConstraint();
   vec_E<Polyhedron2D> polys;
   void SampleEndPoints() override;
-  void SampleEndPointsSubProcess(const int & target_id, const int &chunk_size, PointList &endpoint_sub) override;
+  void SampleEndPointsSubProcess(const int &target_id, const int &chunk_size,
+                                 PointList &endpoint_sub) override;
   void ComputePrimitives() override;
-  void ComputePrimitivesSubProcess(const int & target_id, const int &start_idx, const int &end_idx, PrimitiveList &primitive_list_sub) override;
+  void ComputePrimitivesSubProcess(const int &target_id, const int &start_idx, const int &end_idx,
+                                   PrimitiveList &primitive_list_sub) override;
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
   void CheckPclCollision() override;
-  void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint2D& constraints, const int &start_idx, const int &end_idx, IndexList & safe_pcl_index_sub);
+  void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint2D &constraints,
+                                   const int &start_idx, const int &end_idx,
+                                   IndexList &safe_pcl_index_sub);
   void CheckStructuredObstacleCollision() override;
-  void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx, const int &end_idx, IndexList &safe_structured_index_sub) override;
+  void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx,
+                                                  const int &end_idx,
+                                                  IndexList &safe_structured_index_sub) override;
   void CalculateCentroid() override;
-  void CalculateCentroidSubProcess(const int &target_id, const int &start_idx, const int &end_idx, pair<int, float> &min_dist) override;
+  void CalculateCentroidSubProcess(const int &target_id, const int &start_idx, const int &end_idx,
+                                   pair<int, float> &min_dist) override;
 
-  void CalculateSafePclIndex(
-      const vector<LinearConstraint2D> &safe_corridor_list);
+  void CalculateSafePclIndex(const vector<LinearConstraint2D> &safe_corridor_list);
 
 public:
   bool PredictTargetTrajectory() override;
@@ -111,19 +122,25 @@ private:
   vector<LinearConstraint3D> GenLinearConstraint();
   vec_E<Polyhedron3D> polys;
   void SampleEndPoints() override;
-  void SampleEndPointsSubProcess(const int & target_id, const int &chunk_size, PointList &endpoint_sub) override;
+  void SampleEndPointsSubProcess(const int &target_id, const int &chunk_size,
+                                 PointList &endpoint_sub) override;
   void ComputePrimitives() override;
-  void ComputePrimitivesSubProcess(const int & target_id, const int &start_idx, const int &end_idx, PrimitiveList &primitive_list_sub) override;
+  void ComputePrimitivesSubProcess(const int &target_id, const int &start_idx, const int &end_idx,
+                                   PrimitiveList &primitive_list_sub) override;
   void CalculateCloseObstacleIndex() override;
   bool CheckCollision() override;
   void CheckPclCollision() override;
-  void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint3D& constraints, const int &start_idx, const int &end_idx, IndexList & safe_pcl_index_sub) ;
+  void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint3D &constraints,
+                                   const int &start_idx, const int &end_idx,
+                                   IndexList &safe_pcl_index_sub);
   void CheckStructuredObstacleCollision() override;
-  void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx, const int &end_idx, IndexList &safe_structured_index_sub) override;
+  void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx,
+                                                  const int &end_idx,
+                                                  IndexList &safe_structured_index_sub) override;
   void CalculateCentroid() override;
-  void CalculateCentroidSubProcess(const int &target_id, const int &start_idx, const int &end_idx, pair<int, float> &min_dist) override;
-  void CalculateSafePclIndex(
-      const vector<LinearConstraint3D> &safe_corridor_list);
+  void CalculateCentroidSubProcess(const int &target_id, const int &start_idx, const int &end_idx,
+                                   pair<int, float> &min_dist) override;
+  void CalculateSafePclIndex(const vector<LinearConstraint3D> &safe_corridor_list);
 
 public:
   bool PredictTargetTrajectory() override;

@@ -45,8 +45,7 @@ void los_keeper::TargetManager::CheckStructuredObstacleCollisionSubProcess(
 void los_keeper::TargetManager::CalculateCentroidSubProcess(const int &target_id,
                                                             const int &start_idx,
                                                             const int &end_idx,
-                                                            pair<int, float> &min_dist) {
-}
+                                                            pair<int, float> &min_dist) {}
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
   SampleEndPoints();
@@ -173,19 +172,21 @@ bool los_keeper::TargetManager2D::CheckCollision() {
 void los_keeper::TargetManager2D::CalculateCentroid() {
   primitive_best_index_.clear();
   primitive_best_index_.reserve(num_target_);
-  for(int i =0 ;i<num_target_;i++){
-    int num_chunk = (int) primitive_safe_total_index_[i].size()/num_thread_;
+  for (int i = 0; i < num_target_; i++) {
+    int num_chunk = (int)primitive_safe_total_index_[i].size() / num_thread_;
     vector<thread> worker_thread;
-    vector<std::pair<int,float>> min_dist_pair_temp(num_thread_);
-    for(int j =0;j<num_thread_;j++){
-      worker_thread.emplace_back(&TargetManager2D::CalculateCentroidSubProcess,this,i,num_chunk*(j),num_chunk*(j+1),std::ref(min_dist_pair_temp[j]));
+    vector<std::pair<int, float>> min_dist_pair_temp(num_thread_);
+    for (int j = 0; j < num_thread_; j++) {
+      worker_thread.emplace_back(&TargetManager2D::CalculateCentroidSubProcess, this, i,
+                                 num_chunk * (j), num_chunk * (j + 1),
+                                 std::ref(min_dist_pair_temp[j]));
     }
-    for(int j =0;j<num_thread_;j++){
+    for (int j = 0; j < num_thread_; j++) {
       worker_thread[j].join();
     }
     float min_dist_temp = 99999999999999.0f;
-    for(int j=0;j<num_thread_;j++){
-      if(min_dist_temp>min_dist_pair_temp[j].second){
+    for (int j = 0; j < num_thread_; j++) {
+      if (min_dist_temp > min_dist_pair_temp[j].second) {
         min_dist_temp = min_dist_pair_temp[j].second;
         primitive_best_index_[i] = min_dist_pair_temp[j].first;
       }
@@ -199,19 +200,22 @@ void los_keeper::TargetManager2D::CheckPclCollision() {
 void los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
   primitive_safe_structured_obstacle_index_.reserve(num_target_);
-  for(int i =0;i<num_target_;i++){
-    int num_chunk = (int)primitives_list_[i].size()/num_thread_;
+  for (int i = 0; i < num_target_; i++) {
+    int num_chunk = (int)primitives_list_[i].size() / num_thread_;
     vector<thread> worker_thread;
     IndexListSet primitive_safe_structured_obstacle_index_temp(num_thread_);
-    for(int j=0;j<num_thread_;j++){
-      worker_thread.emplace_back(&TargetManager2D::CheckStructuredObstacleCollisionSubProcess,this,i,num_chunk*(j),num_chunk*(j+1),std::ref(primitive_safe_structured_obstacle_index_temp[j]));
+    for (int j = 0; j < num_thread_; j++) {
+      worker_thread.emplace_back(&TargetManager2D::CheckStructuredObstacleCollisionSubProcess, this,
+                                 i, num_chunk * (j), num_chunk * (j + 1),
+                                 std::ref(primitive_safe_structured_obstacle_index_temp[j]));
     }
-    for(int j =0;j<num_thread_;j++){
+    for (int j = 0; j < num_thread_; j++) {
       worker_thread[j].join();
     }
-    for(int j=0;j<num_thread_;j++){
-      for(int k =0;k<primitive_safe_structured_obstacle_index_temp[j].size();k++){
-        primitive_safe_structured_obstacle_index_[i].push_back(primitive_safe_structured_obstacle_index_temp[j][k]);
+    for (int j = 0; j < num_thread_; j++) {
+      for (int k = 0; k < primitive_safe_structured_obstacle_index_temp[j].size(); k++) {
+        primitive_safe_structured_obstacle_index_[i].push_back(
+            primitive_safe_structured_obstacle_index_temp[j][k]);
       }
     }
   }
@@ -391,37 +395,38 @@ void los_keeper::TargetManager2D::CheckStructuredObstacleCollisionSubProcess(
         for (int m = std::max(0, l - 3); m <= std::min(3, l); m++) {
           value += (float)nchoosek(3, m) * (float)nchoosek(3, l - m) / (float)nchoosek(2 * 3, l) *
                    (primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                    primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] -
+                        primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] -
                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .px.GetBernsteinCoefficient()[l - m] -
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .px.GetBernsteinCoefficient()[l - m] -
                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] *
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .px.GetBernsteinCoefficient()[m] +
                     structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .px.GetBernsteinCoefficient()[m] +
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .px.GetBernsteinCoefficient()[m] *
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .px.GetBernsteinCoefficient()[l - m] + // x-component
+                            .px.GetBernsteinCoefficient()[m] *
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .px.GetBernsteinCoefficient()[l - m] + // x-component
                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                    primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] -
+                        primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] -
                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .py.GetBernsteinCoefficient()[l - m] -
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .py.GetBernsteinCoefficient()[l - m] -
                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] *
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .py.GetBernsteinCoefficient()[m] +
                     structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .py.GetBernsteinCoefficient()[m] +
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .py.GetBernsteinCoefficient()[m] *
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .py.GetBernsteinCoefficient()[l - m] // y-component
+                            .py.GetBernsteinCoefficient()[m] *
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .py.GetBernsteinCoefficient()[l - m] // y-component
                    );
         }
-        if (value < powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rx +
-                         primitives_list_[target_id][j].rx,
-                         2) +
-                    powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].ry +
+        if (value <
+            powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rx +
+                     primitives_list_[target_id][j].rx,
+                 2) +
+                powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].ry +
                          primitives_list_[target_id][j].ry,
-                         2)) {
+                     2)) {
           flag_store_in = false;
           break;
         }
@@ -480,8 +485,8 @@ void los_keeper::TargetManager2D::CalculateCentroidSubProcess(const int &target_
     }
   }
   min_dist.second = 99999999999.0f;
-  for(int i =0;i<chunk_size;i++){
-    if(min_dist.second>distance_sum_list[i]){
+  for (int i = 0; i < chunk_size; i++) {
+    if (min_dist.second > distance_sum_list[i]) {
       min_dist.second = distance_sum_list[i];
       min_dist.first = primitive_safe_total_index_[target_id][i + start_idx];
     }
@@ -616,19 +621,21 @@ void los_keeper::TargetManager3D::ComputePrimitives() {
 void los_keeper::TargetManager3D::CalculateCentroid() {
   primitive_best_index_.clear();
   primitive_best_index_.reserve(num_target_);
-  for(int i =0 ;i<num_target_;i++){
-    int num_chunk = (int) primitive_safe_total_index_[i].size()/num_thread_;
+  for (int i = 0; i < num_target_; i++) {
+    int num_chunk = (int)primitive_safe_total_index_[i].size() / num_thread_;
     vector<thread> worker_thread;
-    vector<std::pair<int,float>> min_dist_pair_temp(num_thread_);
-    for(int j =0;j<num_thread_;j++){
-      worker_thread.emplace_back(&TargetManager3D::CalculateCentroidSubProcess,this,i,num_chunk*(j),num_chunk*(j+1),std::ref(min_dist_pair_temp[j]));
+    vector<std::pair<int, float>> min_dist_pair_temp(num_thread_);
+    for (int j = 0; j < num_thread_; j++) {
+      worker_thread.emplace_back(&TargetManager3D::CalculateCentroidSubProcess, this, i,
+                                 num_chunk * (j), num_chunk * (j + 1),
+                                 std::ref(min_dist_pair_temp[j]));
     }
-    for(int j =0;j<num_thread_;j++){
+    for (int j = 0; j < num_thread_; j++) {
       worker_thread[j].join();
     }
     float min_dist_temp = 99999999999999.0f;
-    for(int j=0;j<num_thread_;j++){
-      if(min_dist_temp>min_dist_pair_temp[j].second){
+    for (int j = 0; j < num_thread_; j++) {
+      if (min_dist_temp > min_dist_pair_temp[j].second) {
         min_dist_temp = min_dist_pair_temp[j].second;
         primitive_best_index_[i] = min_dist_pair_temp[j].first;
       }
@@ -642,19 +649,22 @@ void los_keeper::TargetManager3D::CheckPclCollision() {
 void los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
   primitive_safe_structured_obstacle_index_.reserve(num_target_);
-  for(int i =0;i<num_target_;i++){
-    int num_chunk = (int)primitives_list_[i].size()/num_thread_;
+  for (int i = 0; i < num_target_; i++) {
+    int num_chunk = (int)primitives_list_[i].size() / num_thread_;
     vector<thread> worker_thread;
     IndexListSet primitive_safe_structured_obstacle_index_temp(num_thread_);
-    for(int j=0;j<num_thread_;j++){
-      worker_thread.emplace_back(&TargetManager3D::CheckStructuredObstacleCollisionSubProcess,this,i,num_chunk*(j),num_chunk*(j+1),std::ref(primitive_safe_structured_obstacle_index_temp[j]));
+    for (int j = 0; j < num_thread_; j++) {
+      worker_thread.emplace_back(&TargetManager3D::CheckStructuredObstacleCollisionSubProcess, this,
+                                 i, num_chunk * (j), num_chunk * (j + 1),
+                                 std::ref(primitive_safe_structured_obstacle_index_temp[j]));
     }
-    for(int j =0;j<num_thread_;j++){
+    for (int j = 0; j < num_thread_; j++) {
       worker_thread[j].join();
     }
-    for(int j=0;j<num_thread_;j++){
-      for(int k =0;k<primitive_safe_structured_obstacle_index_temp[j].size();k++){
-        primitive_safe_structured_obstacle_index_[i].push_back(primitive_safe_structured_obstacle_index_temp[j][k]);
+    for (int j = 0; j < num_thread_; j++) {
+      for (int k = 0; k < primitive_safe_structured_obstacle_index_temp[j].size(); k++) {
+        primitive_safe_structured_obstacle_index_[i].push_back(
+            primitive_safe_structured_obstacle_index_temp[j][k]);
       }
     }
   }
@@ -785,45 +795,45 @@ void los_keeper::TargetManager3D::ComputePrimitivesSubProcess(
 void los_keeper::TargetManager3D::CheckPclCollisionSubProcess(
     const int &target_id, const LinearConstraint3D &constraints, const int &start_idx,
     const int &end_idx, los_keeper::IndexList &safe_pcl_index_sub) {
-    int num_constraints = (int)constraints.A().rows();
-    int num_vars = (int)constraints.A().cols(); // 3D
-    IndexList safe_pcl_index_temp_;
-    Eigen::Vector3f A_comp_temp{0.0, 0.0, 0.0};
-    float b_comp_temp{0.0};
-    std::vector<Eigen::Vector3f> LinearConstraintA;
-    std::vector<float> LinearConstraintB;
-    for (int j = 0; j < num_constraints; j++) {
-      A_comp_temp[0] = (float)constraints.A().coeffRef(j, 0);
-      A_comp_temp[1] = (float)constraints.A().coeffRef(j, 1);
-      A_comp_temp[2] = (float)constraints.A().coeffRef(j, 2);
-      b_comp_temp = (float)constraints.b().coeffRef(j, 0);
-      LinearConstraintA.push_back(A_comp_temp);
-      LinearConstraintB.push_back(b_comp_temp);
-    }
-    float temp_value = 0.0f;
-    bool is_safe = true;
-    for (int j = start_idx; j < end_idx; j++) {
-      is_safe = true;
-      for (int k = 0; k < (int)LinearConstraintA.size(); k++) {
-        for (int l = 0; l < 4; l++) {
-          temp_value = LinearConstraintA[k].coeffRef(0, 0) *
-                           primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l] +
-                       LinearConstraintA[k].coeffRef(1, 0) *
-                           primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l] +
-                       LinearConstraintA[k].coeffRef(1, 0) *
-                           primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l] -
-                       LinearConstraintB[k];
-          if (temp_value > 0.0f) {
-            is_safe = false;
-            break;
-          }
-        }
-        if (not is_safe)
+  int num_constraints = (int)constraints.A().rows();
+  int num_vars = (int)constraints.A().cols(); // 3D
+  IndexList safe_pcl_index_temp_;
+  Eigen::Vector3f A_comp_temp{0.0, 0.0, 0.0};
+  float b_comp_temp{0.0};
+  std::vector<Eigen::Vector3f> LinearConstraintA;
+  std::vector<float> LinearConstraintB;
+  for (int j = 0; j < num_constraints; j++) {
+    A_comp_temp[0] = (float)constraints.A().coeffRef(j, 0);
+    A_comp_temp[1] = (float)constraints.A().coeffRef(j, 1);
+    A_comp_temp[2] = (float)constraints.A().coeffRef(j, 2);
+    b_comp_temp = (float)constraints.b().coeffRef(j, 0);
+    LinearConstraintA.push_back(A_comp_temp);
+    LinearConstraintB.push_back(b_comp_temp);
+  }
+  float temp_value = 0.0f;
+  bool is_safe = true;
+  for (int j = start_idx; j < end_idx; j++) {
+    is_safe = true;
+    for (int k = 0; k < (int)LinearConstraintA.size(); k++) {
+      for (int l = 0; l < 4; l++) {
+        temp_value = LinearConstraintA[k].coeffRef(0, 0) *
+                         primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l] +
+                     LinearConstraintA[k].coeffRef(1, 0) *
+                         primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l] +
+                     LinearConstraintA[k].coeffRef(1, 0) *
+                         primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l] -
+                     LinearConstraintB[k];
+        if (temp_value > 0.0f) {
+          is_safe = false;
           break;
+        }
       }
-      if (is_safe)
-        safe_pcl_index_sub.push_back(j);
+      if (not is_safe)
+        break;
     }
+    if (is_safe)
+      safe_pcl_index_sub.push_back(j);
+  }
 }
 void los_keeper::TargetManager3D::CheckStructuredObstacleCollisionSubProcess(
     const int &target_id, const int &start_idx, const int &end_idx,
@@ -841,52 +851,53 @@ void los_keeper::TargetManager3D::CheckStructuredObstacleCollisionSubProcess(
         for (int m = std::max(0, l - 3); m <= std::min(3, l); m++) {
           value += (float)nchoosek(3, m) * (float)nchoosek(3, l - m) / (float)nchoosek(2 * 3, l) *
                    (primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                    primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] -
+                        primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] -
                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .px.GetBernsteinCoefficient()[l - m] -
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .px.GetBernsteinCoefficient()[l - m] -
                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] *
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .px.GetBernsteinCoefficient()[m] +
                     structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .px.GetBernsteinCoefficient()[m] +
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .px.GetBernsteinCoefficient()[m] *
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .px.GetBernsteinCoefficient()[l - m] + // x-component
+                            .px.GetBernsteinCoefficient()[m] *
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .px.GetBernsteinCoefficient()[l - m] + // x-component
                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                    primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] -
+                        primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] -
                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .py.GetBernsteinCoefficient()[l - m] -
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .py.GetBernsteinCoefficient()[l - m] -
                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] *
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .py.GetBernsteinCoefficient()[m] +
                     structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .py.GetBernsteinCoefficient()[m] +
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .py.GetBernsteinCoefficient()[m] *
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .py.GetBernsteinCoefficient()[l - m] + // y-component
+                            .py.GetBernsteinCoefficient()[m] *
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .py.GetBernsteinCoefficient()[l - m] + // y-component
                     primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[m] *
-                    primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l - m] -
+                        primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l - m] -
                     primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[m] *
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .pz.GetBernsteinCoefficient()[l - m] -
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .pz.GetBernsteinCoefficient()[l - m] -
                     primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l - m] *
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .pz.GetBernsteinCoefficient()[m] +
                     structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .pz.GetBernsteinCoefficient()[m] +
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .pz.GetBernsteinCoefficient()[m] *
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                        .pz.GetBernsteinCoefficient()[l - m] // y-component
+                            .pz.GetBernsteinCoefficient()[m] *
+                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                            .pz.GetBernsteinCoefficient()[l - m] // y-component
                    );
         }
-        if (value < powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rx +
-                         primitives_list_[target_id][j].rx,
-                         2) +
-                    powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].ry +
+        if (value <
+            powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rx +
+                     primitives_list_[target_id][j].rx,
+                 2) +
+                powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].ry +
                          primitives_list_[target_id][j].ry,
-                         2) +
-                    powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rz +
+                     2) +
+                powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rz +
                          primitives_list_[target_id][j].rz,
-                         2)) {
+                     2)) {
           flag_store_in = false;
           break;
         }
@@ -961,12 +972,10 @@ void los_keeper::TargetManager3D::CalculateCentroidSubProcess(const int &target_
     }
   }
   min_dist.second = 99999999999.0f;
-  for(int i =0;i<chunk_size;i++){
-    if(min_dist.second>distance_sum_list[i]){
+  for (int i = 0; i < chunk_size; i++) {
+    if (min_dist.second > distance_sum_list[i]) {
       min_dist.second = distance_sum_list[i];
       min_dist.first = primitive_safe_total_index_[target_id][i + start_idx];
     }
   }
-
-
 }
