@@ -2,7 +2,8 @@
 
 using namespace los_keeper;
 
-DroneState los_keeper::ConverToDroneState(const DroneStateMsg &drone_state_msg) {
+DroneState
+los_keeper::ConvertToDroneState(const DroneStateMsg &drone_state_msg) {
   return DroneState();
 }
 
@@ -16,7 +17,7 @@ los_keeper::ConvertToPointCloud(const PointCloudMsg &point_cloud_msg) {
   return pcl::PointCloud<pcl::PointXYZ>();
 }
 
-InputMsg los_keeper::ConverToInputMsg(const int drone_input) {
+InputMsg los_keeper::ConvertToInputMsg(const int drone_input) {
 
   // TODO(@): change argument
   return InputMsg();
@@ -30,7 +31,7 @@ void LosServer::ControlTimerCallback() {
 }
 
 void LosServer::DroneStateCallback(const DroneStateMsg::SharedPtr msg) {
-  auto drone_state = ConverToDroneState(*msg);
+  auto drone_state = ConvertToDroneState(*msg);
   wrapper_.SetDroneState(drone_state);
 };
 
