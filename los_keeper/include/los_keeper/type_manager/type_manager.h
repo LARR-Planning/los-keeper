@@ -5,6 +5,7 @@
 #define LOS_KEEPER_TYPE_MANAGER_H
 #include "los_keeper/bernstein_polynomial_utils/bernstein_polynomial_utils.h"
 #include <thread>
+
 struct ObjectState {
   float px;
   float py;
@@ -48,5 +49,13 @@ struct Point {
   float y;
   float z;
 };
+using namespace std;
+typedef vector<int> IndexList;
+typedef vector<IndexList> IndexListSet;
+typedef vector<Point> PointList;
+typedef vector<PointList> PointListSet;
+typedef vector<StatePoly> PrimitiveList;
+typedef vector<PrimitiveList> PrimitiveListSet;
+
 
 #endif // LOS_KEEPER_TYPE_MANAGER_H

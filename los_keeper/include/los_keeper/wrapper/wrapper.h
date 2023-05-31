@@ -16,7 +16,7 @@ private:
   std::string name_{"Wrapper"};
   ObstacleManager obstacle_manager_;
   TargetManager *target_manager_;
-  TrajectoryPlanner trajectory_planner_;
+  TrajectoryPlanner *trajectory_planner_;
 
   std::string long_string_;
   std::string short_string_;

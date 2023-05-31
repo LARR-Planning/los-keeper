@@ -12,12 +12,7 @@
 using namespace std;
 
 namespace los_keeper {
-typedef vector<int> IndexList;
-typedef vector<IndexList> IndexListSet;
-typedef vector<Point> PointList;
-typedef vector<PointList> PointListSet;
-typedef vector<StatePoly> PrimitiveList;
-typedef vector<PrimitiveList> PrimitiveListSet;
+
 
 class TargetManager {
 private:
