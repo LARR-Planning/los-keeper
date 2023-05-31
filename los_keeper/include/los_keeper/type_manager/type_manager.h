@@ -57,5 +57,13 @@ struct StatePoly {
   };
   Point GetPointAtTime(double time) const { return Point(); };
 };
+using namespace std;
+typedef vector<int> IndexList;
+typedef vector<IndexList> IndexListSet;
+typedef vector<Point> PointList;
+typedef vector<PointList> PointListSet;
+typedef vector<StatePoly> PrimitiveList;
+typedef vector<PrimitiveList> PrimitiveListSet;
+}
 
 #endif // LOS_KEEPER_TYPE_MANAGER_H

@@ -35,13 +35,13 @@ void los_keeper::TargetManager::CheckPclCollision() {}
 void los_keeper::TargetManager::CheckStructuredObstacleCollision() {}
 void los_keeper::TargetManager::SampleEndPointsSubProcess(const int &target_id,
                                                           const int &chunk_size,
-                                                          los_keeper::PointList &endpoint_sub) {}
+                                                          PointList &endpoint_sub) {}
 void los_keeper::TargetManager::ComputePrimitivesSubProcess(
     const int &target_id, const int &start_idx, const int &end_idx,
-    los_keeper::PrimitiveList &primitive_list_sub) {}
+    PrimitiveList &primitive_list_sub) {}
 void los_keeper::TargetManager::CheckStructuredObstacleCollisionSubProcess(
     const int &target_id, const int &start_idx, const int &end_idx,
-    los_keeper::IndexList &safe_structured_index_sub) {}
+    IndexList &safe_structured_index_sub) {}
 void los_keeper::TargetManager::CalculateCentroidSubProcess(const int &target_id,
                                                             const int &start_idx,
                                                             const int &end_idx,
@@ -269,7 +269,7 @@ void los_keeper::TargetManager2D::CalculateSafePclIndex(
 }
 void los_keeper::TargetManager2D::SampleEndPointsSubProcess(const int &target_id,
                                                             const int &chunk_size,
-                                                            los_keeper::PointList &endpoint_sub) {
+                                                            PointList &endpoint_sub) {
   Point end_point_center{float(target_state_list_[target_id].px +
                                target_state_list_[target_id].vx * planning_horizon_),
                          float(target_state_list_[target_id].py +
@@ -298,7 +298,7 @@ void los_keeper::TargetManager2D::SampleEndPointsSubProcess(const int &target_id
 }
 void los_keeper::TargetManager2D::ComputePrimitivesSubProcess(
     const int &target_id, const int &start_idx, const int &end_idx,
-    los_keeper::PrimitiveList &primitive_list_sub) {
+    PrimitiveList &primitive_list_sub) {
 
   StatePoly primitive_temp;
   primitive_temp.SetDegree(3);
@@ -342,7 +342,7 @@ void los_keeper::TargetManager2D::ComputePrimitivesSubProcess(
 }
 void los_keeper::TargetManager2D::CheckPclCollisionSubProcess(
     const int &target_id, const LinearConstraint2D &constraints, const int &start_idx,
-    const int &end_idx, los_keeper::IndexList &safe_pcl_index_sub) {
+    const int &end_idx, IndexList &safe_pcl_index_sub) {
 
   int num_constraints = (int)constraints.A().rows();
   int num_vars = (int)constraints.A().cols(); // 2D
@@ -382,7 +382,7 @@ void los_keeper::TargetManager2D::CheckPclCollisionSubProcess(
 }
 void los_keeper::TargetManager2D::CheckStructuredObstacleCollisionSubProcess(
     const int &target_id, const int &start_idx, const int &end_idx,
-    los_keeper::IndexList &safe_structured_index_sub) {
+    IndexList &safe_structured_index_sub) {
   bool flag_store_in = true;
   bool flag_store_out = true;
   float value;
@@ -720,7 +720,7 @@ void los_keeper::TargetManager3D::CalculateSafePclIndex(
 }
 void los_keeper::TargetManager3D::SampleEndPointsSubProcess(const int &target_id,
                                                             const int &chunk_size,
-                                                            los_keeper::PointList &endpoint_sub) {
+                                                            PointList &endpoint_sub) {
   Point end_point_center{float(target_state_list_[target_id].px +
                                target_state_list_[target_id].vx * planning_horizon_),
                          float(target_state_list_[target_id].py +
@@ -751,7 +751,7 @@ void los_keeper::TargetManager3D::SampleEndPointsSubProcess(const int &target_id
 }
 void los_keeper::TargetManager3D::ComputePrimitivesSubProcess(
     const int &target_id, const int &start_idx, const int &end_idx,
-    los_keeper::PrimitiveList &primitive_list_sub) {
+    PrimitiveList &primitive_list_sub) {
 
   StatePoly primitive_temp;
   primitive_temp.SetDegree(3);
@@ -794,7 +794,7 @@ void los_keeper::TargetManager3D::ComputePrimitivesSubProcess(
 }
 void los_keeper::TargetManager3D::CheckPclCollisionSubProcess(
     const int &target_id, const LinearConstraint3D &constraints, const int &start_idx,
-    const int &end_idx, los_keeper::IndexList &safe_pcl_index_sub) {
+    const int &end_idx, IndexList &safe_pcl_index_sub) {
   int num_constraints = (int)constraints.A().rows();
   int num_vars = (int)constraints.A().cols(); // 3D
   IndexList safe_pcl_index_temp_;
@@ -837,7 +837,7 @@ void los_keeper::TargetManager3D::CheckPclCollisionSubProcess(
 }
 void los_keeper::TargetManager3D::CheckStructuredObstacleCollisionSubProcess(
     const int &target_id, const int &start_idx, const int &end_idx,
-    los_keeper::IndexList &safe_structured_index_sub) {
+    IndexList &safe_structured_index_sub) {
 
   bool flag_store_in = true;
   bool flag_store_out = true;
