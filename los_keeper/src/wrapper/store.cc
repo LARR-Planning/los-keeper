@@ -3,7 +3,7 @@
 namespace los_keeper {
 namespace store {
 Action DecideAction(const State &state) {
-  if (!state.is_activated)
+  if (!state.is_activated || !state.is_data_received)
     return Action::kIdle;
   if (!state.is_currently_safe) {
     return Action::kStop;

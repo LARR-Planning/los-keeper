@@ -15,15 +15,36 @@ protected:
   virtual void TearDown() override {}
 };
 
-TEST_F(ApiTestFixture, ControlShouldNullWhenNotActivated) {
+TEST_F(ApiTestFixture, PlanningShouldNullWhenNotActivatedOrNotReceived) {
   wrapper_.OnPlanningTimerCallback();
   EXPECT_EQ(wrapper_.GenerateControlInputFromPlanning(0), std::nullopt);
 
   wrapper_.OnStartServiceCallback();
   wrapper_.OnPlanningTimerCallback();
-  wrapper_.OnPlanningTimerCallback();
 
-  EXPECT_EQ(wrapper_.planning_result_.seq, 2);
+  EXPECT_EQ(wrapper_.planning_result_.seq, 0);
+}
+
+TEST_F(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived) {
+  DroneState drone_state;
+  drone_state.t_sec = 1.0;
+  wrapper_.SetDroneState(drone_state);
+
+  PclPointCloud point_cloud;
+  point_cloud.push_back(PclPoint(0, 0, 0));
+  wrapper_.SetPoints(point_cloud);
+
+  wrapper_.OnStartServiceCallback();
+
+  // replan tried as planning is not safe
+  wrapper_.OnPlanningTimerCallback();
+  EXPECT_EQ(wrapper_.state_.is_data_received, true);
+
+  // planning tried, having seq = 1
+  EXPECT_GT(wrapper_.planning_result_.seq, 0);
+
+  // However, planning is not valid as prediction is not successful.
+  EXPECT_EQ(wrapper_.planning_result_.chasing_trajectory, std::nullopt);
 }
 
 } // namespace los_keeper

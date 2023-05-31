@@ -13,15 +13,16 @@ std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
   return Point();
 }
 
-bool Wrapper::UpdateState(store::State &state) {
-  bool is_changed = false;
-  // state.is_initialized =
-  //     obstacle_manager_->IsInitialized() && target_manager_->IsInitialized();
+void Wrapper::UpdateState(store::State &state) {
+  // TODO(@): add object state, etc,.
+  state.is_data_received =
+      !obstacle_manager_->GetPointCloud().empty() && drone_state_.t_sec > 0.0;
+
+  // TODO(@): implement these
   // state.is_currently_safe =
   //     obstacle_manager_->CheckCollisionOnPosition(drone_state);
   // state.is_planning_safe =
   //     obstacle_manager_->CheckCollisionAlongTrajectory(drone_state);
-  return is_changed;
 }
 
 void Wrapper::HandleStopAction() { state_.is_activated = false; }

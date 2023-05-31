@@ -30,7 +30,8 @@ struct PlanningResult {
 class Wrapper {
   // TODO(@): removed when releasing
   friend class ApiTestFixture;
-  FRIEND_TEST(ApiTestFixture, ControlShouldNullWhenNotActivated);
+  FRIEND_TEST(ApiTestFixture, PlanningShouldNullWhenNotActivatedOrNotReceived);
+  FRIEND_TEST(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived);
 
 private:
   DroneState drone_state_;
@@ -47,7 +48,7 @@ private:
   std::shared_ptr<TargetManager> target_manager_;
   std::shared_ptr<TrajectoryPlanner> trajectory_planner_;
 
-  bool UpdateState(store::State &state);
+  void UpdateState(store::State &state);
 
   void HandleStopAction();
   void HandleActivateAction();
