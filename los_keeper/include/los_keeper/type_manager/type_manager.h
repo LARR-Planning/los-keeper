@@ -4,13 +4,13 @@
 #ifndef LOS_KEEPER_TYPE_MANAGER_H
 #define LOS_KEEPER_TYPE_MANAGER_H
 #include "los_keeper/bernstein_polynomial_utils/bernstein_polynomial_utils.h"
+#include "thread"
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include "thread"
 namespace los_keeper {
 typedef pcl::PointXYZ PclPoint;
 typedef pcl::PointCloud<PclPoint> PclPointCloud;
-}
+} // namespace los_keeper
 struct ObjectState {
   float px;
   float py;

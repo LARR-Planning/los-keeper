@@ -20,8 +20,7 @@ int nchoosek(int n, int r) {
   }
 }
 
-BernsteinPoly::BernsteinPoly(float time_interval[], float bernstein_coeff[],
-                             const int &degree) {
+BernsteinPoly::BernsteinPoly(float time_interval[], float bernstein_coeff[], const int &degree) {
   time_interval_[0] = time_interval[0];
   time_interval_[1] = time_interval[1];
   auto *new_coeff = new float[degree_ + 1];
@@ -71,8 +70,7 @@ BernsteinPoly BernsteinPoly::ElevateDegree(int m) {
 
   for (int i = 0; i < poly_order + 1; i++) {
     for (int j = 0; j <= m - poly_order; j++)
-      mat[i][i + j] = float(nchoosek(m - poly_order, j)) *
-                      float(nchoosek(poly_order, i)) /
+      mat[i][i + j] = float(nchoosek(m - poly_order, j)) * float(nchoosek(poly_order, i)) /
                       float(nchoosek(m, i + j));
   }
   float element;
@@ -117,44 +115,38 @@ BernsteinPoly BernsteinPoly::operator*(const BernsteinPoly &rhs) {
     for (int i = 0; i <= n_lhs + n_rhs; i++) {
       if (i <= n_rhs) {
         for (int j = i; j >= 0; j--)
-          dataPtr[i] += float(nchoosek(n_lhs, j)) *
-                        float(nchoosek(n_rhs, i - j)) /
-                        float(nchoosek(n_lhs + n_rhs, i)) *
-                        this->bernstein_coeff_[j] * rhs.bernstein_coeff_[i - j];
+          dataPtr[i] += float(nchoosek(n_lhs, j)) * float(nchoosek(n_rhs, i - j)) /
+                        float(nchoosek(n_lhs + n_rhs, i)) * this->bernstein_coeff_[j] *
+                        rhs.bernstein_coeff_[i - j];
       } else if ((i >= n_rhs + 1) and (i <= n_lhs)) {
         for (int j = i; j >= i - n_rhs; j--)
-          dataPtr[i] += float(nchoosek(n_lhs, j)) *
-                        float(nchoosek(n_rhs, i - j)) /
-                        float(nchoosek(n_lhs + n_rhs, i)) *
-                        this->bernstein_coeff_[j] * rhs.bernstein_coeff_[i - j];
+          dataPtr[i] += float(nchoosek(n_lhs, j)) * float(nchoosek(n_rhs, i - j)) /
+                        float(nchoosek(n_lhs + n_rhs, i)) * this->bernstein_coeff_[j] *
+                        rhs.bernstein_coeff_[i - j];
       } else if (i >= n_lhs + 1) {
         for (int j = n_lhs; j >= i - n_rhs; j--)
-          dataPtr[i] += float(nchoosek(n_lhs, j)) *
-                        float(nchoosek(n_rhs, i - j)) /
-                        float(nchoosek(n_lhs + n_rhs, i)) *
-                        this->bernstein_coeff_[j] * rhs.bernstein_coeff_[i - j];
+          dataPtr[i] += float(nchoosek(n_lhs, j)) * float(nchoosek(n_rhs, i - j)) /
+                        float(nchoosek(n_lhs + n_rhs, i)) * this->bernstein_coeff_[j] *
+                        rhs.bernstein_coeff_[i - j];
       }
     }
   } else { // n_lhs<n_rhs
     for (int i = 0; i <= n_lhs + n_rhs; i++) {
       if (i <= n_lhs) {
         for (int j = i; j >= 0; j--)
-          dataPtr[i] += float(nchoosek(n_rhs, j)) *
-                        float(nchoosek(n_lhs, i - j)) /
-                        float(nchoosek(n_lhs + n_rhs, i)) *
-                        rhs.bernstein_coeff_[j] * this->bernstein_coeff_[i - j];
+          dataPtr[i] += float(nchoosek(n_rhs, j)) * float(nchoosek(n_lhs, i - j)) /
+                        float(nchoosek(n_lhs + n_rhs, i)) * rhs.bernstein_coeff_[j] *
+                        this->bernstein_coeff_[i - j];
       } else if ((i >= n_lhs + 1) and (i <= n_rhs)) {
         for (int j = i; j >= i - n_rhs; j--)
-          dataPtr[i] += float(nchoosek(n_rhs, j)) *
-                        float(nchoosek(n_lhs, i - j)) /
-                        float(nchoosek(n_lhs + n_rhs, i)) *
-                        rhs.bernstein_coeff_[j] * this->bernstein_coeff_[i - j];
+          dataPtr[i] += float(nchoosek(n_rhs, j)) * float(nchoosek(n_lhs, i - j)) /
+                        float(nchoosek(n_lhs + n_rhs, i)) * rhs.bernstein_coeff_[j] *
+                        this->bernstein_coeff_[i - j];
       } else if (i >= n_rhs + 1) {
         for (int j = n_rhs; j >= i - n_lhs; j--)
-          dataPtr[i] += float(nchoosek(n_rhs, j)) *
-                        float(nchoosek(n_lhs, i - j)) /
-                        float(nchoosek(n_lhs + n_rhs, i)) *
-                        rhs.bernstein_coeff_[j] * this->bernstein_coeff_[i - j];
+          dataPtr[i] += float(nchoosek(n_rhs, j)) * float(nchoosek(n_lhs, i - j)) /
+                        float(nchoosek(n_lhs + n_rhs, i)) * rhs.bernstein_coeff_[j] *
+                        this->bernstein_coeff_[i - j];
       }
     }
   }

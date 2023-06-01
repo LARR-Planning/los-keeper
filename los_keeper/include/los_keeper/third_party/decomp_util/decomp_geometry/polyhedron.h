@@ -17,9 +17,7 @@ template <int Dim> struct Hyperplane {
   decimal_t signed_dist(const Vecf<Dim> &pt) const { return n_.dot(pt - p_); }
 
   /// Calculate the distance from point
-  decimal_t dist(const Vecf<Dim> &pt) const {
-    return std::abs(signed_dist(pt));
-  }
+  decimal_t dist(const Vecf<Dim> &pt) const { return std::abs(signed_dist(pt)); }
 
   /// Point on the plane
   Vecf<Dim> p_;

@@ -8,8 +8,7 @@
 #include "los_keeper/third_party/decomp_util/decomp_basis/data_type.h"
 
 /// Template for transforming a vector
-template <class T, class TF>
-vec_E<T> transform_vec(const vec_E<T> &t, const TF &tf) {
+template <class T, class TF> vec_E<T> transform_vec(const vec_E<T> &t, const TF &tf) {
   vec_E<T> new_t;
   for (const auto &it : t)
     new_t.push_back(tf * it);

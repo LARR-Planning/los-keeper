@@ -15,9 +15,7 @@ template <int Dim> struct Ellipsoid {
   Ellipsoid(const Matf<Dim, Dim> &C, const Vecf<Dim> &d) : C_(C), d_(d) {}
 
   /// Calculate distance to the center
-  decimal_t dist(const Vecf<Dim> &pt) const {
-    return (C_.inverse() * (pt - d_)).norm();
-  }
+  decimal_t dist(const Vecf<Dim> &pt) const { return (C_.inverse() * (pt - d_)).norm(); }
 
   /// Check if the point is inside, non-exclusive
   bool inside(const Vecf<Dim> &pt) const { return dist(pt) <= 1; }
@@ -54,8 +52,7 @@ template <int Dim> struct Ellipsoid {
   }
 
   /// Sample n points along the contour
-  template <int U = Dim>
-  typename std::enable_if<U == 2, vec_Vecf<U>>::type sample(int num) const {
+  template <int U = Dim> typename std::enable_if<U == 2, vec_Vecf<U>>::type sample(int num) const {
     vec_Vecf<Dim> pts;
     decimal_t dyaw = M_PI * 2 / num;
     for (decimal_t yaw = 0; yaw < M_PI * 2; yaw += dyaw) {
