@@ -2,8 +2,7 @@
 
 using namespace los_keeper;
 
-DroneState
-los_keeper::ConverToDroneState(const DroneStateMsg &drone_state_msg) {
+DroneState los_keeper::ConverToDroneState(const DroneStateMsg &drone_state_msg) {
   return DroneState();
 }
 
@@ -43,25 +42,20 @@ void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
 LosServer::LosServer() : Node("los_server_node") {
 
   rclcpp::SubscriptionOptions options;
-  options.callback_group =
-      create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   state_subscriber_ = create_subscription<DroneStateMsg>(
       "~/state", rclcpp::QoS(10),
-      std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1),
-      options);
+      std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1), options);
 
-  options.callback_group =
-      create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   points_subscriber_ = create_subscription<PointCloudMsg>(
       "~/points", rclcpp::QoS(10),
-      std::bind(&LosServer::PointsCallback, this, std::placeholders::_1),
-      options);
+      std::bind(&LosServer::PointsCallback, this, std::placeholders::_1), options);
 
-  planning_timer_ = this->create_wall_timer(
-      10ms, std::bind(&LosServer::PlanningTimerCallback, this));
+  planning_timer_ =
+      this->create_wall_timer(10ms, std::bind(&LosServer::PlanningTimerCallback, this));
 
-  control_timer_ = this->create_wall_timer(
-      10ms, std::bind(&LosServer::ControlTimerCallback, this));
+  control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
 }

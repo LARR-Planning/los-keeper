@@ -17,8 +17,7 @@ using namespace std::chrono_literals;
 using DroneStateMsg = los_keeper_msgs::msg::DroneState;
 using InputMsg = los_keeper_msgs::msg::JerkControlInput;
 using PointCloudMsg = sensor_msgs::msg::PointCloud2;
-using PointCloudSubscriber =
-    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr;
+using PointCloudSubscriber = rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr;
 using StateSubscriber = rclcpp::Subscription<DroneStateMsg>::SharedPtr;
 using InputPublisher = rclcpp::Publisher<InputMsg>::SharedPtr;
 using RosTimer = rclcpp::TimerBase::SharedPtr;
@@ -26,8 +25,7 @@ using RosTimer = rclcpp::TimerBase::SharedPtr;
 namespace los_keeper {
 
 DroneState ConverToDroneState(const DroneStateMsg &drone_state_msg);
-pcl::PointCloud<pcl::PointXYZ>
-ConvertToPointCloud(const PointCloudMsg &point_cloud_msg);
+pcl::PointCloud<pcl::PointXYZ> ConvertToPointCloud(const PointCloudMsg &point_cloud_msg);
 InputMsg ConverToInputMsg(const int drone_input);
 
 class LosServer : public rclcpp::Node {
