@@ -77,9 +77,9 @@ public:
       const PclPointCloud &point_cloud,
       const std::vector<StatePoly> &structured_obstacle_poly_list) = 0;
 };
-};
 
-class TargetManager2D : public TargetManager {
+
+class TargetManager2D : public los_keeper::TargetManager {
 private:
   vector<LinearConstraint2D> GenLinearConstraint();
   vec_E<Polyhedron2D> polys;
@@ -109,10 +109,10 @@ public:
   bool PredictTargetTrajectory() override;
   std::optional<std::vector<StatePoly>> PredictTargetList(
       const std::vector<ObjectState> &target_state_list,
-      const PclPointCloud &point_cloud,
+      const los_keeper::PclPointCloud &point_cloud,
       const std::vector<StatePoly> &structured_obstacle_poly_list) override;
 };
-class TargetManager3D : public TargetManager {
+class TargetManager3D : public los_keeper::TargetManager {
 private:
   vector<LinearConstraint3D> GenLinearConstraint();
   vec_E<Polyhedron3D> polys;
@@ -144,7 +144,6 @@ public:
       const PclPointCloud &point_cloud,
       const std::vector<StatePoly> &structured_obstacle_poly_list) override;
 };
-
-} // namespace los_keeper
+};
 
 #endif /* HEADER_TARGET_MANAGER */

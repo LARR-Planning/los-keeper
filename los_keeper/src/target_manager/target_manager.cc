@@ -1,7 +1,8 @@
 #include "los_keeper/target_manager/target_manager.h"
 using namespace std;
 bool los_keeper::TargetManager::CheckCollision(const ObstacleManager &obstacle_manager) const {
-  return obstacle_manager.GetName() == "ObstacleManager";
+    return false;
+    //  return obstacle_manager.GetName() == "ObstacleManager";
 }
 std::string los_keeper::TargetManager::GetName() const { return name_; }
 void los_keeper::TargetManager::SetTargetState(const std::vector<ObjectState> &target_state_list) {
@@ -493,6 +494,13 @@ void los_keeper::TargetManager2D::CalculateCentroidSubProcess(const int &target_
   }
 }
 
+std::optional<std::vector<StatePoly>>
+los_keeper::TargetManager2D::PredictTargetList(const vector<ObjectState> &target_state_list,
+                                               const los_keeper::PclPointCloud &point_cloud,
+                                               const vector<StatePoly> &structured_obstacle_poly_list) {
+    return std::optional<std::vector<StatePoly>>();
+}
+
 bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
   SampleEndPoints();
   ComputePrimitives();
@@ -978,4 +986,11 @@ void los_keeper::TargetManager3D::CalculateCentroidSubProcess(const int &target_
       min_dist.first = primitive_safe_total_index_[target_id][i + start_idx];
     }
   }
+}
+
+std::optional<std::vector<StatePoly>>
+los_keeper::TargetManager3D::PredictTargetList(const vector<ObjectState> &target_state_list,
+                                               const los_keeper::PclPointCloud &point_cloud,
+                                               const vector<StatePoly> &structured_obstacle_poly_list) {
+    return std::optional<std::vector<StatePoly>>();
 }

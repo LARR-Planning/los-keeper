@@ -8,10 +8,9 @@
 #include <pcl/point_types.h>
 #include "thread"
 namespace los_keeper {
-
 typedef pcl::PointXYZ PclPoint;
 typedef pcl::PointCloud<PclPoint> PclPointCloud;
-
+}
 struct ObjectState {
   float px;
   float py;
@@ -57,6 +56,7 @@ struct StatePoly {
   };
   Point GetPointAtTime(double time) const { return Point(); };
 };
+
 using namespace std;
 typedef vector<int> IndexList;
 typedef vector<IndexList> IndexListSet;
@@ -64,6 +64,4 @@ typedef vector<Point> PointList;
 typedef vector<PointList> PointListSet;
 typedef vector<StatePoly> PrimitiveList;
 typedef vector<PrimitiveList> PrimitiveListSet;
-}
-
 #endif // LOS_KEEPER_TYPE_MANAGER_H
