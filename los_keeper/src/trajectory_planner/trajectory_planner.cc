@@ -64,12 +64,61 @@ void TrajectoryPlanner2D::SampleShootingPointsSubProcess(const int &target_id,
   }
 }
 void TrajectoryPlanner2D::ComputePrimitives() {
-
-
+  primitives_list_.clear();
+  int num_chunk = num_sample_/num_thread_;
+  vector<thread> worker_thread;
+  PrimitiveListSet primitive_list_temp;
+  for(int i = 0; i<num_thread_;i++){
+    worker_thread.emplace_back(&TrajectoryPlanner2D::ComputePrimitivesSubProcess,this,num_chunk*(i),num_chunk*(i+1),std::ref(primitive_list_temp[i]));
+  }
+  for(int i = 0;i<num_thread_;i++){
+    worker_thread[i].join();
+  }
+  for(int i =0;i<num_thread_;i++){
+    for(int j =0;j<primitive_list_temp[i].size();j++){
+      primitives_list_.push_back(primitive_list_temp[i][j]);
+    }
+  }
 }
 void TrajectoryPlanner2D::ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                                       PrimitiveList &primitive_list_sub) {
+  StatePoly primitive_temp;
+  primitive_temp.SetDegree(5);
+  float time_interval_temp[2]{0.0, planning_horizon_};
+  primitive_temp.SetTimeInterval(time_interval_temp);
+  float bernstein_coeff_temp[6];
+  float planning_horizon_square = planning_horizon_*planning_horizon_;
 
+  for(int i = start_idx; i<end_idx;i++){
+    { // x-component
+     bernstein_coeff_temp[0] = drone_state_.px;
+     bernstein_coeff_temp[1] = drone_state_.px + 0.2f*planning_horizon_*drone_state_.vx;
+     bernstein_coeff_temp[2] = drone_state_.px + 0.4f*planning_horizon_*drone_state_.vx + 0.05f*planning_horizon_square*drone_state_.ax;
+     bernstein_coeff_temp[3] = 0.16666667f*shooting_points_[i].x + 0.83333333f*drone_state_.px + 0.43333333f*planning_horizon_*drone_state_.vx + 0.06666667f*planning_horizon_square*drone_state_.ax;
+     bernstein_coeff_temp[4] = 0.5f*shooting_points_[i].x + 0.5f*drone_state_.px + 0.3f*planning_horizon_*drone_state_.vx + 0.05f*planning_horizon_square*drone_state_.ax;
+     bernstein_coeff_temp[5] = shooting_points_[i].x;
+     primitive_temp.px.SetBernsteinCoeff(bernstein_coeff_temp);
+    }
+    { // y-component
+     bernstein_coeff_temp[0] = drone_state_.py;
+     bernstein_coeff_temp[1] = drone_state_.py + 0.2f*planning_horizon_*drone_state_.vy;
+     bernstein_coeff_temp[2] = drone_state_.py + 0.4f*planning_horizon_*drone_state_.vy + 0.05f*planning_horizon_square*drone_state_.ay;
+     bernstein_coeff_temp[3] = 0.16666667f*shooting_points_[i].y + 0.83333333f*drone_state_.py + 0.43333333f*planning_horizon_*drone_state_.vy + 0.06666667f*planning_horizon_square*drone_state_.ay;
+     bernstein_coeff_temp[4] = 0.5f*shooting_points_[i].y + 0.5f*drone_state_.py + 0.3f*planning_horizon_*drone_state_.vy + 0.05f*planning_horizon_square*drone_state_.ay;
+     bernstein_coeff_temp[5] = shooting_points_[i].y;
+     primitive_temp.py.SetBernsteinCoeff(bernstein_coeff_temp);
+    }
+    { // z-component
+      bernstein_coeff_temp[0] = drone_state_.pz;
+      bernstein_coeff_temp[1] = drone_state_.pz + 0.2f*planning_horizon_*drone_state_.vz;
+      bernstein_coeff_temp[2] = drone_state_.pz + 0.4f*planning_horizon_*drone_state_.vz;
+      bernstein_coeff_temp[3] = drone_state_.pz + 0.6f*planning_horizon_*drone_state_.vz;
+      bernstein_coeff_temp[4] = drone_state_.pz + 0.8f*planning_horizon_*drone_state_.vz;
+      bernstein_coeff_temp[5] = drone_state_.pz + 1.0f*planning_horizon_*drone_state_.vz;
+      primitive_temp.pz.SetBernsteinCoeff(bernstein_coeff_temp);
+    }
+    primitive_list_sub.push_back(primitive_temp);
+  }
 }
 bool TrajectoryPlanner3D::PlanKeeperTrajectory() {
   SampleShootingPoints();
@@ -117,9 +166,61 @@ void TrajectoryPlanner3D::SampleShootingPointsSubProcess(const int &target_id,
   }
 }
 void TrajectoryPlanner3D::ComputePrimitives() {
-
+  primitives_list_.clear();
+  int num_chunk = num_sample_/num_thread_;
+  vector<thread> worker_thread;
+  PrimitiveListSet primitive_list_temp;
+  for(int i = 0; i<num_thread_;i++){
+    worker_thread.emplace_back(&TrajectoryPlanner3D::ComputePrimitivesSubProcess,this,num_chunk*(i),num_chunk*(i+1),std::ref(primitive_list_temp[i]));
+  }
+  for(int i = 0;i<num_thread_;i++){
+    worker_thread[i].join();
+  }
+  for(int i =0;i<num_thread_;i++){
+    for(int j =0;j<primitive_list_temp[i].size();j++){
+      primitives_list_.push_back(primitive_list_temp[i][j]);
+    }
+  }
 }
 void TrajectoryPlanner3D::ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                                       PrimitiveList &primitive_list_sub) {
-
+  StatePoly primitive_temp;
+  primitive_temp.SetDegree(5);
+  float time_interval_temp[2]{0.0, planning_horizon_};
+  primitive_temp.SetTimeInterval(time_interval_temp);
+  float bernstein_coeff_temp[6];
+  float planning_horizon_square = planning_horizon_*planning_horizon_;
+  primitive_temp.rx = rx_;
+  primitive_temp.ry = ry_;
+  primitive_temp.rz = rz_;
+  for(int i = start_idx; i<end_idx;i++){
+    { // x-component
+      bernstein_coeff_temp[0] = drone_state_.px;
+      bernstein_coeff_temp[1] = drone_state_.px + 0.2f*planning_horizon_*drone_state_.vx;
+      bernstein_coeff_temp[2] = drone_state_.px + 0.4f*planning_horizon_*drone_state_.vx + 0.05f*planning_horizon_square*drone_state_.ax;
+      bernstein_coeff_temp[3] = 0.16666667f*shooting_points_[i].x + 0.83333333f*drone_state_.px + 0.43333333f*planning_horizon_*drone_state_.vx + 0.06666667f*planning_horizon_square*drone_state_.ax;
+      bernstein_coeff_temp[4] = 0.5f*shooting_points_[i].x + 0.5f*drone_state_.px + 0.3f*planning_horizon_*drone_state_.vx + 0.05f*planning_horizon_square*drone_state_.ax;
+      bernstein_coeff_temp[5] = shooting_points_[i].x;
+      primitive_temp.px.SetBernsteinCoeff(bernstein_coeff_temp);
+    }
+    { // y-component
+      bernstein_coeff_temp[0] = drone_state_.py;
+      bernstein_coeff_temp[1] = drone_state_.py + 0.2f*planning_horizon_*drone_state_.vy;
+      bernstein_coeff_temp[2] = drone_state_.py + 0.4f*planning_horizon_*drone_state_.vy + 0.05f*planning_horizon_square*drone_state_.ay;
+      bernstein_coeff_temp[3] = 0.16666667f*shooting_points_[i].y + 0.83333333f*drone_state_.py + 0.43333333f*planning_horizon_*drone_state_.vy + 0.06666667f*planning_horizon_square*drone_state_.ay;
+      bernstein_coeff_temp[4] = 0.5f*shooting_points_[i].y + 0.5f*drone_state_.py + 0.3f*planning_horizon_*drone_state_.vy + 0.05f*planning_horizon_square*drone_state_.ay;
+      bernstein_coeff_temp[5] = shooting_points_[i].y;
+      primitive_temp.py.SetBernsteinCoeff(bernstein_coeff_temp);
+    }
+    { // z-component
+      bernstein_coeff_temp[0] = drone_state_.pz;
+      bernstein_coeff_temp[1] = drone_state_.pz + 0.2f*planning_horizon_*drone_state_.vz;
+      bernstein_coeff_temp[2] = drone_state_.pz + 0.4f*planning_horizon_*drone_state_.vz + 0.05f*planning_horizon_square*drone_state_.az;
+      bernstein_coeff_temp[3] = 0.16666667f*shooting_points_[i].z + 0.83333333f*drone_state_.pz + 0.43333333f*planning_horizon_*drone_state_.vz + 0.06666667f*planning_horizon_square*drone_state_.az;
+      bernstein_coeff_temp[4] = 0.5f*shooting_points_[i].z + 0.5f*drone_state_.pz + 0.3f*planning_horizon_*drone_state_.vz + 0.05f*planning_horizon_square*drone_state_.az;
+      bernstein_coeff_temp[5] = shooting_points_[i].z;
+      primitive_temp.pz.SetBernsteinCoeff(bernstein_coeff_temp);
+    }
+    primitive_list_sub.push_back(primitive_temp);
+  }
 }

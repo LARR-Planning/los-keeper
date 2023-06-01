@@ -15,8 +15,8 @@ protected:
   vector<StatePoly> structured_obstacle_poly_list_;
   pcl::PointCloud<pcl::PointXYZ> cloud_;
   PrimitiveList target_trajectory_list_;
-
   int num_target_;
+  DroneState drone_state_;
 
   // PARAMETER
   int num_sample_;
@@ -29,6 +29,9 @@ protected:
   float detect_range_;
   float virtual_pcl_zone_width_;
   float virtual_pcl_zone_height_;
+  float rx_;
+  float ry_;
+  float rz_;
 
   PointList shooting_points_;
   PrimitiveList  primitives_list_;
