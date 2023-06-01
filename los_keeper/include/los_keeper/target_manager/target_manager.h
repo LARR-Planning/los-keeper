@@ -13,7 +13,6 @@ using namespace std;
 
 namespace los_keeper {
 
-
 class TargetManager {
 private:
 protected:
@@ -72,12 +71,11 @@ public:
   void SetTargetState(const vector<ObjectState> &target_state_list);
   void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud,
                         const PrimitiveList &structured_obstacle_poly_list);
-  virtual std::optional<std::vector<StatePoly>> PredictTargetList(
-      const std::vector<ObjectState> &target_state_list,
-      const PclPointCloud &point_cloud,
-      const std::vector<StatePoly> &structured_obstacle_poly_list) = 0;
+  virtual std::optional<std::vector<StatePoly>>
+  PredictTargetList(const std::vector<ObjectState> &target_state_list,
+                    const PclPointCloud &point_cloud,
+                    const std::vector<StatePoly> &structured_obstacle_poly_list) = 0;
 };
-
 
 class TargetManager2D : public los_keeper::TargetManager {
 private:
@@ -107,10 +105,10 @@ private:
 
 public:
   bool PredictTargetTrajectory() override;
-  std::optional<std::vector<StatePoly>> PredictTargetList(
-      const std::vector<ObjectState> &target_state_list,
-      const los_keeper::PclPointCloud &point_cloud,
-      const std::vector<StatePoly> &structured_obstacle_poly_list) override;
+  std::optional<std::vector<StatePoly>>
+  PredictTargetList(const std::vector<ObjectState> &target_state_list,
+                    const los_keeper::PclPointCloud &point_cloud,
+                    const std::vector<StatePoly> &structured_obstacle_poly_list) override;
 };
 class TargetManager3D : public los_keeper::TargetManager {
 private:
@@ -139,11 +137,11 @@ private:
 
 public:
   bool PredictTargetTrajectory() override;
-  std::optional<std::vector<StatePoly>> PredictTargetList(
-      const std::vector<ObjectState> &target_state_list,
-      const PclPointCloud &point_cloud,
-      const std::vector<StatePoly> &structured_obstacle_poly_list) override;
+  std::optional<std::vector<StatePoly>>
+  PredictTargetList(const std::vector<ObjectState> &target_state_list,
+                    const PclPointCloud &point_cloud,
+                    const std::vector<StatePoly> &structured_obstacle_poly_list) override;
 };
-};
+}; // namespace los_keeper
 
 #endif /* HEADER_TARGET_MANAGER */
