@@ -33,8 +33,6 @@ protected:
   float virtual_pcl_zone_height_;
   bool is_lite;
 
-  string name_{"TargetManager"};
-
   PointListSet end_points_;          // Sampled End Points from Dynamics Model
   PrimitiveListSet primitives_list_; // Raw primitives from
   IndexListSet close_obstacle_index_;
@@ -66,8 +64,7 @@ protected:
 
 public:
   TargetManager();
-  string GetName() const;
-  bool CheckCollision(const ObstacleManager &obstacle_manager) const;
+
   void SetTargetState(const vector<ObjectState> &target_state_list);
   void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud,
                         const PrimitiveList &structured_obstacle_poly_list);

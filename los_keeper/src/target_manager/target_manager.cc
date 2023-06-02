@@ -2,13 +2,6 @@
 
 using namespace std;
 
-bool los_keeper::TargetManager::CheckCollision(const ObstacleManager &obstacle_manager) const {
-  return false;
-  //  return obstacle_manager.GetName() == "ObstacleManager";
-}
-
-std::string los_keeper::TargetManager::GetName() const { return name_; }
-
 void los_keeper::TargetManager::SetTargetState(const std::vector<ObjectState> &target_state_list) {
   target_state_list_.clear();
   target_state_list_ = target_state_list;
