@@ -58,6 +58,13 @@ void los_keeper::TargetManager::CalculateCentroidSubProcess(const int &target_id
                                                             const int &start_idx,
                                                             const int &end_idx,
                                                             pair<int, float> &min_dist) {}
+PrimitiveList los_keeper::TargetManager::GetTargetPredictionResult() {
+  PrimitiveList prediction_result;
+  for (int i = 0; i < num_target_; i++)
+    prediction_result.push_back(primitives_list_[i][primitive_best_index_[i]]);
+
+  return prediction_result;
+}
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
   SampleEndPoints();

@@ -72,6 +72,7 @@ public:
   PredictTargetList(const std::vector<ObjectState> &target_state_list,
                     const PclPointCloud &point_cloud,
                     const std::vector<StatePoly> &structured_obstacle_poly_list) = 0;
+  PrimitiveList GetTargetPredictionResult();
 };
 
 class TargetManager2D : public los_keeper::TargetManager {
