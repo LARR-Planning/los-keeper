@@ -12,6 +12,7 @@
 
 template <int Dim> struct Ellipsoid {
   Ellipsoid() {}
+
   Ellipsoid(const Matf<Dim, Dim> &C, const Vecf<Dim> &d) : C_(C), d_(d) {}
 
   /// Calculate distance to the center

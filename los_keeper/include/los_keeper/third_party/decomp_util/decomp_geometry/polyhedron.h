@@ -11,6 +11,7 @@
 /// Hyperplane class
 template <int Dim> struct Hyperplane {
   Hyperplane() {}
+
   Hyperplane(const Vecf<Dim> &p, const Vecf<Dim> &n) : p_(p), n_(n) {}
 
   /// Calculate the signed distance from point
@@ -34,6 +35,7 @@ typedef Hyperplane<3> Hyperplane3D;
 template <int Dim> struct Polyhedron {
   /// Null constructor
   Polyhedron() {}
+
   /// Construct from Hyperplane array
   Polyhedron(const vec_E<Hyperplane<Dim>> &vs) : vs_(vs) {}
 
@@ -87,8 +89,10 @@ typedef Polyhedron<3> Polyhedron3D;
 template <int Dim> struct LinearConstraint {
   /// Null constructor
   LinearConstraint() {}
+
   /// Construct from \f$A, b\f$ directly, s.t \f$Ax < b\f$
   LinearConstraint(const MatDNf<Dim> &A, const VecDf &b) : A_(A), b_(b) {}
+
   /**
    * @brief Construct from a inside point and hyperplane array
    * @param p0 point that is inside

@@ -4,6 +4,7 @@
  */
 #ifndef SEED_DECOMP_H
 #define SEED_DECOMP_H
+
 #include "los_keeper/third_party/decomp_util/decomp_util/decomp_base.h"
 
 /**
@@ -15,12 +16,14 @@ template <int Dim> class SeedDecomp : public DecompBase<Dim> {
 public:
   /// Simple constructor
   SeedDecomp(){};
+
   /**
    * @brief Basic constructor
    * @param p1 One end of the line seg
    * @param p2 The other end of the line seg
    */
   SeedDecomp(const Vecf<Dim> &p) : p_(p) {}
+
   /**
    * @brief Inflate the seed with a sphere
    * @param radius Robot radius

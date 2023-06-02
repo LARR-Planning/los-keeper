@@ -4,6 +4,7 @@
 
 #ifndef LOS_KEEPER_EIGENMVN_H
 #define LOS_KEEPER_EIGENMVN_H
+
 #include <Eigen/Dense>
 #include <random>
 /*
@@ -24,6 +25,7 @@ template <typename Scalar> struct scalar_normal_dist_op {
   template <typename Index> inline const Scalar operator()(Index, Index = 0) const {
     return norm(rng);
   }
+
   inline void seed(const uint64_t &s) { rng.seed(s); }
 };
 
@@ -62,6 +64,7 @@ public:
   }
 
   void setMean(const Matrix<Scalar, Dynamic, 1> &mean) { _mean = mean; }
+
   void setCovar(const Matrix<Scalar, Dynamic, Dynamic> &covar) {
     _covar = covar;
 

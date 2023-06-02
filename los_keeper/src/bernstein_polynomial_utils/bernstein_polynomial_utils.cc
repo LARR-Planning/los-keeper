@@ -5,6 +5,7 @@ int factorial(int num) {
     return 1;
   return num * factorial(num - 1);
 }
+
 int nchoosek(int n, int r) {
   long long int number = 1;
   if (n - r > r) {

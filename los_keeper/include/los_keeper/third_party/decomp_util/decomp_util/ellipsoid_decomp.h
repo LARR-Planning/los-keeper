@@ -18,6 +18,7 @@ template <int Dim> class EllipsoidDecomp {
 public:
   /// Simple constructor
   EllipsoidDecomp() {}
+
   /**
    * @brief Basic constructor
    * @param origin The origin of the global bounding box

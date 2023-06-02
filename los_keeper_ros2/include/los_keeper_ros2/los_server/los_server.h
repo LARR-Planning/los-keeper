@@ -1,5 +1,6 @@
 #ifndef HEADER_LOS_SERVER
 #define HEADER_LOS_SERVER
+
 #include "los_keeper/wrapper/wrapper.h"
 #include "los_keeper_msgs/msg/drone_state.hpp"
 #include "los_keeper_msgs/msg/jerk_control_input.hpp"
@@ -25,7 +26,9 @@ using RosTimer = rclcpp::TimerBase::SharedPtr;
 namespace los_keeper {
 
 DroneState ConverToDroneState(const DroneStateMsg &drone_state_msg);
+
 pcl::PointCloud<pcl::PointXYZ> ConvertToPointCloud(const PointCloudMsg &point_cloud_msg);
+
 InputMsg ConverToInputMsg(const int drone_input);
 
 class LosServer : public rclcpp::Node {
@@ -40,8 +43,11 @@ private:
   RosTimer control_timer_;
 
   void DroneStateCallback(const DroneStateMsg::SharedPtr msg);
+
   void PointsCallback(const PointCloudMsg::SharedPtr msg);
+
   void PlanningTimerCallback();
+
   void ControlTimerCallback();
 
 public:

@@ -17,6 +17,7 @@ template <int Dim> class IterativeDecomp : public EllipsoidDecomp<Dim> {
 public:
   /// Simple constructor
   IterativeDecomp() {}
+
   /**
    * @brief Basic constructor
    * @param origin The origin of the global bounding box
@@ -24,6 +25,7 @@ public:
    */
   IterativeDecomp(const Vecf<Dim> &origin, const Vecf<Dim> &dim)
       : EllipsoidDecomp<Dim>(origin, dim) {}
+
   /**
    * @brief Decomposition thread
    * @param path_raw The path to dilate

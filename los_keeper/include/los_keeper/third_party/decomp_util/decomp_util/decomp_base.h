@@ -4,6 +4,7 @@
  */
 #ifndef DECOMP_BASE_H
 #define DECOMP_BASE_H
+
 #include "los_keeper/third_party/decomp_util/decomp_geometry/ellipsoid.h"
 #include "los_keeper/third_party/decomp_util/decomp_geometry/polyhedron.h"
 
@@ -18,6 +19,7 @@ template <int Dim> class DecompBase {
 public:
   /// Null constructor
   DecompBase() {}
+
   /**
    * @brief Adding local bounding box around line seg
    * @param Dim Distance in corresponding axis
@@ -94,4 +96,5 @@ protected:
   /// Local bounding box along the line segment
   Vecf<Dim> local_bbox_{Vecf<Dim>::Zero()};
 };
+
 #endif

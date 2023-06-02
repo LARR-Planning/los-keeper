@@ -4,6 +4,7 @@
  */
 #ifndef LINE_SEGMENT_H
 #define LINE_SEGMENT_H
+
 #include "los_keeper/third_party/decomp_util/decomp_geometry/geometric_utils.h"
 #include "los_keeper/third_party/decomp_util/decomp_util/decomp_base.h"
 
@@ -16,12 +17,14 @@ template <int Dim> class LineSegment : public DecompBase<Dim> {
 public:
   /// Simple constructor
   LineSegment(){};
+
   /**
    * @brief Basic constructor
    * @param p1 One end of the line seg
    * @param p2 The other end of the line seg
    */
   LineSegment(const Vecf<Dim> &p1, const Vecf<Dim> &p2) : p1_(p1), p2_(p2) {}
+
   /**
    * @brief Infalte the line segment
    * @param radius the offset added to the long semi-axis
