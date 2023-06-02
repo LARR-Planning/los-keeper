@@ -29,20 +29,16 @@ void Wrapper::HandleReplanAction() {
     // TODO(@): add target_state_list and structure_obstacle_poly_list
   }
   const auto &point_cloud = planning_problem.point_cloud;
-  const auto &structured_obstacle_poly_list =
-      planning_problem.structured_obstacle_poly_list;
+  const auto &structured_obstacle_poly_list = planning_problem.structured_obstacle_poly_list;
 
   PlanningResult new_planning_result;
   auto target_prediction_list = target_manager_->PredictTargetList(
-      planning_problem.target_state_list, point_cloud,
-      structured_obstacle_poly_list);
+      planning_problem.target_state_list, point_cloud, structured_obstacle_poly_list);
   if (!target_prediction_list)
     goto update;
 
-  new_planning_result.chasing_trajectory =
-      trajectory_planner_->ComputeChasingTrajectory(
-          target_prediction_list.value(), point_cloud,
-          structured_obstacle_poly_list);
+  new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
+      target_prediction_list.value(), point_cloud, structured_obstacle_poly_list);
 
 update : {
   std::unique_lock<std::mutex> lock(mutex_list_.control);

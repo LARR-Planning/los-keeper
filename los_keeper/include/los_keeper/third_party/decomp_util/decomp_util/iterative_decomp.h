@@ -31,8 +31,8 @@ public:
    * @param offset_x offset added to the long semi-axis, default is 0
    * @param res Resolution to downsample the path
    */
-  void dilate_iter(const vec_Vecf<Dim> &path_raw, int iter_num = 5,
-                   decimal_t res = 0, decimal_t offset_x = 0) {
+  void dilate_iter(const vec_Vecf<Dim> &path_raw, int iter_num = 5, decimal_t res = 0,
+                   decimal_t offset_x = 0) {
     vec_Vecf<Dim> path = res > 0 ? downsample(path_raw, res) : path_raw;
     this->dilate(path, offset_x);
     vec_Vecf<Dim> new_path = simplify(path);

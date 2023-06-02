@@ -22,11 +22,8 @@ private:
 
 public:
   void SetObstacleCloud(const PclPointCloud &cloud);
-  void SetStructuredObstacleState(
-      const std::vector<ObjectState> &structured_obstacle_state_list);
-  std::vector<StatePoly> GetStructuredObstaclePolyList() {
-    return structured_obstacle_poly_list_;
-  };
+  void SetStructuredObstacleState(const std::vector<ObjectState> &structured_obstacle_state_list);
+  std::vector<StatePoly> GetStructuredObstaclePolyList() { return structured_obstacle_poly_list_; };
   PclPointCloud GetPointCloud() { return cloud_; };
 };
 } // namespace los_keeper

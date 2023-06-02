@@ -2,8 +2,7 @@
 
 using namespace los_keeper;
 
-void ObstacleManager::SetObstacleCloud(
-    const pcl::PointCloud<pcl::PointXYZ> &cloud) {
+void ObstacleManager::SetObstacleCloud(const pcl::PointCloud<pcl::PointXYZ> &cloud) {
   cloud_.points = cloud.points;
 }
 
@@ -18,16 +17,13 @@ void ObstacleManager::TranslateStateToPoly() {
   StatePoly temp_state_poly;
   temp_state_poly.SetDegree(3);
   for (const auto &i : structured_obstacle_state_list_) {
-    float temp_coefficient_x[4]{i.px,
-                                i.px + 0.33333333f * i.vx * planning_horizon_,
+    float temp_coefficient_x[4]{i.px, i.px + 0.33333333f * i.vx * planning_horizon_,
                                 i.px + 0.66666667f * i.vx * planning_horizon_,
                                 i.px + i.vx * planning_horizon_};
-    float temp_coefficient_y[4]{i.py,
-                                i.py + 0.33333333f * i.vy * planning_horizon_,
+    float temp_coefficient_y[4]{i.py, i.py + 0.33333333f * i.vy * planning_horizon_,
                                 i.py + 0.66666667f * i.vy * planning_horizon_,
                                 i.py + i.vy * planning_horizon_};
-    float temp_coefficient_z[4]{i.pz,
-                                i.pz + 0.33333333f * i.vz * planning_horizon_,
+    float temp_coefficient_z[4]{i.pz, i.pz + 0.33333333f * i.vz * planning_horizon_,
                                 i.pz + 0.66666667f * i.vz * planning_horizon_,
                                 i.pz + i.vz * planning_horizon_};
     temp_state_poly.px.SetBernsteinCoeff(temp_coefficient_x);

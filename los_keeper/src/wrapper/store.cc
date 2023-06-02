@@ -7,8 +7,7 @@ Action DecideAction(const State &state) {
     return Action::kStop;
   } else if (!state.is_data_received) {
     return Action::kInitialize;
-  } else if (!state.is_planning_expired ||
-             (!state.is_planning_safe || !state.is_planning_visible))
+  } else if (!state.is_planning_expired || (!state.is_planning_safe || !state.is_planning_visible))
     return Action::kReplan;
 }
 } // namespace store

@@ -16,13 +16,12 @@
 namespace Eigen {
 namespace internal {
 template <typename Scalar> struct scalar_normal_dist_op {
-  static std::mt19937 rng; // The uniform pseudo-random algorithm
+  static std::mt19937 rng;                       // The uniform pseudo-random algorithm
   mutable std::normal_distribution<Scalar> norm; // gaussian combinator
 
   EIGEN_EMPTY_STRUCT_CTOR(scalar_normal_dist_op)
 
-  template <typename Index>
-  inline const Scalar operator()(Index, Index = 0) const {
+  template <typename Index> inline const Scalar operator()(Index, Index = 0) const {
     return norm(rng);
   }
   inline void seed(const uint64_t &s) { rng.seed(s); }
@@ -30,13 +29,8 @@ template <typename Scalar> struct scalar_normal_dist_op {
 
 template <typename Scalar> std::mt19937 scalar_normal_dist_op<Scalar>::rng;
 
-template <typename Scalar>
-struct functor_traits<scalar_normal_dist_op<Scalar>> {
-  enum {
-    Cost = 50 * NumTraits<Scalar>::MulCost,
-    PacketAccess = false,
-    IsRepeatable = false
-  };
+template <typename Scalar> struct functor_traits<scalar_normal_dist_op<Scalar>> {
+  enum { Cost = 50 * NumTraits<Scalar>::MulCost, PacketAccess = false, IsRepeatable = false };
 };
 
 } // end namespace internal
@@ -85,23 +79,19 @@ public:
         // Use cholesky solver
         _transform = cholSolver.matrixL();
       } else {
-        throw std::runtime_error(
-            "Failed computing the Cholesky decomposition. Use solver instead");
+        throw std::runtime_error("Failed computing the Cholesky decomposition. Use solver instead");
       }
     } else {
-      _eigenSolver =
-          SelfAdjointEigenSolver<Matrix<Scalar, Dynamic, Dynamic>>(_covar);
-      _transform =
-          _eigenSolver.eigenvectors() *
-          _eigenSolver.eigenvalues().cwiseMax(0).cwiseSqrt().asDiagonal();
+      _eigenSolver = SelfAdjointEigenSolver<Matrix<Scalar, Dynamic, Dynamic>>(_covar);
+      _transform = _eigenSolver.eigenvectors() *
+                   _eigenSolver.eigenvalues().cwiseMax(0).cwiseSqrt().asDiagonal();
     }
   }
 
   /// Draw nn samples from the gaussian and return them
   /// as columns in a Dynamic by nn matrix
   Matrix<Scalar, Dynamic, -1> samples(int nn) {
-    return (_transform *
-            Matrix<Scalar, Dynamic, -1>::NullaryExpr(_covar.rows(), nn, randN))
+    return (_transform * Matrix<Scalar, Dynamic, -1>::NullaryExpr(_covar.rows(), nn, randN))
                .colwise() +
            _mean;
   }

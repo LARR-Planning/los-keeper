@@ -17,8 +17,7 @@ public:
     degree_ = -1;
     bernstein_coeff_ = nullptr;
   };
-  BernsteinPoly(float time_interval[], float bernstein_coeff[],
-                const int &degree);
+  BernsteinPoly(float time_interval[], float bernstein_coeff[], const int &degree);
   BernsteinPoly(const BernsteinPoly &bern_poly) {
     time_interval_[0] = bern_poly.time_interval_[0];
     time_interval_[1] = bern_poly.time_interval_[1];
@@ -30,9 +29,7 @@ public:
   void SetBernsteinCoeff(float bernstein_coeff_[]);
   void SetDegree(int degree_);
   int GetDegree() const;
-  bool IsSet() {
-    return ((time_interval_ != nullptr) and (bernstein_coeff_ != nullptr));
-  };
+  bool IsSet() { return ((time_interval_ != nullptr) and (bernstein_coeff_ != nullptr)); };
   float *GetTimeInterval() { return time_interval_; };
   float *GetBernsteinCoefficient() { return this->bernstein_coeff_; };
   float GetValue(float t);

@@ -83,8 +83,7 @@ protected:
   }
 
   /// Find ellipsoid in 2D
-  template <int U = Dim>
-  typename std::enable_if<U == 2>::type find_ellipsoid(double offset_x) {
+  template <int U = Dim> typename std::enable_if<U == 2>::type find_ellipsoid(double offset_x) {
     const decimal_t f = (p1_ - p2_).norm() / 2;
     Matf<Dim, Dim> C = f * Matf<Dim, Dim>::Identity();
     Vecf<Dim> axes = Vecf<Dim>::Constant(f);
@@ -128,8 +127,7 @@ protected:
   }
 
   /// Find ellipsoid in 3D
-  template <int U = Dim>
-  typename std::enable_if<U == 3>::type find_ellipsoid(double offset_x) {
+  template <int U = Dim> typename std::enable_if<U == 3>::type find_ellipsoid(double offset_x) {
     const decimal_t f = (p1_ - p2_).norm() / 2;
     Matf<Dim, Dim> C = f * Matf<Dim, Dim>::Identity();
     Vecf<Dim> axes = Vecf<Dim>::Constant(f);
@@ -185,8 +183,7 @@ protected:
     while (!obs_inside.empty()) {
       const auto pw = E.closest_point(obs_inside);
       Vec3f p = Rf.transpose() * (pw - E.d());
-      decimal_t dd =
-          1 - std::pow(p(0) / axes(0), 2) - std::pow(p(1) / axes(1), 2);
+      decimal_t dd = 1 - std::pow(p(0) / axes(0), 2) - std::pow(p(1) / axes(1), 2);
       if (dd > epsilon_)
         axes(2) = std::abs(p(2)) / std::sqrt(dd);
       Matf<Dim, Dim> new_C = Matf<Dim, Dim>::Identity();

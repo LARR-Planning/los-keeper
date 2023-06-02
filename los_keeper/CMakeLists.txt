@@ -8,8 +8,8 @@ file(GLOB_RECURSE LIBRARY_HDRS "include/los_keeper/*.h")
 file(GLOB_RECURSE LIBRARY_SRCS "src/*.cc")
 file(GLOB TEST_SRCS "test/*.cc")
 
-add_library(${PROJECT_NAME} STATIC ${LIBRARY_SRCS} ${LIBRARY_HDRS})
-target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES})
+add_library(${PROJECT_NAME} STATIC ${LIBRARY_SRCS} ${LIBRARY_HDRS} )
+target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES} pthread)
 target_include_directories(
   ${PROJECT_NAME}
   PUBLIC ${EIGEN_INCLUDE_DIR} ${PCL_INCLUDE_DIRS}
