@@ -13,50 +13,56 @@
 
 namespace los_keeper {
 
-struct PlanningProblem {
-  DroneState drone_state;
-  PclPointCloud point_cloud;
-  std::vector<StatePoly> structured_obstacle_poly_list;
-  std::vector<ObjectState> target_state_list;
-};
+    struct PlanningProblem {
+        DroneState drone_state;
+        PclPointCloud point_cloud;
+        std::vector<StatePoly> structured_obstacle_poly_list;
+        std::vector<ObjectState> target_state_list;
+    };
 
-struct PlanningResult {
-  std::optional<StatePoly> chasing_trajectory;
-  std::optional<Point> GetPointAtTime(double t) const;
-};
+    struct PlanningResult {
+        std::optional<StatePoly> chasing_trajectory;
 
-class Wrapper {
-private:
-  DroneState drone_state_;
-  store::State state_;
-  PlanningResult planning_result_;
+        std::optional<Point> GetPointAtTime(double t) const;
+    };
 
-  struct {
-    std::mutex drone_state;
-    std::mutex point_cloud;
-    std::mutex control;
-  } mutex_list_;
+    class Wrapper {
+    private:
+        DroneState drone_state_;
+        store::State state_;
+        PlanningResult planning_result_;
 
-  std::shared_ptr<ObstacleManager> obstacle_manager_;
-  std::shared_ptr<TargetManager> target_manager_;
-  std::shared_ptr<TrajectoryPlanner> trajectory_planner_;
+        struct {
+            std::mutex drone_state;
+            std::mutex point_cloud;
+            std::mutex control;
+        } mutex_list_;
 
-  bool UpdateState(store::State &state);
+        std::shared_ptr<ObstacleManager> obstacle_manager_;
+        std::shared_ptr<TargetManager> target_manager_;
+        std::shared_ptr<TrajectoryPlanner> trajectory_planner_;
 
-  void HandleStopAction();
-  void HandleActivateAction();
-  void HandleReplanAction();
+        bool UpdateState(store::State &state);
 
-public:
-  Wrapper();
+        void HandleStopAction();
 
-  void SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points);
-  void SetDroneState(const DroneState &drone_state);
-  std::optional<Point> GenerateControlInputFromPlanning(double time);
+        void HandleActivateAction();
 
-  void OnPlanningTimerCallback();
-  void OnStartServiceCallback();
-};
+        void HandleReplanAction();
+
+    public:
+        Wrapper();
+
+        void SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points);
+
+        void SetDroneState(const DroneState &drone_state);
+
+        std::optional<Point> GenerateControlInputFromPlanning(double time);
+
+        void OnPlanningTimerCallback();
+
+        void OnStartServiceCallback();
+    };
 } // namespace los_keeper
 
 #endif /* HEADER_WRAPPER */
