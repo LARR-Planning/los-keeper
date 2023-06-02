@@ -15,8 +15,7 @@ private:
   PclPointCloud cloud_;
   std::vector<ObjectState> structured_obstacle_state_list_;
   std::vector<StatePoly> structured_obstacle_poly_list_;
-  float planning_horizon_;
-
+  float planning_horizon_; // TODO: This should be a parameter too.
   Eigen::Affine3d pose_;
   void TranslateStateToPoly();
 
