@@ -30,10 +30,6 @@ TEST_F(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived) {
   drone_state.t_sec = 1.0;
   wrapper_.SetDroneState(drone_state);
 
-  PclPointCloud point_cloud;
-  point_cloud.push_back(PclPoint(0, 0, 0));
-  wrapper_.SetPoints(point_cloud);
-
   wrapper_.OnStartServiceCallback();
 
   // replan tried as planning is not safe

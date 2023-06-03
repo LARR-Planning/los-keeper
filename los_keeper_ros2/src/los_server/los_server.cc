@@ -2,8 +2,7 @@
 
 using namespace los_keeper;
 
-DroneState
-los_keeper::ConvertToDroneState(const DroneStateMsg &drone_state_msg) {
+DroneState los_keeper::ConvertToDroneState(const DroneStateMsg &drone_state_msg) {
   return DroneState();
 }
 

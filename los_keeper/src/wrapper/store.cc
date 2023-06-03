@@ -8,8 +8,7 @@ Action DecideAction(const State &state) {
   if (!state.is_currently_safe) {
     return Action::kStop;
   }
-  if (!state.is_planning_expired ||
-      (!state.is_planning_safe || !state.is_planning_visible))
+  if (!state.is_planning_expired || (!state.is_planning_safe || !state.is_planning_visible))
     return Action::kReplan;
   return Action::kIdle;
 }

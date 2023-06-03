@@ -3,8 +3,9 @@ using namespace los_keeper;
 
 Wrapper::Wrapper() {
   obstacle_manager_ = std::make_shared<ObstacleManager>();
+  // TODO(@): parameterize this instantiation
   target_manager_ = std::make_shared<TargetManager3D>();
-  trajectory_planner_ = std::make_shared<TrajectoryPlanner>();
+  trajectory_planner_ = std::make_shared<TrajectoryPlanner3D>();
 }
 
 std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
@@ -14,11 +15,10 @@ std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
 }
 
 void Wrapper::UpdateState(store::State &state) {
-  // TODO(@): add object state, etc,.
-  state.is_data_received =
-      !obstacle_manager_->GetPointCloud().empty() && drone_state_.t_sec > 0.0;
+  // TODO(Jeon): add object state, etc,.
+  state.is_data_received = drone_state_.t_sec > 0.0;
 
-  // TODO(@): implement these
+  // TODO(Lee): implement these
   // state.is_currently_safe =
   //     obstacle_manager_->CheckCollisionOnPosition(drone_state);
   // state.is_planning_safe =
