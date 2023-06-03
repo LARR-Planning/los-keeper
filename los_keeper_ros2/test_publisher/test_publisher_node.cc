@@ -20,8 +20,8 @@ using RosTimer = rclcpp::TimerBase::SharedPtr;
 class TestPublisherNode : public rclcpp::Node {
 public:
   TestPublisherNode() : Node("test_publisher_node") {
-    state_publisher_ = create_publisher<DroneStateMsg>("/los_server_node/state", 10);
-    points_publisher_ = create_publisher<PointCloudMsg>("/los_server_node/points", 10);
+    state_publisher_ = create_publisher<DroneStateMsg>("~/state", 10);
+    points_publisher_ = create_publisher<PointCloudMsg>("~/points", 10);
 
     short_timer_ = create_wall_timer(10ms, [this]() { PublishStateMessage(); });
 
