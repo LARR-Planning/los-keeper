@@ -20,19 +20,7 @@ protected:
   DroneState drone_state_;
 
   // PARAMETER
-  int num_sample_;
-  int num_thread_;
-  float target_distance_min;
-  float target_distance_max;
-  float planning_horizon_;
-  float acc_max_;
-  bool is_2d_;
-  float detect_range_;
-  float virtual_pcl_zone_width_;
-  float virtual_pcl_zone_height_;
-  float rx_;
-  float ry_;
-  float rz_;
+  PlanningParam param_;
 
   PointList shooting_points_;
   PrimitiveList primitives_list_;

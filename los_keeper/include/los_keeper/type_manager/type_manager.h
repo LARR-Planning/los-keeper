@@ -11,58 +11,63 @@ namespace los_keeper {
 typedef pcl::PointXYZ PclPoint;
 typedef pcl::PointCloud<PclPoint> PclPointCloud;
 
-namespace Parameters {
-struct VirtualPclBbox {
-  float width{1.0f};
-  float height{1.0f};
-};
-struct DynamicLimits {
-  float vel_max{0.0f};
-  float acc_max{0.0f};
-};
-struct SamplingParam {
-  int num_sample{0};
-  int num_thread{0};
-  bool is_lite{false};
-};
-struct DroneParam {
-  float rx{0.0f};
-  float ry{0.0f};
-  float rz{0.0f};
-  float fov_angle{1.5707f};
-};
-struct DistanceParam {
-  float distance_min{0.0f};
-  float distance_max{0.0f};
-};
-
-struct HorizonParam {
-  float planning_horizon{0.0f};
+struct PlanningParam {
+  struct {
+    int num_sample{0};
+    int num_thread{0};
+    bool is_lite{false};
+  } sampling;
+  struct {
+    float planning{0.0f};
+  } horizon;
+  struct {
+    float obstacle_max{0.0f};
+    float target_min{0.0f};
+    float target_max{0.0f};
+  } distance;
+  struct {
+    float vel_max{0.0f};
+    float acc_max{0.0f};
+  } dynamic_limits;
+  struct {
+    float rx{0.0f};
+    float ry{0.0f};
+    float rz{0.0f};
+  } drone;
+  struct {
+    float height{0.0f};
+    float width{0.0f};
+  } virtual_pcl_bbox;
 };
 
 struct PredictionParam {
-  struct SamplingParam sample_param;
-  struct HorizonParam horizon_param;
-  struct DynamicLimits dynamic_param;
-  struct DistanceParam detect_param;
-  struct VirtualPclBbox sfc_param;
-};
-struct PlanningParam {
-  struct SamplingParam sample_param;
-  struct HorizonParam horizon_param;
-  struct DistanceParam distance_obstacle_param;
-  struct DistanceParam distance_target_param;
-  struct DynamicLimits dynamic_param;
-  struct DroneParam drone_param;
-  struct VirtualPclBbox sfc_param;
+  struct {
+    int num_sample{0};
+    int num_thread{0};
+    bool is_lite{false};
+  } sampling;
+  struct {
+    float prediction{0.0f};
+  } horizon;
+  struct {
+    float vel_max{0.0f};
+    float acc_max{0.0f};
+  } dynamic_limits;
+  struct {
+    float obstacle_max{0.0f};
+  } distance;
+  struct {
+    float height{0.0f};
+    float width{0.0f};
+  } virtual_pcl_bbox;
 };
 struct ObstacleParam {
-  HorizonParam horizon_param;
+  float planning_horizon{0.0f};
 };
+
 struct ProblemParam {
-  bool is_2d{false};
+  bool is_2d;
 };
-} // namespace Parameters
 } // namespace los_keeper
 struct ObjectState {
   double t_sec{0.0};
