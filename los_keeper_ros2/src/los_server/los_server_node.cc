@@ -2,8 +2,8 @@
 
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
-
-  auto los_server = std::make_shared<los_keeper::LosServer>();
+  auto options = rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true);
+  auto los_server = std::make_shared<los_keeper::LosServer>(options);
   rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_node(los_server);
   executor.spin();

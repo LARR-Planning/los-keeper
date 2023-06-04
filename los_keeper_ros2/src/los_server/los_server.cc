@@ -39,7 +39,8 @@ void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
   wrapper_.SetPoints(points);
 };
 
-LosServer::LosServer() : Node("los_server_node") {
+LosServer::LosServer(const rclcpp::NodeOptions &options_input)
+    : Node("los_server_node", options_input) {
 
   rclcpp::SubscriptionOptions options;
   options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -58,4 +59,10 @@ LosServer::LosServer() : Node("los_server_node") {
       this->create_wall_timer(10ms, std::bind(&LosServer::PlanningTimerCallback, this));
 
   control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
+
+  // TODO(Jeon): replaced by wrapper's parameter struct
+  double param;
+  get_parameter<double>("obstacle_manager.planning_horizon", param);
+  get_parameter<double>("target_manager.virtual_pcl_zone.width", param);
+  get_parameter<double>("target_manager.virtual_pcl_zone.height", param);
 }

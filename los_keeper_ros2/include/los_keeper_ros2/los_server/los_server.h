@@ -45,7 +45,7 @@ private:
   void ControlTimerCallback();
 
 public:
-  LosServer();
+  LosServer(const rclcpp::NodeOptions &options_input);
 };
 
 } // namespace los_keeper
