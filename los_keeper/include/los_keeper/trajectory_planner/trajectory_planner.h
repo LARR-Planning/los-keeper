@@ -65,6 +65,7 @@ private:
                                    PrimitiveList &primitive_list_sub) override;
 
 public:
+  TrajectoryPlanner2D();
   explicit TrajectoryPlanner2D(const PlanningParam &param);
   bool PlanKeeperTrajectory() override;
 };
@@ -79,6 +80,7 @@ private:
                                    PrimitiveList &primitive_list_sub) override;
 
 public:
+  TrajectoryPlanner3D();
   explicit TrajectoryPlanner3D(const PlanningParam &param);
   bool PlanKeeperTrajectory() override;
 };

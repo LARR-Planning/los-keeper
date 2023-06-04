@@ -159,6 +159,7 @@ void TrajectoryPlanner2D::ComputePrimitivesSubProcess(const int &start_idx, cons
 }
 
 TrajectoryPlanner2D::TrajectoryPlanner2D(const PlanningParam &param) : TrajectoryPlanner(param) {}
+TrajectoryPlanner2D::TrajectoryPlanner2D() {}
 
 bool TrajectoryPlanner3D::PlanKeeperTrajectory() {
   SampleShootingPoints();
@@ -292,3 +293,4 @@ void TrajectoryPlanner3D::ComputePrimitivesSubProcess(const int &start_idx, cons
 }
 
 TrajectoryPlanner3D::TrajectoryPlanner3D(const PlanningParam &param) : TrajectoryPlanner(param) {}
+TrajectoryPlanner3D::TrajectoryPlanner3D() {}

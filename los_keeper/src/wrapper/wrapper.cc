@@ -5,6 +5,15 @@ using namespace los_keeper;
 Wrapper::Wrapper() {
   obstacle_manager_ = std::make_shared<ObstacleManager>();
   // TODO(@): parameterize this instantiation
+
+  //   * If ProblemParam.is_2d = true?
+  //   * target_manager_.reset(new TargetManager2D(prediction_param));
+  //   * trajectory_planner_.reset(new TrajectoryPlanner2D(planning_param));
+  //   * If ProblemParam.is_2d = false?
+  //   *  target_manager_.reset(new TargetManager3D(prediction_param));
+  //   *  target_manager_.reset(new TrajectoryPlanner3D(planning_param));
+  //   */
+
   target_manager_ = std::make_shared<TargetManager3D>();
   trajectory_planner_ = std::make_shared<TrajectoryPlanner3D>();
 }
@@ -59,22 +68,7 @@ update : {
 }
 }
 
-
-Wrapper::Wrapper() {
-  // TODO: Parameter Assignment? (los_server <-> wrapper <-> (prediction and planning module))
-  /*
-   * If ProblemParam.is_2d = true?
-   * target_manager_.reset(new TargetManager2D(prediction_param));
-   * trajectory_planner_.reset(new TrajectoryPlanner2D(planning_param));
-   * If ProblemParam.is_2d = false?
-   *  target_manager_.reset(new TargetManager3D(prediction_param));
-   *  target_manager_.reset(new TrajectoryPlanner3D(planning_param));
-   */
-  target_manager_.reset(new TargetManager3D);
-}
-
 void Wrapper::HandleIdleAction() { printf("Handle IdleAction\n"); }
-
 
 void Wrapper::OnPlanningTimerCallback() {
 

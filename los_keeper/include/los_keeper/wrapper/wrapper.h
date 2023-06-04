@@ -48,8 +48,7 @@ private:
   std::shared_ptr<TargetManager> target_manager_;
   std::shared_ptr<TrajectoryPlanner> trajectory_planner_;
 
-
-  bool UpdateState(store::State &state);
+  void UpdateState(store::State &state);
 
   void HandleStopAction();
   void HandleActivateAction();

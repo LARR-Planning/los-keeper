@@ -39,4 +39,3 @@ ObstacleManager::ObstacleManager() {}
 ObstacleManager::ObstacleManager(const ObstacleParam &param) : param_(param) {}
 
 PclPointCloud ObstacleManager::GetPointCloud() { return cloud_; }
-
