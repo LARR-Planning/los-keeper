@@ -5,7 +5,7 @@
 #ifndef ITERATIVE_DECOMP_H
 #define ITERATIVE_DECOMP_H
 
-#include <decomp_util/ellipsoid_decomp.h>
+#include "los_keeper/third_party/decomp_util/decomp_geometry/ellipsoid.h"
 
 /**
  * @brief IterativeDecomp Class

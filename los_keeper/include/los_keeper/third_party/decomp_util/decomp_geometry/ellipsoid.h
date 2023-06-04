@@ -12,15 +12,11 @@
 
 template <int Dim> struct Ellipsoid {
   Ellipsoid() {}
-
   Ellipsoid(const Matf<Dim, Dim> &C, const Vecf<Dim> &d) : C_(C), d_(d) {}
-
   /// Calculate distance to the center
   decimal_t dist(const Vecf<Dim> &pt) const { return (C_.inverse() * (pt - d_)).norm(); }
-
   /// Check if the point is inside, non-exclusive
   bool inside(const Vecf<Dim> &pt) const { return dist(pt) <= 1; }
-
   /// Calculate points inside ellipsoid, non-exclusive
   vec_Vecf<Dim> points_inside(const vec_Vecf<Dim> &O) const {
     vec_Vecf<Dim> new_O;
@@ -44,7 +40,6 @@ template <int Dim> struct Ellipsoid {
     }
     return pt;
   }
-
   /// Find the closest hyperplane from the closest point
   Hyperplane<Dim> closest_hyperplane(const vec_Vecf<Dim> &O) const {
     const auto closest_pt = closest_point(O);
@@ -63,27 +58,20 @@ template <int Dim> struct Ellipsoid {
     }
     return pts;
   }
-
   void print() const {
     std::cout << "C: " << C_ << std::endl;
     std::cout << "d: " << d_ << std::endl;
   }
-
   /// Get ellipsoid volume
   decimal_t volume() const { return C_.determinant(); }
-
   /// Get C matrix
   Matf<Dim, Dim> C() const { return C_; }
-
   /// Get center
   Vecf<Dim> d() const { return d_; }
-
   Matf<Dim, Dim> C_;
   Vecf<Dim> d_;
 };
-
 typedef Ellipsoid<2> Ellipsoid2D;
-
 typedef Ellipsoid<3> Ellipsoid3D;
 
 #endif

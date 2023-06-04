@@ -11,15 +11,11 @@
 /// Hyperplane class
 template <int Dim> struct Hyperplane {
   Hyperplane() {}
-
   Hyperplane(const Vecf<Dim> &p, const Vecf<Dim> &n) : p_(p), n_(n) {}
-
   /// Calculate the signed distance from point
   decimal_t signed_dist(const Vecf<Dim> &pt) const { return n_.dot(pt - p_); }
-
   /// Calculate the distance from point
   decimal_t dist(const Vecf<Dim> &pt) const { return std::abs(signed_dist(pt)); }
-
   /// Point on the plane
   Vecf<Dim> p_;
   /// Normal of the plane, directional
@@ -35,13 +31,10 @@ typedef Hyperplane<3> Hyperplane3D;
 template <int Dim> struct Polyhedron {
   /// Null constructor
   Polyhedron() {}
-
   /// Construct from Hyperplane array
   Polyhedron(const vec_E<Hyperplane<Dim>> &vs) : vs_(vs) {}
-
   /// Append Hyperplane
   void add(const Hyperplane<Dim> &v) { vs_.push_back(v); }
-
   /// Check if the point is inside polyhedron, non-exclusive
   bool inside(const Vecf<Dim> &pt) const {
     for (const auto &v : vs_) {

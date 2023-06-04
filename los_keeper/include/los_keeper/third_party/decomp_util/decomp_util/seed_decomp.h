@@ -67,13 +67,10 @@ protected:
       Vs.add(Hyperplane<Dim>(pp6, -dir_v));
     }
   }
-
   /// Seed location
   Vecf<Dim> p_;
 };
-
 typedef SeedDecomp<2> SeedDecomp2D;
-
 typedef SeedDecomp<3> SeedDecomp3D;
 
 #endif

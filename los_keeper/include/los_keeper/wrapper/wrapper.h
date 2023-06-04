@@ -43,24 +43,16 @@ private:
   std::shared_ptr<TrajectoryPlanner> trajectory_planner_;
 
   bool UpdateState(store::State &state);
-
   void HandleStopAction();
-
   void HandleActivateAction();
-
   void HandleReplanAction();
 
 public:
   Wrapper();
-
   void SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points);
-
   void SetDroneState(const DroneState &drone_state);
-
   std::optional<Point> GenerateControlInputFromPlanning(double time);
-
   void OnPlanningTimerCallback();
-
   void OnStartServiceCallback();
 };
 } // namespace los_keeper

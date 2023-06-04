@@ -84,15 +84,12 @@ protected:
 
     polyhedron_ = Vs;
   }
-
   /// Obstacles, input
   vec_Vecf<Dim> obs_;
-
   /// Output ellipsoid
   Ellipsoid<Dim> ellipsoid_;
   /// Output polyhedron
   Polyhedron<Dim> polyhedron_;
-
   /// Local bounding box along the line segment
   Vecf<Dim> local_bbox_{Vecf<Dim>::Zero()};
 };

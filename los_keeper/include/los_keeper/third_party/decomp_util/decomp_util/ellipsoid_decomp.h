@@ -31,19 +31,14 @@ public:
 
   /// Set obstacle points
   void set_obs(const vec_Vecf<Dim> &obs) { obs_ = obs; }
-
   /// Set dimension of bounding box
   void set_local_bbox(const Vecf<Dim> &bbox) { local_bbox_ = bbox; }
-
   /// Get the path that is used for dilation
   vec_Vecf<Dim> get_path() const { return path_; }
-
   /// Get the Safe Flight Corridor
   vec_E<Polyhedron<Dim>> get_polyhedrons() const { return polyhedrons_; }
-
   /// Get the ellipsoids
   vec_E<Ellipsoid<Dim>> get_ellipsoids() const { return ellipsoids_; }
-
   /// Get the constraints of SFC as \f$Ax\leq b \f$
   vec_E<LinearConstraint<Dim>> get_constraints() const {
     vec_E<LinearConstraint<Dim>> constraints;
