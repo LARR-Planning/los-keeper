@@ -2,21 +2,28 @@
 
 using namespace los_keeper;
 
+Wrapper::Wrapper() {
+  obstacle_manager_ = std::make_shared<ObstacleManager>();
+  // TODO(@): parameterize this instantiation
+  target_manager_ = std::make_shared<TargetManager3D>();
+  trajectory_planner_ = std::make_shared<TrajectoryPlanner3D>();
+}
+
 std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
   if (!chasing_trajectory)
     return std::nullopt;
   return Point();
 }
 
-bool Wrapper::UpdateState(store::State &state) {
-  bool is_changed = false;
-  // state.is_initialized =
-  //     obstacle_manager_->IsInitialized() && target_manager_->IsInitialized();
+void Wrapper::UpdateState(store::State &state) {
+  // TODO(Jeon): add object state, etc,.
+  state.is_data_received = drone_state_.t_sec > 0.0;
+
+  // TODO(Lee): implement these
   // state.is_currently_safe =
   //     obstacle_manager_->CheckCollisionOnPosition(drone_state);
   // state.is_planning_safe =
   //     obstacle_manager_->CheckCollisionAlongTrajectory(drone_state);
-  return is_changed;
 }
 
 void Wrapper::HandleStopAction() { state_.is_activated = false; }
@@ -24,6 +31,7 @@ void Wrapper::HandleStopAction() { state_.is_activated = false; }
 void Wrapper::HandleActivateAction() { state_.is_activated = true; }
 
 void Wrapper::HandleReplanAction() {
+  printf("Handle ReplanAction\n");
   PlanningProblem planning_problem;
   {
     std::scoped_lock lock(mutex_list_.drone_state, mutex_list_.point_cloud);
@@ -35,6 +43,8 @@ void Wrapper::HandleReplanAction() {
   const auto &structured_obstacle_poly_list = planning_problem.structured_obstacle_poly_list;
 
   PlanningResult new_planning_result;
+  new_planning_result.seq = planning_result_.seq + 1;
+
   auto target_prediction_list = target_manager_->PredictTargetList(
       planning_problem.target_state_list, point_cloud, structured_obstacle_poly_list);
   if (!target_prediction_list)
@@ -49,6 +59,7 @@ update : {
 }
 }
 
+
 Wrapper::Wrapper() {
   // TODO: Parameter Assignment? (los_server <-> wrapper <-> (prediction and planning module))
   /*
@@ -62,17 +73,23 @@ Wrapper::Wrapper() {
   target_manager_.reset(new TargetManager3D);
 }
 
+void Wrapper::HandleIdleAction() { printf("Handle IdleAction\n"); }
+
+
 void Wrapper::OnPlanningTimerCallback() {
 
   UpdateState(state_);
   auto action = DecideAction(state_);
   switch (action) {
-  case store::Action::kInitialize:
-    HandleActivateAction();
   case store::Action::kStop:
     HandleStopAction();
-  default:
+    break;
+  case store::Action::kReplan:
     HandleReplanAction();
+    break;
+  default:
+    HandleIdleAction();
+    break;
   }
 }
 

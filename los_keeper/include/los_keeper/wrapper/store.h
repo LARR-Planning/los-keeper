@@ -17,7 +17,7 @@ struct State {
 };
 
 enum Action {
-  kInitialize,
+  kIdle,
   kReplan,
   kStop,
 };

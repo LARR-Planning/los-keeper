@@ -34,5 +34,9 @@ void ObstacleManager::TranslateStateToPoly() {
     temp_state_poly.rz = i.rz;
   }
 }
+
 ObstacleManager::ObstacleManager() {}
 ObstacleManager::ObstacleManager(const ObstacleParam &param) : param_(param) {}
+
+PclPointCloud ObstacleManager::GetPointCloud() { return cloud_; }
+

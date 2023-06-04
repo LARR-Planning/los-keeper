@@ -50,6 +50,7 @@ struct ObstacleParam {
 
 } // namespace los_keeper
 struct ObjectState {
+  double t_sec{0.0};
   float px;
   float py;
   float pz;
@@ -61,6 +62,7 @@ struct ObjectState {
   float rz;
 };
 struct DroneState {
+  double t_sec{0.0};
   float px;
   float py;
   float pz;
