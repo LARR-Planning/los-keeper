@@ -1,6 +1,7 @@
 #ifndef HEADER_WRAPPER
 #define HEADER_WRAPPER
 
+#include "gtest/gtest.h"
 #include <chrono>
 #include <mutex>
 #include <string>
@@ -21,12 +22,18 @@ struct PlanningProblem {
 };
 
 struct PlanningResult {
+  int seq{0};
   std::optional<StatePoly> chasing_trajectory;
 
   std::optional<Point> GetPointAtTime(double t) const;
 };
 
 class Wrapper {
+  // TODO(@): removed when releasing
+  friend class ApiTestFixture;
+  FRIEND_TEST(ApiTestFixture, PlanningShouldNullWhenNotActivatedOrNotReceived);
+  FRIEND_TEST(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived);
+
 private:
   DroneState drone_state_;
   store::State state_;
@@ -42,10 +49,13 @@ private:
   std::shared_ptr<TargetManager> target_manager_;
   std::shared_ptr<TrajectoryPlanner> trajectory_planner_;
 
+
   bool UpdateState(store::State &state);
+
   void HandleStopAction();
   void HandleActivateAction();
   void HandleReplanAction();
+  void HandleIdleAction();
 
 public:
   Wrapper();

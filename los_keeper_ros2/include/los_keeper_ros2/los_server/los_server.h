@@ -25,9 +25,9 @@ using RosTimer = rclcpp::TimerBase::SharedPtr;
 
 namespace los_keeper {
 
-DroneState ConverToDroneState(const DroneStateMsg &drone_state_msg);
+DroneState ConvertToDroneState(const DroneStateMsg &drone_state_msg);
 pcl::PointCloud<pcl::PointXYZ> ConvertToPointCloud(const PointCloudMsg &point_cloud_msg);
-InputMsg ConverToInputMsg(const int drone_input);
+InputMsg ConvertToInputMsg(const int drone_input);
 
 class LosServer : public rclcpp::Node {
 private:
