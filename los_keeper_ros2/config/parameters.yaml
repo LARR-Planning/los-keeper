@@ -1,0 +1,8 @@
+/**:
+  ros__parameters:
+    obstacle_manager:
+      planning_horizon: 2.0
+    target_manager:
+      virtual_pcl_zone:
+        width: 1.0
+        height: 1.0
