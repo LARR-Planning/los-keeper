@@ -22,7 +22,6 @@ struct PlanningProblem {
 
 struct PlanningResult {
   std::optional<StatePoly> chasing_trajectory;
-
   std::optional<Point> GetPointAtTime(double t) const;
 };
 
