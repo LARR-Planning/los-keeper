@@ -21,6 +21,7 @@ protected:
   pcl::PointCloud<pcl::PointXYZ> cloud_;
   vector<ObjectState> target_state_list_;
   int num_target_;
+  Parameters::PredictionParam aa;
 
   // PARAMETER
   int num_sample_;

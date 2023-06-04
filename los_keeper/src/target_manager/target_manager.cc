@@ -15,6 +15,7 @@ void los_keeper::TargetManager::SetObstacleState(
   structured_obstacle_poly_list_ = structured_obstacle_poly_list;
   cloud_.points.clear();
   cloud_.points = cloud.points;
+
 }
 
 bool los_keeper::TargetManager::PredictTargetTrajectory() {
@@ -26,7 +27,8 @@ bool los_keeper::TargetManager::PredictTargetTrajectory() {
   return true;
 }
 
-void los_keeper::TargetManager::SampleEndPoints() {}
+void los_keeper::TargetManager::SampleEndPoints() {
+}
 
 los_keeper::TargetManager::TargetManager() { // Abstract Target Manager
 }
