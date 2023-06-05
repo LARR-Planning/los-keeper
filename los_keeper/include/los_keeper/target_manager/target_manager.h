@@ -20,18 +20,8 @@ protected:
   vector<StatePoly> structured_obstacle_poly_list_;
   pcl::PointCloud<pcl::PointXYZ> cloud_;
   vector<ObjectState> target_state_list_;
-  int num_target_;
-
-  // PARAMETER
-  int num_sample_;
-  int num_thread_;
-  float planning_horizon_;
-  float acc_max_;
-  bool is_2d_;
-  float detect_range_;
-  float virtual_pcl_zone_width_;
-  float virtual_pcl_zone_height_;
-  bool is_lite;
+  int num_target_{};
+  PredictionParam param_;
 
   PointListSet end_points_;          // Sampled End Points from Dynamics Model
   PrimitiveListSet primitives_list_; // Raw primitives from
@@ -64,7 +54,7 @@ protected:
 
 public:
   TargetManager();
-
+  explicit TargetManager(const PredictionParam &param) : param_(param){};
   void SetTargetState(const vector<ObjectState> &target_state_list);
   void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud,
                         const PrimitiveList &structured_obstacle_poly_list);
@@ -102,6 +92,9 @@ private:
   void CalculateSafePclIndex(const vector<LinearConstraint2D> &safe_corridor_list);
 
 public:
+  TargetManager2D() = default;
+  explicit TargetManager2D(const PredictionParam &param);
+
   bool PredictTargetTrajectory() override;
   std::optional<std::vector<StatePoly>>
   PredictTargetList(const std::vector<ObjectState> &target_state_list,
@@ -134,6 +127,8 @@ private:
   void CalculateSafePclIndex(const vector<LinearConstraint3D> &safe_corridor_list);
 
 public:
+  TargetManager3D() = default;
+  explicit TargetManager3D(const PredictionParam &param);
   bool PredictTargetTrajectory() override;
   std::optional<std::vector<StatePoly>>
   PredictTargetList(const std::vector<ObjectState> &target_state_list,

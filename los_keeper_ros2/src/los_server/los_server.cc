@@ -22,21 +22,21 @@ InputMsg los_keeper::ConvertToInputMsg(const int drone_input) {
   return InputMsg();
 }
 
-void LosServer::PlanningTimerCallback() { wrapper_.OnPlanningTimerCallback(); }
+void LosServer::PlanningTimerCallback() { wrapper_ptr_->OnPlanningTimerCallback(); }
 
 void LosServer::ControlTimerCallback() {
   auto t = now();
-  auto control_input = wrapper_.GenerateControlInputFromPlanning(t.seconds());
+  auto control_input = wrapper_ptr_->GenerateControlInputFromPlanning(t.seconds());
 }
 
 void LosServer::DroneStateCallback(const DroneStateMsg::SharedPtr msg) {
   auto drone_state = ConvertToDroneState(*msg);
-  wrapper_.SetDroneState(drone_state);
+  wrapper_ptr_->SetDroneState(drone_state);
 };
 
 void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
   auto points = ConvertToPointCloud(*msg);
-  wrapper_.SetPoints(points);
+  wrapper_ptr_->SetPoints(points);
 };
 
 LosServer::LosServer(const rclcpp::NodeOptions &options_input)
@@ -60,9 +60,57 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
 
   control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
 
-  // TODO(Jeon): replaced by wrapper's parameter struct
-  double param;
-  get_parameter<double>("obstacle_manager.planning_horizon", param);
-  get_parameter<double>("target_manager.virtual_pcl_zone.width", param);
-  get_parameter<double>("target_manager.virtual_pcl_zone.height", param);
+  // Parameter Settings
+  ObstacleParam obstacle_param;
+  PredictionParam prediction_param;
+  PlanningParam planning_param;
+  ProblemParam problem_param;
+  { // Parameter Settings for Problem
+    get_parameter<bool>("problem.is_2d", problem_param.is_2d);
+  }
+  { // Parameter Settings for ObstacleManager
+    get_parameter<float>("obstacle_manager.planning_horizon", obstacle_param.planning_horizon);
+  }
+  { // Parameter Settings for TargetManager
+    get_parameter<int>("target_manager.sampling.num_sample", prediction_param.sampling.num_sample);
+    get_parameter<int>("target_manager.sampling.num_thread", prediction_param.sampling.num_thread);
+    get_parameter<bool>("target_manager.sampling.is_lite", prediction_param.sampling.is_lite);
+    get_parameter<float>("target_manager.horizon.prediction", prediction_param.horizon.prediction);
+    get_parameter<float>("target_manager.dynamic_limits.vel_max",
+                         prediction_param.dynamic_limits.vel_max);
+    get_parameter<float>("target_manager.dynamic_limits.acc_max",
+                         prediction_param.dynamic_limits.acc_max);
+    get_parameter<float>("target_manager.distance.obstacle_max",
+                         prediction_param.distance.obstacle_max);
+    get_parameter<float>("target_manager.virtual_pcl_bbox.width",
+                         prediction_param.virtual_pcl_bbox.width);
+    get_parameter<float>("target_manager.virtual_pcl_bbox.height",
+                         prediction_param.virtual_pcl_bbox.height);
+  }
+  { // Parameter Settings for TrajectoryPlanner
+    get_parameter<int>("trajectory_planner.sampling.num_sample",
+                       planning_param.sampling.num_sample);
+    get_parameter<int>("trajectory_planner.sampling.num_thread",
+                       planning_param.sampling.num_thread);
+    get_parameter<bool>("trajectory_planner.sampling.is_lite", planning_param.sampling.is_lite);
+    get_parameter<float>("trajectory_planner.horizon.planning", planning_param.horizon.planning);
+    get_parameter<float>("trajectory_planner.distance.obstacle_max",
+                         planning_param.distance.obstacle_max);
+    get_parameter<float>("trajectory_planner.distance.target_min",
+                         planning_param.distance.target_min);
+    get_parameter<float>("trajectory_planner.distance.target_max",
+                         planning_param.distance.target_max);
+    get_parameter<float>("trajectory_planner.dynamic_limits.vel_max",
+                         planning_param.dynamic_limits.vel_max);
+    get_parameter<float>("trajectory_planner.dynamic_limits.acc_max",
+                         planning_param.dynamic_limits.acc_max);
+    get_parameter<float>("trajectory_planner.drone.rx", planning_param.drone.rx);
+    get_parameter<float>("trajectory_planner.drone.ry", planning_param.drone.ry);
+    get_parameter<float>("trajectory_planner.drone.rz", planning_param.drone.rz);
+    get_parameter<float>("trajectory_planner.virtual_pcl_bbox.width",
+                         planning_param.virtual_pcl_bbox.width);
+    get_parameter<float>("trajectory_planner.virtual_pcl_bbox.height",
+                         planning_param.virtual_pcl_bbox.height);
+  }
+  wrapper_ptr_ = new Wrapper(problem_param, obstacle_param, prediction_param, planning_param);
 }

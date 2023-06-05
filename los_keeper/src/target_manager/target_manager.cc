@@ -80,17 +80,17 @@ void los_keeper::TargetManager2D::SampleEndPoints() {
   end_points_.clear();
   end_points_.reserve(target_state_list_.size()); // TODO: Reserve vs Resize?
   for (int i = 0; i < target_state_list_.size(); i++) {
-    int num_chunk = num_sample_ / num_thread_;
+    int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
-    vector<vector<Point>> end_point_temp(num_thread_);
-    for (int j = 0; j < num_thread_; j++) {
+    vector<vector<Point>> end_point_temp(param_.sampling.num_thread);
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager2D::SampleEndPointsSubProcess, this, i, num_chunk,
                                  std::ref(end_point_temp[j]));
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < end_point_temp[j].size(); k++) {
         end_points_[i].push_back(end_point_temp[j][k]);
       }
@@ -102,18 +102,18 @@ void los_keeper::TargetManager2D::ComputePrimitives() {
   primitives_list_.clear();
   primitives_list_.reserve(num_target_);
   for (int i = 0; i < num_target_; i++) {
-    int num_chunk = num_sample_ / num_thread_;
+    int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
-    PrimitiveListSet primitive_list_temp(num_thread_);
-    for (int j = 0; j < num_thread_; j++) {
+    PrimitiveListSet primitive_list_temp(param_.sampling.num_thread);
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager2D::ComputePrimitivesSubProcess, this, i,
                                  num_chunk * (j), num_chunk * (j + 1),
                                  std::ref(primitive_list_temp[j]));
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < primitive_list_temp[j].size(); k++) {
         primitives_list_[i].push_back(primitive_list_temp[j][k]);
       }
@@ -133,7 +133,7 @@ void los_keeper::TargetManager2D::CalculateCloseObstacleIndex() {
               powf(target_state_list_[i].py -
                        structured_obstacle_poly_list_[j].py.GetInitialValue(),
                    2) <
-          detect_range_ * detect_range_;
+          param_.distance.obstacle_max * param_.distance.obstacle_max;
       if (is_close)
         close_obstacle_index_temp.push_back(j);
     }
@@ -154,7 +154,7 @@ bool los_keeper::TargetManager2D::CheckCollision() {
   if (is_cloud_empty and is_structured_obstacle_empty) { // Case I: No Obstacle
     for (int i = 0; i < num_target_; i++) {
       IndexList primitive_safe_total_index_temp_;
-      for (int j = 0; j < num_sample_; j++) {
+      for (int j = 0; j < param_.sampling.num_sample; j++) {
         primitive_safe_total_index_temp_.push_back(j);
       }
       primitive_safe_total_index_.push_back(primitive_safe_total_index_temp_);
@@ -173,7 +173,7 @@ bool los_keeper::TargetManager2D::CheckCollision() {
       std::vector<bool> is_primitive_safe_pcl_temp;
       std::vector<bool> is_primitive_safe_structured_obstacle_temp;
       IndexList primitive_safe_total_index_temp;
-      for (int j = 0; j < num_sample_; j++) {
+      for (int j = 0; j < param_.sampling.num_sample; j++) {
         is_primitive_safe_pcl_temp.push_back(false);
         is_primitive_safe_structured_obstacle_temp.push_back(false);
       }
@@ -183,7 +183,7 @@ bool los_keeper::TargetManager2D::CheckCollision() {
       for (int j : primitive_safe_pcl_index_[i]) {
         is_primitive_safe_pcl_temp[j] = true;
       }
-      for (int j = 0; j < num_sample_; j++) {
+      for (int j = 0; j < param_.sampling.num_sample; j++) {
         if (is_primitive_safe_pcl_temp[j] and is_primitive_safe_structured_obstacle_temp[j])
           primitive_safe_total_index_temp.push_back(j);
       }
@@ -197,19 +197,19 @@ void los_keeper::TargetManager2D::CalculateCentroid() {
   primitive_best_index_.clear();
   primitive_best_index_.reserve(num_target_);
   for (int i = 0; i < num_target_; i++) {
-    int num_chunk = (int)primitive_safe_total_index_[i].size() / num_thread_;
+    int num_chunk = (int)primitive_safe_total_index_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
-    vector<std::pair<int, float>> min_dist_pair_temp(num_thread_);
-    for (int j = 0; j < num_thread_; j++) {
+    vector<std::pair<int, float>> min_dist_pair_temp(param_.sampling.num_thread);
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager2D::CalculateCentroidSubProcess, this, i,
                                  num_chunk * (j), num_chunk * (j + 1),
                                  std::ref(min_dist_pair_temp[j]));
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
     float min_dist_temp = 99999999999999.0f;
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       if (min_dist_temp > min_dist_pair_temp[j].second) {
         min_dist_temp = min_dist_pair_temp[j].second;
         primitive_best_index_[i] = min_dist_pair_temp[j].first;
@@ -227,18 +227,18 @@ void los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
   primitive_safe_structured_obstacle_index_.reserve(num_target_);
   for (int i = 0; i < num_target_; i++) {
-    int num_chunk = (int)primitives_list_[i].size() / num_thread_;
+    int num_chunk = (int)primitives_list_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
-    IndexListSet primitive_safe_structured_obstacle_index_temp(num_thread_);
-    for (int j = 0; j < num_thread_; j++) {
+    IndexListSet primitive_safe_structured_obstacle_index_temp(param_.sampling.num_thread);
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager2D::CheckStructuredObstacleCollisionSubProcess, this,
                                  i, num_chunk * (j), num_chunk * (j + 1),
                                  std::ref(primitive_safe_structured_obstacle_index_temp[j]));
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < primitive_safe_structured_obstacle_index_temp[j].size(); k++) {
         primitive_safe_structured_obstacle_index_[i].push_back(
             primitive_safe_structured_obstacle_index_temp[j][k]);
@@ -262,7 +262,7 @@ std::vector<LinearConstraint2D> los_keeper::TargetManager2D::GenLinearConstraint
     SeedDecomp2D decomp_util(seed);
     decomp_util.set_obs(obstacle_pcl);
     decomp_util.set_local_bbox(
-        Vec2f(0.5f * virtual_pcl_zone_width_, 0.5f * virtual_pcl_zone_width_));
+        Vec2f(0.5f * param_.virtual_pcl_bbox.width, 0.5f * param_.virtual_pcl_bbox.width));
     decomp_util.dilate(0.1);
     polys.push_back(decomp_util.get_polyhedron());
     auto poly_hedrons = decomp_util.get_polyhedron();
@@ -277,18 +277,18 @@ void los_keeper::TargetManager2D::CalculateSafePclIndex(
   primitive_safe_pcl_index_.clear();
   primitive_safe_pcl_index_.reserve(num_target_);
   for (int i = 0; i < num_target_; i++) {
-    int num_chunk = num_sample_ / num_thread_;
+    int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
-    IndexListSet safe_pcl_index_temp(num_thread_);
-    for (int j = 0; j < num_thread_; j++) {
+    IndexListSet safe_pcl_index_temp(param_.sampling.num_thread);
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager2D::CheckPclCollisionSubProcess, this, i,
                                  safe_corridor_list[i], num_chunk * (j), num_chunk * (j + 1),
                                  std::ref(safe_pcl_index_temp[j]));
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < safe_pcl_index_temp[j].size(); k++) {
         primitive_safe_pcl_index_[i].push_back(safe_pcl_index_temp[j][k]);
       }
@@ -300,21 +300,24 @@ void los_keeper::TargetManager2D::SampleEndPointsSubProcess(const int &target_id
                                                             const int &chunk_size,
                                                             PointList &endpoint_sub) {
   Point end_point_center{float(target_state_list_[target_id].px +
-                               target_state_list_[target_id].vx * planning_horizon_),
+                               target_state_list_[target_id].vx * param_.horizon.prediction),
                          float(target_state_list_[target_id].py +
-                               target_state_list_[target_id].vy * planning_horizon_),
+                               target_state_list_[target_id].vy * param_.horizon.prediction),
                          float(target_state_list_[target_id].pz +
-                               target_state_list_[target_id].vz * planning_horizon_)};
+                               target_state_list_[target_id].vz * param_.horizon.prediction)};
   uint n_cols = 2;
-  uint n_rows = num_sample_;
+  uint n_rows = param_.sampling.num_sample;
   using namespace Eigen;
   Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> gaussian_data_eigen;
   gaussian_data_eigen.setZero(n_rows, n_cols);
   Eigen::Vector2f mean;
   Eigen::Matrix2f covar;
   mean << end_point_center.x, end_point_center.y;
-  covar << (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_), 0, 0,
-      (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_);
+  covar << (0.5f * 0.33333333f * param_.dynamic_limits.acc_max * param_.horizon.prediction *
+            param_.horizon.prediction),
+      0, 0,
+      (0.5f * 0.33333333f * param_.dynamic_limits.acc_max * param_.horizon.prediction *
+       param_.horizon.prediction);
   Eigen::EigenMultivariateNormal<float> normX_solver1(mean, covar);
   Point tempPoint{end_point_center.x, end_point_center.y, end_point_center.z};
   PointList end_points_temp;
@@ -333,39 +336,43 @@ void los_keeper::TargetManager2D::ComputePrimitivesSubProcess(const int &target_
 
   StatePoly primitive_temp;
   primitive_temp.SetDegree(3);
-  float time_interval_temp[2]{0.0, planning_horizon_};
+  float time_interval_temp[2]{0.0, param_.horizon.prediction};
   primitive_temp.SetTimeInterval(time_interval_temp);
   float bernstein_coeff_temp[4];
 
   for (int j = start_idx; j < end_idx; j++) {
     { // x-coefficient
       bernstein_coeff_temp[0] = target_state_list_[target_id].px;
-      bernstein_coeff_temp[1] = target_state_list_[target_id].px +
-                                0.33333333f * target_state_list_[target_id].vx * planning_horizon_;
-      bernstein_coeff_temp[2] = 0.5f * target_state_list_[target_id].px +
-                                0.5f * end_points_[target_id][j].x +
-                                0.16666667f * target_state_list_[target_id].vx * planning_horizon_;
+      bernstein_coeff_temp[1] =
+          target_state_list_[target_id].px +
+          0.33333333f * target_state_list_[target_id].vx * param_.horizon.prediction;
+      bernstein_coeff_temp[2] =
+          0.5f * target_state_list_[target_id].px + 0.5f * end_points_[target_id][j].x +
+          0.16666667f * target_state_list_[target_id].vx * param_.horizon.prediction;
       bernstein_coeff_temp[3] = end_points_[target_id][j].x;
       primitive_temp.px.SetBernsteinCoeff(bernstein_coeff_temp);
     }
     { // y-coefficient
       bernstein_coeff_temp[0] = target_state_list_[target_id].py;
-      bernstein_coeff_temp[1] = target_state_list_[target_id].py +
-                                0.33333333f * target_state_list_[target_id].vy * planning_horizon_;
-      bernstein_coeff_temp[2] = 0.5f * target_state_list_[target_id].py +
-                                0.5f * end_points_[target_id][j].y +
-                                0.16666667f * target_state_list_[target_id].vy * planning_horizon_;
+      bernstein_coeff_temp[1] =
+          target_state_list_[target_id].py +
+          0.33333333f * target_state_list_[target_id].vy * param_.horizon.prediction;
+      bernstein_coeff_temp[2] =
+          0.5f * target_state_list_[target_id].py + 0.5f * end_points_[target_id][j].y +
+          0.16666667f * target_state_list_[target_id].vy * param_.horizon.prediction;
       bernstein_coeff_temp[3] = end_points_[target_id][j].y;
       primitive_temp.py.SetBernsteinCoeff(bernstein_coeff_temp);
     }
     { // z-coefficient
       bernstein_coeff_temp[0] = target_state_list_[target_id].pz;
-      bernstein_coeff_temp[1] = target_state_list_[target_id].pz +
-                                0.33333333f * target_state_list_[target_id].vz * planning_horizon_;
-      bernstein_coeff_temp[2] = target_state_list_[target_id].pz +
-                                0.66666667f * target_state_list_[target_id].vz * planning_horizon_;
-      bernstein_coeff_temp[3] =
-          target_state_list_[target_id].pz + target_state_list_[target_id].vz * planning_horizon_;
+      bernstein_coeff_temp[1] =
+          target_state_list_[target_id].pz +
+          0.33333333f * target_state_list_[target_id].vz * param_.horizon.prediction;
+      bernstein_coeff_temp[2] =
+          target_state_list_[target_id].pz +
+          0.66666667f * target_state_list_[target_id].vz * param_.horizon.prediction;
+      bernstein_coeff_temp[3] = target_state_list_[target_id].pz +
+                                target_state_list_[target_id].vz * param_.horizon.prediction;
       primitive_temp.pz.SetBernsteinCoeff(bernstein_coeff_temp);
     }
     primitive_list_sub.push_back(primitive_temp);
@@ -534,6 +541,8 @@ std::optional<std::vector<StatePoly>> los_keeper::TargetManager2D::PredictTarget
     const vector<StatePoly> &structured_obstacle_poly_list) {
   return std::optional<std::vector<StatePoly>>();
 }
+los_keeper::TargetManager2D::TargetManager2D(const los_keeper::PredictionParam &param)
+    : TargetManager(param) {}
 
 bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
   SampleEndPoints();
@@ -549,17 +558,17 @@ void los_keeper::TargetManager3D::SampleEndPoints() {
   end_points_.clear();
   end_points_.reserve(target_state_list_.size()); // TODO: Reserve vs Resize?
   for (int i = 0; i < target_state_list_.size(); i++) {
-    int num_chunk = num_sample_ / num_thread_;
+    int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
-    vector<vector<Point>> end_point_temp(num_thread_);
-    for (int j = 0; j < num_thread_; j++) {
+    vector<vector<Point>> end_point_temp(param_.sampling.num_thread);
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager3D::SampleEndPointsSubProcess, this, i, num_chunk,
                                  std::ref(end_point_temp[j]));
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < end_point_temp[j].size(); k++) {
         end_points_[i].push_back(end_point_temp[j][k]);
       }
@@ -582,7 +591,7 @@ void los_keeper::TargetManager3D::CalculateCloseObstacleIndex() {
               powf(target_state_list_[i].pz -
                        structured_obstacle_poly_list_[j].pz.GetInitialValue(),
                    2) <
-          detect_range_ * detect_range_;
+          param_.distance.obstacle_max * param_.distance.obstacle_max;
       if (is_close)
         close_obstacle_index_temp.push_back(j);
     }
@@ -604,7 +613,7 @@ bool los_keeper::TargetManager3D::CheckCollision() {
   if (is_cloud_empty and is_structured_obstacle_empty) { // Case I: No Obstacle
     for (int i = 0; i < num_target_; i++) {
       IndexList primitive_safe_total_index_temp_;
-      for (int j = 0; j < num_sample_; j++) {
+      for (int j = 0; j < param_.sampling.num_sample; j++) {
         primitive_safe_total_index_temp_.push_back(j);
       }
       primitive_safe_total_index_.push_back(primitive_safe_total_index_temp_);
@@ -621,7 +630,7 @@ bool los_keeper::TargetManager3D::CheckCollision() {
       std::vector<bool> is_primitive_safe_pcl_temp;
       std::vector<bool> is_primitive_safe_structured_obstacle_temp;
       IndexList primitive_safe_total_index_temp;
-      for (int j = 0; j < num_sample_; j++) {
+      for (int j = 0; j < param_.sampling.num_sample; j++) {
         is_primitive_safe_pcl_temp.push_back(false);
         is_primitive_safe_structured_obstacle_temp.push_back(false);
       }
@@ -631,7 +640,7 @@ bool los_keeper::TargetManager3D::CheckCollision() {
       for (int j : primitive_safe_pcl_index_[i]) {
         is_primitive_safe_pcl_temp[j] = true;
       }
-      for (int j = 0; j < num_sample_; j++) {
+      for (int j = 0; j < param_.sampling.num_sample; j++) {
         if (is_primitive_safe_pcl_temp[j] and is_primitive_safe_structured_obstacle_temp[j])
           primitive_safe_total_index_temp.push_back(j);
       }
@@ -646,18 +655,18 @@ void los_keeper::TargetManager3D::ComputePrimitives() {
   primitives_list_.reserve(num_target_);
 
   for (int i = 0; i < num_target_; i++) {
-    int num_chunk = num_sample_ / num_thread_;
+    int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
-    PrimitiveListSet primitive_list_temp(num_thread_);
-    for (int j = 0; j < num_thread_; j++) {
+    PrimitiveListSet primitive_list_temp(param_.sampling.num_thread);
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager3D::ComputePrimitivesSubProcess, this, i,
                                  num_chunk * (j), num_chunk * (j + 1),
                                  std::ref(primitive_list_temp[j]));
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < primitive_list_temp[j].size(); k++) {
         primitives_list_[i].push_back(primitive_list_temp[j][k]);
       }
@@ -669,19 +678,19 @@ void los_keeper::TargetManager3D::CalculateCentroid() {
   primitive_best_index_.clear();
   primitive_best_index_.reserve(num_target_);
   for (int i = 0; i < num_target_; i++) {
-    int num_chunk = (int)primitive_safe_total_index_[i].size() / num_thread_;
+    int num_chunk = (int)primitive_safe_total_index_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
-    vector<std::pair<int, float>> min_dist_pair_temp(num_thread_);
-    for (int j = 0; j < num_thread_; j++) {
+    vector<std::pair<int, float>> min_dist_pair_temp(param_.sampling.num_thread);
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager3D::CalculateCentroidSubProcess, this, i,
                                  num_chunk * (j), num_chunk * (j + 1),
                                  std::ref(min_dist_pair_temp[j]));
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
     float min_dist_temp = 99999999999999.0f;
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       if (min_dist_temp > min_dist_pair_temp[j].second) {
         min_dist_temp = min_dist_pair_temp[j].second;
         primitive_best_index_[i] = min_dist_pair_temp[j].first;
@@ -699,18 +708,18 @@ void los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
   primitive_safe_structured_obstacle_index_.reserve(num_target_);
   for (int i = 0; i < num_target_; i++) {
-    int num_chunk = (int)primitives_list_[i].size() / num_thread_;
+    int num_chunk = (int)primitives_list_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
-    IndexListSet primitive_safe_structured_obstacle_index_temp(num_thread_);
-    for (int j = 0; j < num_thread_; j++) {
+    IndexListSet primitive_safe_structured_obstacle_index_temp(param_.sampling.num_thread);
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager3D::CheckStructuredObstacleCollisionSubProcess, this,
                                  i, num_chunk * (j), num_chunk * (j + 1),
                                  std::ref(primitive_safe_structured_obstacle_index_temp[j]));
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < primitive_safe_structured_obstacle_index_temp[j].size(); k++) {
         primitive_safe_structured_obstacle_index_[i].push_back(
             primitive_safe_structured_obstacle_index_temp[j][k]);
@@ -735,8 +744,9 @@ std::vector<LinearConstraint3D> los_keeper::TargetManager3D::GenLinearConstraint
                                              target_state_list_[i].pz};
     SeedDecomp3D decomp_util(seed);
     decomp_util.set_obs(obstacle_pcl);
-    decomp_util.set_local_bbox(Vec3f(0.5f * virtual_pcl_zone_width_, 0.5f * virtual_pcl_zone_width_,
-                                     0.5f * virtual_pcl_zone_height_));
+    decomp_util.set_local_bbox(Vec3f(0.5f * param_.virtual_pcl_bbox.width,
+                                     0.5f * param_.virtual_pcl_bbox.width,
+                                     0.5f * param_.virtual_pcl_bbox.height));
     decomp_util.dilate(0.1);
     polys.push_back(decomp_util.get_polyhedron());
     auto poly_hedrons = decomp_util.get_polyhedron();
@@ -751,18 +761,18 @@ void los_keeper::TargetManager3D::CalculateSafePclIndex(
   primitive_safe_pcl_index_.clear();
   primitive_safe_pcl_index_.reserve(num_target_);
   for (int i = 0; i < num_target_; i++) {
-    int num_chunk = num_sample_ / num_thread_;
+    int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
-    IndexListSet safe_pcl_index_temp(num_thread_);
-    for (int j = 0; j < num_thread_; j++) {
+    IndexListSet safe_pcl_index_temp(param_.sampling.num_thread);
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager3D::CheckPclCollisionSubProcess, this, i,
                                  safe_corridor_list[i], num_chunk * (j), num_chunk * (j + 1),
                                  std::ref(safe_pcl_index_temp[j]));
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
-    for (int j = 0; j < num_thread_; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < safe_pcl_index_temp[j].size(); k++) {
         primitive_safe_pcl_index_[i].push_back(safe_pcl_index_temp[j][k]);
       }
@@ -774,11 +784,11 @@ void los_keeper::TargetManager3D::SampleEndPointsSubProcess(const int &target_id
                                                             const int &chunk_size,
                                                             PointList &endpoint_sub) {
   Point end_point_center{float(target_state_list_[target_id].px +
-                               target_state_list_[target_id].vx * planning_horizon_),
+                               target_state_list_[target_id].vx * param_.horizon.prediction),
                          float(target_state_list_[target_id].py +
-                               target_state_list_[target_id].vy * planning_horizon_),
+                               target_state_list_[target_id].vy * param_.horizon.prediction),
                          float(target_state_list_[target_id].pz +
-                               target_state_list_[target_id].vz * planning_horizon_)};
+                               target_state_list_[target_id].vz * param_.horizon.prediction)};
   uint n_cols = 3;
   uint n_rows = chunk_size;
   using namespace Eigen;
@@ -787,9 +797,14 @@ void los_keeper::TargetManager3D::SampleEndPointsSubProcess(const int &target_id
   Eigen::Vector3f mean;
   Eigen::Matrix3f covar;
   mean << end_point_center.x, end_point_center.y, end_point_center.z;
-  covar << (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_), 0, 0, 0,
-      (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_), 0, 0, 0,
-      (0.5f * 0.33333333f * acc_max_ * planning_horizon_ * planning_horizon_);
+  covar << (0.5f * 0.33333333f * param_.dynamic_limits.acc_max * param_.horizon.prediction *
+            param_.horizon.prediction),
+      0, 0, 0,
+      (0.5f * 0.33333333f * param_.dynamic_limits.acc_max * param_.horizon.prediction *
+       param_.horizon.prediction),
+      0, 0, 0,
+      (0.5f * 0.33333333f * param_.dynamic_limits.acc_max * param_.horizon.prediction *
+       param_.horizon.prediction);
   Eigen::EigenMultivariateNormal<float> normX_solver1(mean, covar);
   gaussian_data_eigen << normX_solver1.samples(n_rows).transpose();
 
@@ -809,37 +824,40 @@ void los_keeper::TargetManager3D::ComputePrimitivesSubProcess(const int &target_
 
   StatePoly primitive_temp;
   primitive_temp.SetDegree(3);
-  float time_interval_temp[2]{0.0, planning_horizon_};
+  float time_interval_temp[2]{0.0, param_.horizon.prediction};
   primitive_temp.SetTimeInterval(time_interval_temp);
   float bernstein_coeff_temp[4];
   for (int j = start_idx; j < end_idx; j++) {
     { // x-coefficient
       bernstein_coeff_temp[0] = target_state_list_[target_id].px;
-      bernstein_coeff_temp[1] = target_state_list_[target_id].px +
-                                0.33333333f * target_state_list_[target_id].vx * planning_horizon_;
-      bernstein_coeff_temp[2] = 0.5f * target_state_list_[target_id].px +
-                                0.5f * end_points_[target_id][j].x +
-                                0.16666667f * target_state_list_[target_id].vx * planning_horizon_;
+      bernstein_coeff_temp[1] =
+          target_state_list_[target_id].px +
+          0.33333333f * target_state_list_[target_id].vx * param_.horizon.prediction;
+      bernstein_coeff_temp[2] =
+          0.5f * target_state_list_[target_id].px + 0.5f * end_points_[target_id][j].x +
+          0.16666667f * target_state_list_[target_id].vx * param_.horizon.prediction;
       bernstein_coeff_temp[3] = end_points_[target_id][j].x;
       primitive_temp.px.SetBernsteinCoeff(bernstein_coeff_temp);
     }
     { // y-coefficient
       bernstein_coeff_temp[0] = target_state_list_[target_id].py;
-      bernstein_coeff_temp[1] = target_state_list_[target_id].py +
-                                0.33333333f * target_state_list_[target_id].vy * planning_horizon_;
-      bernstein_coeff_temp[2] = 0.5f * target_state_list_[target_id].py +
-                                0.5f * end_points_[target_id][j].y +
-                                0.16666667f * target_state_list_[target_id].vy * planning_horizon_;
+      bernstein_coeff_temp[1] =
+          target_state_list_[target_id].py +
+          0.33333333f * target_state_list_[target_id].vy * param_.horizon.prediction;
+      bernstein_coeff_temp[2] =
+          0.5f * target_state_list_[target_id].py + 0.5f * end_points_[target_id][j].y +
+          0.16666667f * target_state_list_[target_id].vy * param_.horizon.prediction;
       bernstein_coeff_temp[3] = end_points_[target_id][j].y;
       primitive_temp.py.SetBernsteinCoeff(bernstein_coeff_temp);
     }
     { // z-coefficient
       bernstein_coeff_temp[0] = target_state_list_[target_id].pz;
-      bernstein_coeff_temp[1] = target_state_list_[target_id].pz +
-                                0.33333333f * target_state_list_[target_id].vz * planning_horizon_;
-      bernstein_coeff_temp[2] = 0.5f * target_state_list_[target_id].pz +
-                                0.5f * end_points_[target_id][j].z +
-                                0.16666667f * target_state_list_[target_id].vz * planning_horizon_;
+      bernstein_coeff_temp[1] =
+          target_state_list_[target_id].pz +
+          0.33333333f * target_state_list_[target_id].vz * param_.horizon.prediction;
+      bernstein_coeff_temp[2] =
+          0.5f * target_state_list_[target_id].pz + 0.5f * end_points_[target_id][j].z +
+          0.16666667f * target_state_list_[target_id].vz * param_.horizon.prediction;
       bernstein_coeff_temp[3] = end_points_[target_id][j].z;
       primitive_temp.pz.SetBernsteinCoeff(bernstein_coeff_temp);
     }
@@ -1044,3 +1062,5 @@ std::optional<std::vector<StatePoly>> los_keeper::TargetManager3D::PredictTarget
     const vector<StatePoly> &structured_obstacle_poly_list) {
   return std::optional<std::vector<StatePoly>>();
 }
+los_keeper::TargetManager3D::TargetManager3D(const los_keeper::PredictionParam &param)
+    : TargetManager(param) {}

@@ -10,6 +10,64 @@
 namespace los_keeper {
 typedef pcl::PointXYZ PclPoint;
 typedef pcl::PointCloud<PclPoint> PclPointCloud;
+
+struct PlanningParam {
+  struct {
+    int num_sample{0};
+    int num_thread{0};
+    bool is_lite{false};
+  } sampling;
+  struct {
+    float planning{0.0f};
+  } horizon;
+  struct {
+    float obstacle_max{0.0f};
+    float target_min{0.0f};
+    float target_max{0.0f};
+  } distance;
+  struct {
+    float vel_max{0.0f};
+    float acc_max{0.0f};
+  } dynamic_limits;
+  struct {
+    float rx{0.0f};
+    float ry{0.0f};
+    float rz{0.0f};
+  } drone;
+  struct {
+    float height{0.0f};
+    float width{0.0f};
+  } virtual_pcl_bbox;
+};
+
+struct PredictionParam {
+  struct {
+    int num_sample{0};
+    int num_thread{0};
+    bool is_lite{false};
+  } sampling;
+  struct {
+    float prediction{0.0f};
+  } horizon;
+  struct {
+    float vel_max{0.0f};
+    float acc_max{0.0f};
+  } dynamic_limits;
+  struct {
+    float obstacle_max{0.0f};
+  } distance;
+  struct {
+    float height{0.0f};
+    float width{0.0f};
+  } virtual_pcl_bbox;
+};
+struct ObstacleParam {
+  float planning_horizon{0.0f};
+};
+
+struct ProblemParam {
+  bool is_2d{false};
+};
 } // namespace los_keeper
 struct ObjectState {
   double t_sec{0.0};

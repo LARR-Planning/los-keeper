@@ -8,6 +8,18 @@ Wrapper::Wrapper() {
   trajectory_planner_ = std::make_shared<TrajectoryPlanner3D>();
 }
 
+Wrapper::Wrapper(const ProblemParam &problem_param, const ObstacleParam &obstacle_param,
+                 const PredictionParam &prediction_param, const PlanningParam &planning_param) {
+  obstacle_manager_.reset(new ObstacleManager(obstacle_param));
+  if (problem_param.is_2d) {
+    target_manager_.reset(new TargetManager2D(prediction_param));
+    trajectory_planner_.reset(new TrajectoryPlanner2D(planning_param));
+  } else {
+    target_manager_.reset(new TargetManager3D(prediction_param));
+    trajectory_planner_.reset(new TrajectoryPlanner3D(planning_param));
+  }
+}
+
 std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
   if (!chasing_trajectory)
     return std::nullopt;
