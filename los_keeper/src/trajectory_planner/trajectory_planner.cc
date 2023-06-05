@@ -5,7 +5,7 @@ using namespace los_keeper;
 std::optional<StatePoly> TrajectoryPlanner::ComputeChasingTrajectory(
     const std::vector<StatePoly> &target_prediction_list,
     const los_keeper::PclPointCloud &obstacle_points,
-    const std::vector<StatePoly> &structured_obstacle_poly_list) const {
+    const std::vector<StatePoly> &structured_obstacle_poly_list) {
   return std::optional<StatePoly>();
 }
 
@@ -33,6 +33,7 @@ void TrajectoryPlanner::ComputePrimitives() {}
 void TrajectoryPlanner::ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                                     PrimitiveList &primitive_list_sub) {}
 TrajectoryPlanner::TrajectoryPlanner(const PlanningParam &param) { param_ = param; }
+StatePoly TrajectoryPlanner::GetBestKeeperTrajectory() { return primitives_list_[0]; };
 
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
   SampleShootingPoints();
@@ -156,6 +157,18 @@ void TrajectoryPlanner2D::ComputePrimitivesSubProcess(const int &start_idx, cons
 }
 
 TrajectoryPlanner2D::TrajectoryPlanner2D(const PlanningParam &param) : TrajectoryPlanner(param) {}
+
+optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
+    const vector<StatePoly> &target_prediction_list, const PclPointCloud &obstacle_points,
+    const vector<StatePoly> &structured_obstacle_poly_list) {
+  this->SetTargetState(target_prediction_list);
+  this->SetObstacleState(obstacle_points, structured_obstacle_poly_list);
+  bool plan_success = this->PlanKeeperTrajectory();
+  if (plan_success)
+    return GetBestKeeperTrajectory();
+  else
+    return std::nullopt;
+}
 
 bool TrajectoryPlanner3D::PlanKeeperTrajectory() {
   SampleShootingPoints();
@@ -288,3 +301,14 @@ void TrajectoryPlanner3D::ComputePrimitivesSubProcess(const int &start_idx, cons
   }
 }
 TrajectoryPlanner3D::TrajectoryPlanner3D(const PlanningParam &param) : TrajectoryPlanner(param) {}
+optional<StatePoly> TrajectoryPlanner3D::ComputeChasingTrajectory(
+    const vector<StatePoly> &target_prediction_list, const PclPointCloud &obstacle_points,
+    const vector<StatePoly> &structured_obstacle_poly_list) {
+  this->SetTargetState(target_prediction_list);
+  this->SetObstacleState(obstacle_points, structured_obstacle_poly_list);
+  bool plan_success = this->PlanKeeperTrajectory();
+  if (plan_success)
+    return GetBestKeeperTrajectory();
+  else
+    return std::nullopt;
+}
