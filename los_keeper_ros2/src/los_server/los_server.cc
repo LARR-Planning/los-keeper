@@ -22,21 +22,21 @@ InputMsg los_keeper::ConvertToInputMsg(const int drone_input) {
   return InputMsg();
 }
 
-void LosServer::PlanningTimerCallback() { wrapper_.OnPlanningTimerCallback(); }
+void LosServer::PlanningTimerCallback() { wrapper_ptr_->OnPlanningTimerCallback(); }
 
 void LosServer::ControlTimerCallback() {
   auto t = now();
-  auto control_input = wrapper_.GenerateControlInputFromPlanning(t.seconds());
+  auto control_input = wrapper_ptr_->GenerateControlInputFromPlanning(t.seconds());
 }
 
 void LosServer::DroneStateCallback(const DroneStateMsg::SharedPtr msg) {
   auto drone_state = ConvertToDroneState(*msg);
-  wrapper_.SetDroneState(drone_state);
+  wrapper_ptr_->SetDroneState(drone_state);
 };
 
 void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
   auto points = ConvertToPointCloud(*msg);
-  wrapper_.SetPoints(points);
+  wrapper_ptr_->SetPoints(points);
 };
 
 LosServer::LosServer(const rclcpp::NodeOptions &options_input)
@@ -60,8 +60,7 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
 
   control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
 
-  // TODO(Jeon): replaced by wrapper's parameter struct
-
+  // Parameter Settings
   ObstacleParam obstacle_param;
   PredictionParam prediction_param;
   PlanningParam planning_param;
@@ -94,7 +93,7 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
     get_parameter<int>("trajectory_planner.sampling.num_thread",
                        planning_param.sampling.num_thread);
     get_parameter<bool>("trajectory_planner.sampling.is_lite", planning_param.sampling.is_lite);
-    get_parameter<float>("trajectory_planner.horizon.prediction", planning_param.horizon.planning);
+    get_parameter<float>("trajectory_planner.horizon.planning", planning_param.horizon.planning);
     get_parameter<float>("trajectory_planner.distance.obstacle_max",
                          planning_param.distance.obstacle_max);
     get_parameter<float>("trajectory_planner.distance.target_min",
@@ -113,6 +112,5 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
     get_parameter<float>("trajectory_planner.virtual_pcl_bbox.height",
                          planning_param.virtual_pcl_bbox.height);
   }
-  wrapper_.SetParameters(problem_param, obstacle_param, prediction_param, planning_param);
-  //  Wrapper aa(problem_param,obstacle_param,prediction_param,planning_param);
+  wrapper_ptr_ = new Wrapper(problem_param, obstacle_param, prediction_param, planning_param);
 }

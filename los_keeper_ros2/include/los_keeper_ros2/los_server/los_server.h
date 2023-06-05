@@ -30,7 +30,7 @@ InputMsg ConvertToInputMsg(const int drone_input);
 
 class LosServer : public rclcpp::Node {
 private:
-  Wrapper wrapper_;
+  Wrapper *wrapper_ptr_;
 
   PointCloudSubscriber points_subscriber_;
   StateSubscriber state_subscriber_;

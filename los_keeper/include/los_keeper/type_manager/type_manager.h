@@ -66,7 +66,7 @@ struct ObstacleParam {
 };
 
 struct ProblemParam {
-  bool is_2d;
+  bool is_2d{false};
 };
 } // namespace los_keeper
 struct ObjectState {
