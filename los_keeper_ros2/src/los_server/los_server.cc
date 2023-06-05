@@ -114,4 +114,5 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
                          planning_param.virtual_pcl_bbox.height);
   }
   wrapper_.SetParameters(problem_param, obstacle_param, prediction_param, planning_param);
+  //  Wrapper aa(problem_param,obstacle_param,prediction_param,planning_param);
 }

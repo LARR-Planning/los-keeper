@@ -62,6 +62,8 @@ private:
 
 public:
   Wrapper();
+  explicit Wrapper(const ProblemParam &problem_param, const ObstacleParam &obstacle_param,
+                   const PredictionParam &prediction_param, const PlanningParam &planning_param);
   void SetParameters(const ProblemParam &problem_param, const ObstacleParam &obstacle_param,
                      const PredictionParam &prediction_param, const PlanningParam &planning_param) {
     problem_param_ = problem_param;

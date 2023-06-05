@@ -43,7 +43,8 @@ protected:
                                            PrimitiveList &primitive_list_sub);
 
 public:
-  TrajectoryPlanner();
+  TrajectoryPlanner() = default;
+  explicit TrajectoryPlanner(const PlanningParam &param);
   std::optional<StatePoly>
   ComputeChasingTrajectory(const std::vector<StatePoly> &target_prediction_list,
                            const PclPointCloud &obstacle_points,
@@ -64,6 +65,8 @@ private:
                                    PrimitiveList &primitive_list_sub) override;
 
 public:
+  TrajectoryPlanner2D() = default;
+  explicit TrajectoryPlanner2D(const PlanningParam &param);
   bool PlanKeeperTrajectory() override;
 };
 
@@ -77,6 +80,8 @@ private:
                                    PrimitiveList &primitive_list_sub) override;
 
 public:
+  TrajectoryPlanner3D() = default;
+  explicit TrajectoryPlanner3D(const PlanningParam &param);
   bool PlanKeeperTrajectory() override;
 };
 

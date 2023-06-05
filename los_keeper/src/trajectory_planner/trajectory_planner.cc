@@ -9,8 +9,6 @@ std::optional<StatePoly> TrajectoryPlanner::ComputeChasingTrajectory(
   return std::optional<StatePoly>();
 }
 
-TrajectoryPlanner::TrajectoryPlanner() {}
-
 void TrajectoryPlanner::SetTargetState(const PrimitiveList &target_trajectory_list) {
   target_trajectory_list_.clear();
   target_trajectory_list_ = target_trajectory_list;
@@ -34,6 +32,7 @@ void TrajectoryPlanner::ComputePrimitives() {}
 
 void TrajectoryPlanner::ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                                     PrimitiveList &primitive_list_sub) {}
+TrajectoryPlanner::TrajectoryPlanner(const PlanningParam &param) { param_ = param; }
 
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
   SampleShootingPoints();
@@ -155,6 +154,8 @@ void TrajectoryPlanner2D::ComputePrimitivesSubProcess(const int &start_idx, cons
     primitive_list_sub.push_back(primitive_temp);
   }
 }
+
+TrajectoryPlanner2D::TrajectoryPlanner2D(const PlanningParam &param) : TrajectoryPlanner(param) {}
 
 bool TrajectoryPlanner3D::PlanKeeperTrajectory() {
   SampleShootingPoints();
@@ -286,3 +287,4 @@ void TrajectoryPlanner3D::ComputePrimitivesSubProcess(const int &start_idx, cons
     primitive_list_sub.push_back(primitive_temp);
   }
 }
+TrajectoryPlanner3D::TrajectoryPlanner3D(const PlanningParam &param) : TrajectoryPlanner(param) {}
