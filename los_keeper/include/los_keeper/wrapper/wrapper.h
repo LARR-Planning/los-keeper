@@ -34,6 +34,11 @@ class Wrapper {
   FRIEND_TEST(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived);
 
 private:
+  ProblemParam problem_param_;
+  ObstacleParam obstacle_param_;
+  PredictionParam prediction_param_;
+  PlanningParam planning_param_;
+
   DroneState drone_state_;
   store::State state_;
   PlanningResult planning_result_;
@@ -57,7 +62,13 @@ private:
 
 public:
   Wrapper();
-
+  void SetParameters(const ProblemParam &problem_param, const ObstacleParam &obstacle_param,
+                     const PredictionParam &prediction_param, const PlanningParam &planning_param) {
+    problem_param_ = problem_param;
+    obstacle_param_ = obstacle_param;
+    prediction_param_ = prediction_param;
+    planning_param_ = planning_param;
+  };
   void SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points);
   void SetDroneState(const DroneState &drone_state);
   std::optional<Point> GenerateControlInputFromPlanning(double time);
