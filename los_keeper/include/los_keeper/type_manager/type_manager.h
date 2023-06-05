@@ -94,6 +94,13 @@ struct DroneState {
   float az;
 };
 
+struct JerkControlInput {
+  double t_sec{0.0};
+  float jx{0.0f};
+  float jy{0.0f};
+  float jz{0.0f};
+};
+
 struct Point {
   float x{0.0};
   float y{0.0};
