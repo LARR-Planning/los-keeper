@@ -2,8 +2,9 @@
 using namespace los_keeper;
 
 Wrapper::Wrapper() {
+  // TODO(@): remove if unnecessary
+
   obstacle_manager_ = std::make_shared<ObstacleManager>();
-  // TODO(@): parameterize this instantiation
   target_manager_ = std::make_shared<TargetManager3D>();
   trajectory_planner_ = std::make_shared<TrajectoryPlanner3D>();
 }
@@ -87,9 +88,13 @@ void Wrapper::OnPlanningTimerCallback() {
   }
 }
 
-void Wrapper::OnStartServiceCallback() {
+void Wrapper::OnToggleActivateServiceCallback() {
+  printf("[Wrapper] received activation\n");
   using namespace store;
-  HandleActivateAction();
+  if (!state_.is_activated)
+    HandleActivateAction();
+  else
+    HandleStopAction();
 }
 
 void Wrapper::SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points) {
