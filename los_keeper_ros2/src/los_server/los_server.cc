@@ -61,10 +61,10 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
 
   // Parameter Settings
-  ObstacleParam obstacle_param;
-  PredictionParam prediction_param;
-  PlanningParam planning_param;
-  ProblemParam problem_param;
+  ObstacleParameter obstacle_param;
+  PredictionParameter prediction_param;
+  PlanningParameter planning_param;
+  ProblemParameter problem_param;
   { // Parameter Settings for Problem
     get_parameter<bool>("problem.is_2d", problem_param.is_2d);
   }
@@ -112,5 +112,11 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
     get_parameter<float>("trajectory_planner.virtual_pcl_bbox.height",
                          planning_param.virtual_pcl_bbox.height);
   }
-  wrapper_ptr_ = new Wrapper(problem_param, obstacle_param, prediction_param, planning_param);
+  Parameters parameters;
+  parameters.obstacle = obstacle_param;
+  parameters.prediction = prediction_param;
+  parameters.planning = planning_param;
+  parameters.problem = problem_param;
+
+  wrapper_ptr_ = new Wrapper(parameters);
 }

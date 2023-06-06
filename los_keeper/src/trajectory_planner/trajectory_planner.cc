@@ -32,7 +32,7 @@ void TrajectoryPlanner::ComputePrimitives() {}
 
 void TrajectoryPlanner::ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                                     PrimitiveList &primitive_list_sub) {}
-TrajectoryPlanner::TrajectoryPlanner(const PlanningParam &param) { param_ = param; }
+TrajectoryPlanner::TrajectoryPlanner(const PlanningParameter &param) { param_ = param; }
 StatePoly TrajectoryPlanner::GetBestKeeperTrajectory() { return primitives_list_[0]; };
 
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
@@ -156,7 +156,8 @@ void TrajectoryPlanner2D::ComputePrimitivesSubProcess(const int &start_idx, cons
   }
 }
 
-TrajectoryPlanner2D::TrajectoryPlanner2D(const PlanningParam &param) : TrajectoryPlanner(param) {}
+TrajectoryPlanner2D::TrajectoryPlanner2D(const PlanningParameter &param)
+    : TrajectoryPlanner(param) {}
 
 optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
     const vector<StatePoly> &target_prediction_list, const PclPointCloud &obstacle_points,
@@ -300,7 +301,8 @@ void TrajectoryPlanner3D::ComputePrimitivesSubProcess(const int &start_idx, cons
     primitive_list_sub.push_back(primitive_temp);
   }
 }
-TrajectoryPlanner3D::TrajectoryPlanner3D(const PlanningParam &param) : TrajectoryPlanner(param) {}
+TrajectoryPlanner3D::TrajectoryPlanner3D(const PlanningParameter &param)
+    : TrajectoryPlanner(param) {}
 optional<StatePoly> TrajectoryPlanner3D::ComputeChasingTrajectory(
     const vector<StatePoly> &target_prediction_list, const PclPointCloud &obstacle_points,
     const vector<StatePoly> &structured_obstacle_poly_list) {

@@ -21,7 +21,7 @@ protected:
   pcl::PointCloud<pcl::PointXYZ> cloud_;
   vector<ObjectState> target_state_list_;
   int num_target_{};
-  PredictionParam param_;
+  PredictionParameter param_;
 
   PointListSet end_points_;          // Sampled End Points from Dynamics Model
   PrimitiveListSet primitives_list_; // Raw primitives from
@@ -58,7 +58,7 @@ protected:
 
 public:
   TargetManager();
-  explicit TargetManager(const PredictionParam &param) : param_(param){};
+  explicit TargetManager(const PredictionParameter &param) : param_(param){};
   virtual std::optional<std::vector<StatePoly>>
   PredictTargetList(const std::vector<ObjectState> &target_state_list,
                     const PclPointCloud &point_cloud,
@@ -94,7 +94,7 @@ private:
 
 public:
   TargetManager2D() = default;
-  explicit TargetManager2D(const PredictionParam &param);
+  explicit TargetManager2D(const PredictionParameter &param);
 
   std::optional<std::vector<StatePoly>>
   PredictTargetList(const std::vector<ObjectState> &target_state_list,
@@ -129,7 +129,7 @@ private:
 
 public:
   TargetManager3D() = default;
-  explicit TargetManager3D(const PredictionParam &param);
+  explicit TargetManager3D(const PredictionParameter &param);
 
   std::optional<std::vector<StatePoly>>
   PredictTargetList(const std::vector<ObjectState> &target_state_list,

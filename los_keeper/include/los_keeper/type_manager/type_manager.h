@@ -11,7 +11,7 @@ namespace los_keeper {
 typedef pcl::PointXYZ PclPoint;
 typedef pcl::PointCloud<PclPoint> PclPointCloud;
 
-struct PlanningParam {
+struct PlanningParameter {
   struct {
     int num_sample{0};
     int num_thread{0};
@@ -40,7 +40,7 @@ struct PlanningParam {
   } virtual_pcl_bbox;
 };
 
-struct PredictionParam {
+struct PredictionParameter {
   struct {
     int num_sample{0};
     int num_thread{0};
@@ -61,13 +61,21 @@ struct PredictionParam {
     float width{0.0f};
   } virtual_pcl_bbox;
 };
-struct ObstacleParam {
+struct ObstacleParameter {
   float planning_horizon{0.0f};
 };
 
-struct ProblemParam {
+struct ProblemParameter {
   bool is_2d{false};
 };
+
+struct Parameters {
+  ProblemParameter problem;
+  PlanningParameter planning;
+  PredictionParameter prediction;
+  ObstacleParameter obstacle;
+};
+
 } // namespace los_keeper
 struct ObjectState {
   double t_sec{0.0};

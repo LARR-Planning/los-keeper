@@ -20,7 +20,7 @@ protected:
   DroneState drone_state_;
 
   // PARAMETER
-  PlanningParam param_;
+  PlanningParameter param_;
 
   PointList shooting_points_;
   PrimitiveList primitives_list_;
@@ -49,7 +49,7 @@ protected:
 
 public:
   TrajectoryPlanner() = default;
-  explicit TrajectoryPlanner(const PlanningParam &param);
+  explicit TrajectoryPlanner(const PlanningParameter &param);
   virtual optional<StatePoly>
   ComputeChasingTrajectory(const vector<StatePoly> &target_prediction_list,
                            const PclPointCloud &obstacle_points,
@@ -68,7 +68,7 @@ private:
 
 public:
   TrajectoryPlanner2D() = default;
-  explicit TrajectoryPlanner2D(const PlanningParam &param);
+  explicit TrajectoryPlanner2D(const PlanningParameter &param);
   optional<StatePoly>
   ComputeChasingTrajectory(const vector<StatePoly> &target_prediction_list,
                            const PclPointCloud &obstacle_points,
@@ -87,7 +87,7 @@ private:
 
 public:
   TrajectoryPlanner3D() = default;
-  explicit TrajectoryPlanner3D(const PlanningParam &param);
+  explicit TrajectoryPlanner3D(const PlanningParameter &param);
   optional<StatePoly>
   ComputeChasingTrajectory(const vector<StatePoly> &target_prediction_list,
                            const PclPointCloud &obstacle_points,

@@ -36,4 +36,4 @@ void ObstacleManager::TranslateStateToPoly() {
 }
 
 PclPointCloud ObstacleManager::GetPointCloud() { return cloud_; }
-ObstacleManager::ObstacleManager(const ObstacleParam &param) : param_(param) {}
+ObstacleManager::ObstacleManager(const ObstacleParameter &param) : param_(param) {}
