@@ -2,3 +2,6 @@
 build/
 */build/
 */install/
+cmake-build-debug/
+.idea
+*.pyc

@@ -15,14 +15,14 @@ private:
   PclPointCloud cloud_;
   std::vector<ObjectState> structured_obstacle_state_list_;
   std::vector<StatePoly> structured_obstacle_poly_list_;
-  ObstacleParam param_;
+  ObstacleParameter param_;
 
   Eigen::Affine3d pose_;
   void TranslateStateToPoly();
 
 public:
   ObstacleManager() = default;
-  explicit ObstacleManager(const ObstacleParam &param);
+  explicit ObstacleManager(const ObstacleParameter &param);
   void SetObstacleCloud(const PclPointCloud &cloud);
   void SetStructuredObstacleState(const std::vector<ObjectState> &structured_obstacle_state_list);
   std::vector<StatePoly> GetStructuredObstaclePolyList() { return structured_obstacle_poly_list_; };
