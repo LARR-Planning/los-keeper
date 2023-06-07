@@ -37,13 +37,13 @@ private:
 
   void PublishStateMessage() {
     DroneStateMsg message;
-    RCLCPP_INFO(get_logger(), "publishing empty drone state.");
+    message.header.stamp = now();
     state_publisher_->publish(message);
   }
 
   void PublishPointsMessage() {
     PointCloudMsg message;
-    RCLCPP_INFO(get_logger(), "publishing empty points.");
+    // TODO(@): testing with non-empty pointcloud
     points_publisher_->publish(message);
   }
 };

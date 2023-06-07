@@ -19,7 +19,7 @@ TEST_F(ApiTestFixture, PlanningShouldNullWhenNotActivatedOrNotReceived) {
   wrapper_.OnPlanningTimerCallback();
   EXPECT_EQ(wrapper_.GenerateControlInputFromPlanning(0), std::nullopt);
 
-  wrapper_.OnStartServiceCallback();
+  wrapper_.OnToggleActivateServiceCallback();
   wrapper_.OnPlanningTimerCallback();
 
   EXPECT_EQ(wrapper_.planning_result_.seq, 0);
@@ -30,7 +30,7 @@ TEST_F(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived) {
   drone_state.t_sec = 1.0;
   wrapper_.SetDroneState(drone_state);
 
-  wrapper_.OnStartServiceCallback();
+  wrapper_.OnToggleActivateServiceCallback();
 
   // replan tried as planning is not safe
   wrapper_.OnPlanningTimerCallback();

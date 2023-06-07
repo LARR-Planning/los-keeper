@@ -3,7 +3,23 @@
 using namespace los_keeper;
 
 DroneState los_keeper::ConvertToDroneState(const DroneStateMsg &drone_state_msg) {
-  return DroneState();
+  DroneState drone_state;
+  drone_state.t_sec =
+      drone_state_msg.header.stamp.sec + drone_state_msg.header.stamp.nanosec * 1E-9;
+
+  drone_state.px = drone_state_msg.px;
+  drone_state.py = drone_state_msg.py;
+  drone_state.pz = drone_state_msg.pz;
+
+  drone_state.vx = drone_state_msg.vx;
+  drone_state.vy = drone_state_msg.vy;
+  drone_state.vz = drone_state_msg.vz;
+
+  drone_state.ax = drone_state_msg.ax;
+  drone_state.ay = drone_state_msg.ay;
+  drone_state.az = drone_state_msg.az;
+
+  return drone_state;
 }
 
 pcl::PointCloud<pcl::PointXYZ>
@@ -27,6 +43,12 @@ void LosServer::PlanningTimerCallback() { wrapper_ptr_->OnPlanningTimerCallback(
 void LosServer::ControlTimerCallback() {
   auto t = now();
   auto control_input = wrapper_ptr_->GenerateControlInputFromPlanning(t.seconds());
+}
+
+void los_keeper::LosServer::ToggleActivateCallback(
+    const std::shared_ptr<ToggleActivateService::Request> reqeust,
+    std::shared_ptr<ToggleActivateService::Response> response) {
+  wrapper_ptr_->OnToggleActivateServiceCallback();
 }
 
 void LosServer::DroneStateCallback(const DroneStateMsg::SharedPtr msg) {
@@ -59,6 +81,10 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
       this->create_wall_timer(10ms, std::bind(&LosServer::PlanningTimerCallback, this));
 
   control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
+
+  toggle_activate_server_ = this->create_service<ToggleActivateService>(
+      "~/toggle_activate", std::bind(&LosServer::ToggleActivateCallback, this,
+                                     std::placeholders::_1, std::placeholders::_2));
 
   // Parameter Settings
   ObstacleParameter obstacle_param;

@@ -66,7 +66,7 @@ public:
   std::optional<Point> GenerateControlInputFromPlanning(double time);
 
   void OnPlanningTimerCallback();
-  void OnStartServiceCallback();
+  void OnToggleActivateServiceCallback();
 };
 } // namespace los_keeper
 

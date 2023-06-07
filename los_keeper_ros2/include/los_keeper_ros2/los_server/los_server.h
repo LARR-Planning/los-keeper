@@ -5,6 +5,7 @@
 #include "los_keeper_msgs/msg/jerk_control_input.hpp"
 #include "los_keeper_msgs/msg/object_state.hpp"
 #include "los_keeper_msgs/msg/object_state_array.hpp"
+#include "los_keeper_msgs/srv/toggle_activate.hpp"
 
 #include <pcl/PCLPointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -21,6 +22,8 @@ using PointCloudSubscriber = rclcpp::Subscription<sensor_msgs::msg::PointCloud2>
 using StateSubscriber = rclcpp::Subscription<DroneStateMsg>::SharedPtr;
 using InputPublisher = rclcpp::Publisher<InputMsg>::SharedPtr;
 using RosTimer = rclcpp::TimerBase::SharedPtr;
+using ToggleActivateService = los_keeper_msgs::srv::ToggleActivate;
+using ToggleActivateServer = rclcpp::Service<ToggleActivateService>::SharedPtr;
 
 namespace los_keeper {
 
@@ -39,10 +42,14 @@ private:
   RosTimer planning_timer_;
   RosTimer control_timer_;
 
+  ToggleActivateServer toggle_activate_server_;
+
   void DroneStateCallback(const DroneStateMsg::SharedPtr msg);
   void PointsCallback(const PointCloudMsg::SharedPtr msg);
   void PlanningTimerCallback();
   void ControlTimerCallback();
+  void ToggleActivateCallback(const std::shared_ptr<ToggleActivateService::Request> reqeust,
+                              std::shared_ptr<ToggleActivateService::Response> response);
 
 public:
   LosServer(const rclcpp::NodeOptions &options_input);
