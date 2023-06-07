@@ -51,18 +51,18 @@ protected:
   virtual void CalculateCentroid();
   virtual void CalculateCentroidSubProcess(const int &target_id, const int &start_idx,
                                            const int &end_idx, pair<int, float> &min_dist);
+  PrimitiveList GetTargetPredictionResult();
+  void SetTargetState(const vector<ObjectState> &target_state_list);
+  void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud,
+                        const PrimitiveList &structured_obstacle_poly_list);
 
 public:
   TargetManager();
   explicit TargetManager(const PredictionParam &param) : param_(param){};
-  void SetTargetState(const vector<ObjectState> &target_state_list);
-  void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud,
-                        const PrimitiveList &structured_obstacle_poly_list);
   virtual std::optional<std::vector<StatePoly>>
   PredictTargetList(const std::vector<ObjectState> &target_state_list,
                     const PclPointCloud &point_cloud,
-                    const std::vector<StatePoly> &structured_obstacle_poly_list) = 0;
-  PrimitiveList GetTargetPredictionResult();
+                    const PrimitiveList &structured_obstacle_poly_list) = 0;
 };
 
 class TargetManager2D : public los_keeper::TargetManager {
@@ -90,16 +90,16 @@ private:
                                    pair<int, float> &min_dist) override;
 
   void CalculateSafePclIndex(const vector<LinearConstraint2D> &safe_corridor_list);
+  bool PredictTargetTrajectory() override;
 
 public:
   TargetManager2D() = default;
   explicit TargetManager2D(const PredictionParam &param);
 
-  bool PredictTargetTrajectory() override;
   std::optional<std::vector<StatePoly>>
   PredictTargetList(const std::vector<ObjectState> &target_state_list,
                     const los_keeper::PclPointCloud &point_cloud,
-                    const std::vector<StatePoly> &structured_obstacle_poly_list) override;
+                    const PrimitiveList &structured_obstacle_poly_list) override;
 };
 class TargetManager3D : public los_keeper::TargetManager {
 private:
@@ -125,15 +125,16 @@ private:
   void CalculateCentroidSubProcess(const int &target_id, const int &start_idx, const int &end_idx,
                                    pair<int, float> &min_dist) override;
   void CalculateSafePclIndex(const vector<LinearConstraint3D> &safe_corridor_list);
+  bool PredictTargetTrajectory() override;
 
 public:
   TargetManager3D() = default;
   explicit TargetManager3D(const PredictionParam &param);
-  bool PredictTargetTrajectory() override;
+
   std::optional<std::vector<StatePoly>>
   PredictTargetList(const std::vector<ObjectState> &target_state_list,
                     const PclPointCloud &point_cloud,
-                    const std::vector<StatePoly> &structured_obstacle_poly_list) override;
+                    const PrimitiveList &structured_obstacle_poly_list) override;
 };
 }; // namespace los_keeper
 

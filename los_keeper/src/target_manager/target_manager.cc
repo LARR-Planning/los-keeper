@@ -539,7 +539,13 @@ void los_keeper::TargetManager2D::CalculateCentroidSubProcess(const int &target_
 std::optional<std::vector<StatePoly>> los_keeper::TargetManager2D::PredictTargetList(
     const vector<ObjectState> &target_state_list, const los_keeper::PclPointCloud &point_cloud,
     const vector<StatePoly> &structured_obstacle_poly_list) {
-  return std::optional<std::vector<StatePoly>>();
+  this->SetTargetState(target_state_list);
+  this->SetObstacleState(point_cloud, structured_obstacle_poly_list);
+  bool is_target_trajectory_exist = PredictTargetTrajectory();
+  if (is_target_trajectory_exist) // target trajectories exist
+    return GetTargetPredictionResult();
+  else // no target trajectory exists
+    return std::nullopt;
 }
 los_keeper::TargetManager2D::TargetManager2D(const los_keeper::PredictionParam &param)
     : TargetManager(param) {}
@@ -1060,7 +1066,13 @@ void los_keeper::TargetManager3D::CalculateCentroidSubProcess(const int &target_
 std::optional<std::vector<StatePoly>> los_keeper::TargetManager3D::PredictTargetList(
     const vector<ObjectState> &target_state_list, const los_keeper::PclPointCloud &point_cloud,
     const vector<StatePoly> &structured_obstacle_poly_list) {
-  return std::optional<std::vector<StatePoly>>();
+  this->SetTargetState(target_state_list);
+  this->SetObstacleState(point_cloud, structured_obstacle_poly_list);
+  bool is_target_trajectory_exist = PredictTargetTrajectory();
+  if (is_target_trajectory_exist) // target trajectories exist
+    return GetTargetPredictionResult();
+  else // no target trajectory exists
+    return std::nullopt;
 }
 los_keeper::TargetManager3D::TargetManager3D(const los_keeper::PredictionParam &param)
     : TargetManager(param) {}
