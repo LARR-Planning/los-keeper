@@ -23,6 +23,8 @@ def generate_launch_description():
             name='test_publisher_node',
             output={'both': 'log'},
             remappings=[("~/state", "/los_keeper/los_server_node/state"),
-                        ("~/points", "/los_keeper/los_server_node/points")]
+                        ("~/points", "/los_keeper/los_server_node/points"),
+                        ("~/object_state_array", 
+                         "/los_keeper/los_server_node/object_state_array")]
         )
     ])
