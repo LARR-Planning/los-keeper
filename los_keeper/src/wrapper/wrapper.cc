@@ -112,6 +112,13 @@ void Wrapper::SetDroneState(const DroneState &drone_state) {
   }
 }
 
+void Wrapper::SetObjectStateArray(const std::vector<ObjectState> &object_state_list) {
+  std::unique_lock<std::mutex> lock(mutex_list_.object_state_list, std::defer_lock);
+  if (lock.try_lock()) {
+    object_state_list_ = object_state_list;
+  }
+}
+
 std::optional<Point> Wrapper::GenerateControlInputFromPlanning(double time) {
   // TODO(@): generate jerk
   std::optional<Point> control_input;
