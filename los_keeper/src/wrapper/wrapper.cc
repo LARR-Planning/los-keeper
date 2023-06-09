@@ -28,7 +28,7 @@ std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
 
 void Wrapper::UpdateState(store::State &state) {
   // TODO(Jeon): add object state, etc,.
-  state.is_data_received = drone_state_.t_sec > 0.0;
+  state.is_data_received = drone_state_.t_sec > 0.0 && object_state_list_.size() > 0;
 
   // TODO(Lee): implement these
   // state.is_currently_safe =
@@ -46,7 +46,8 @@ void Wrapper::HandleReplanAction() {
     std::scoped_lock lock(mutex_list_.drone_state, mutex_list_.point_cloud);
     planning_problem.drone_state = drone_state_;
     planning_problem.point_cloud = obstacle_manager_->GetPointCloud();
-    // TODO(@): add target_state_list and structure_obstacle_poly_list
+    planning_problem.target_state_list = object_state_list_;
+    // TODO(Lee): add target_state_list and structure_obstacle_poly_list
   }
   const auto &point_cloud = planning_problem.point_cloud;
   const auto &structured_obstacle_poly_list = planning_problem.structured_obstacle_poly_list;

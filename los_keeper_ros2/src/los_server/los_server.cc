@@ -41,12 +41,16 @@ los_keeper::ConvertToObjectStateArray(const ObjectStateArrayMsg &object_state_ar
     // TODO(Lee): add id of object and rx,ry,rz
     ObjectState object_state;
     object_state.t_sec = t_sec;
+    object_state.id = object_state_msg.id;
     object_state.px = object_state_msg.px;
     object_state.py = object_state_msg.py;
     object_state.pz = object_state_msg.pz;
     object_state.vx = object_state_msg.vx;
     object_state.vy = object_state_msg.vy;
     object_state.vz = object_state_msg.vz;
+    object_state.rx = object_state_msg.rx;
+    object_state.ry = object_state_msg.ry;
+    object_state.rz = object_state_msg.rz;
     object_state_array.push_back(object_state);
   }
   return object_state_array;
