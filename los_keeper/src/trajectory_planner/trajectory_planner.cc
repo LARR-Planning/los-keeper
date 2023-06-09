@@ -303,14 +303,27 @@ void TrajectoryPlanner3D::ComputePrimitivesSubProcess(const int &start_idx, cons
 }
 TrajectoryPlanner3D::TrajectoryPlanner3D(const PlanningParameter &param)
     : TrajectoryPlanner(param) {}
+
 optional<StatePoly> TrajectoryPlanner3D::ComputeChasingTrajectory(
     const vector<StatePoly> &target_prediction_list, const PclPointCloud &obstacle_points,
     const vector<StatePoly> &structured_obstacle_poly_list) {
+  /**
   this->SetTargetState(target_prediction_list);
   this->SetObstacleState(obstacle_points, structured_obstacle_poly_list);
   bool plan_success = this->PlanKeeperTrajectory();
+
   if (plan_success)
     return GetBestKeeperTrajectory();
   else
     return std::nullopt;
+  */
+
+  // TODO(Lee): change after adding exception handling
+
+  bool plan_success = true;
+  if (plan_success) {
+    return StatePoly();
+  } else {
+    return nullopt;
+  }
 }

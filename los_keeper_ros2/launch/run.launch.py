@@ -14,7 +14,8 @@ def generate_launch_description():
             executable='los_server_node',
             name='los_server_node',
             output='screen',
-            parameters=parameters
+            parameters=parameters,
+            emulate_tty=True
         ),
         Node(
             package='los_keeper_ros2',

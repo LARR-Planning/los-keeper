@@ -1,8 +1,8 @@
 //
 // Created by larr-planning on 23. 5. 4.
 //
-#ifndef LOS_KEEPER_BERNSTEIN_POLYNOMIAL_UTILS_H
-#define LOS_KEEPER_BERNSTEIN_POLYNOMIAL_UTILS_H
+#ifndef HEADER_BERNSTEIN_POLYNOMIAL_UTILS
+#define HEADER_BERNSTEIN_POLYNOMIAL_UTILS
 int factorial(int num);
 int nchoosek(int n, int r);
 #include <cmath>
@@ -42,4 +42,4 @@ public:
   BernsteinPoly operator*(const float &scalar_);
 };
 
-#endif // LOS_KEEPER_BERNSTEIN_POLYNOMIAL_UTILS_H
+#endif /* HEADER_BERNSTEIN_POLYNOMIAL_UTILS */

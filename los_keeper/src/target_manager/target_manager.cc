@@ -551,6 +551,7 @@ los_keeper::TargetManager2D::TargetManager2D(const los_keeper::PredictionParamet
     : TargetManager(param) {}
 
 bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
+  /** TODO(Lee): fix bug
   SampleEndPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();
@@ -558,6 +559,8 @@ bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
   if (is_safe_traj_exist)
     CalculateCentroid();
   return is_safe_traj_exist;
+  **/
+  return true;
 }
 
 void los_keeper::TargetManager3D::SampleEndPoints() {
@@ -1068,11 +1071,15 @@ std::optional<std::vector<StatePoly>> los_keeper::TargetManager3D::PredictTarget
     const vector<StatePoly> &structured_obstacle_poly_list) {
   this->SetTargetState(target_state_list);
   this->SetObstacleState(point_cloud, structured_obstacle_poly_list);
+  // TODO(Lee): Temporarily, return two empty statepoly for pipeline testing purposes.
+  return std::vector<StatePoly>(2);
+  /**
   bool is_target_trajectory_exist = PredictTargetTrajectory();
   if (is_target_trajectory_exist) // target trajectories exist
     return GetTargetPredictionResult();
   else // no target trajectory exists
     return std::nullopt;
+  */
 }
 los_keeper::TargetManager3D::TargetManager3D(const los_keeper::PredictionParameter &param)
     : TargetManager(param) {}
