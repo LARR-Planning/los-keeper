@@ -43,6 +43,7 @@ void TrajectoryPlanner::CheckDistanceFromTargetsSubProcess(const int &start_idx,
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
   SampleShootingPoints();
   ComputePrimitives();
+  CheckDistanceFromTargets();
 
   return false;
 }
@@ -242,7 +243,7 @@ void TrajectoryPlanner2D::CheckDistanceFromTargetsSubProcess(const int &start_id
 bool TrajectoryPlanner3D::PlanKeeperTrajectory() {
   SampleShootingPoints();
   ComputePrimitives();
-
+  CheckDistanceFromTargets();
   return false;
 }
 
