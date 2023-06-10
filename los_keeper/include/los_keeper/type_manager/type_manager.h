@@ -1,8 +1,8 @@
 //
 // Created by larr-planning on 23. 5. 16.
 //
-#ifndef LOS_KEEPER_TYPE_MANAGER_H
-#define LOS_KEEPER_TYPE_MANAGER_H
+#ifndef HEADER_TYPE_MANAGER
+#define HEADER_TYPE_MANAGER
 #include "los_keeper/bernstein_polynomial_utils/bernstein_polynomial_utils.h"
 #include "thread"
 #include <pcl/point_cloud.h>
@@ -79,6 +79,7 @@ struct Parameters {
 } // namespace los_keeper
 struct ObjectState {
   double t_sec{0.0};
+  size_t id{0};
   float px;
   float py;
   float pz;
@@ -139,4 +140,4 @@ typedef vector<Point> PointList;
 typedef vector<PointList> PointListSet;
 typedef vector<StatePoly> PrimitiveList;
 typedef vector<PrimitiveList> PrimitiveListSet;
-#endif // LOS_KEEPER_TYPE_MANAGER_H
+#endif /* HEADER_TYPE_MANAGER */

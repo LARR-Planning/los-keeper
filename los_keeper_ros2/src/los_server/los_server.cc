@@ -32,6 +32,30 @@ los_keeper::ConvertToPointCloud(const PointCloudMsg &point_cloud_msg) {
   return pcl::PointCloud<pcl::PointXYZ>();
 }
 
+std::vector<ObjectState>
+los_keeper::ConvertToObjectStateArray(const ObjectStateArrayMsg &object_state_array_msg) {
+  std::vector<ObjectState> object_state_array;
+  double t_sec =
+      object_state_array_msg.header.stamp.sec + object_state_array_msg.header.stamp.nanosec * 1E-9;
+  for (const auto &object_state_msg : object_state_array_msg.object_state_array) {
+    // TODO(Lee): add id of object and rx,ry,rz
+    ObjectState object_state;
+    object_state.t_sec = t_sec;
+    object_state.id = object_state_msg.id;
+    object_state.px = object_state_msg.px;
+    object_state.py = object_state_msg.py;
+    object_state.pz = object_state_msg.pz;
+    object_state.vx = object_state_msg.vx;
+    object_state.vy = object_state_msg.vy;
+    object_state.vz = object_state_msg.vz;
+    object_state.rx = object_state_msg.rx;
+    object_state.ry = object_state_msg.ry;
+    object_state.rz = object_state_msg.rz;
+    object_state_array.push_back(object_state);
+  }
+  return object_state_array;
+}
+
 InputMsg los_keeper::ConvertToInputMsg(const int drone_input) {
 
   // TODO(@): change argument
@@ -59,6 +83,11 @@ void LosServer::DroneStateCallback(const DroneStateMsg::SharedPtr msg) {
 void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
   auto points = ConvertToPointCloud(*msg);
   wrapper_ptr_->SetPoints(points);
+}
+
+void los_keeper::LosServer::ObjectStateArrayCallback(const ObjectStateArrayMsg::SharedPtr msg) {
+  const auto object_state_array = ConvertToObjectStateArray(*msg);
+  wrapper_ptr_->SetObjectStateArray(object_state_array);
 };
 
 LosServer::LosServer(const rclcpp::NodeOptions &options_input)
@@ -66,16 +95,19 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
 
   rclcpp::SubscriptionOptions options;
   options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-
   state_subscriber_ = create_subscription<DroneStateMsg>(
       "~/state", rclcpp::QoS(10),
       std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1), options);
 
   options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-
   points_subscriber_ = create_subscription<PointCloudMsg>(
       "~/points", rclcpp::QoS(10),
       std::bind(&LosServer::PointsCallback, this, std::placeholders::_1), options);
+
+  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  object_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
+      "~/object_state_array", rclcpp::QoS(10),
+      std::bind(&LosServer::ObjectStateArrayCallback, this, std::placeholders::_1), options);
 
   planning_timer_ =
       this->create_wall_timer(10ms, std::bind(&LosServer::PlanningTimerCallback, this));

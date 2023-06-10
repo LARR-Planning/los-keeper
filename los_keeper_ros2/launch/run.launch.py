@@ -14,7 +14,8 @@ def generate_launch_description():
             executable='los_server_node',
             name='los_server_node',
             output='screen',
-            parameters=parameters
+            parameters=parameters,
+            emulate_tty=True
         ),
         Node(
             package='los_keeper_ros2',
@@ -23,6 +24,8 @@ def generate_launch_description():
             name='test_publisher_node',
             output={'both': 'log'},
             remappings=[("~/state", "/los_keeper/los_server_node/state"),
-                        ("~/points", "/los_keeper/los_server_node/points")]
+                        ("~/points", "/los_keeper/los_server_node/points"),
+                        ("~/object_state_array", 
+                         "/los_keeper/los_server_node/object_state_array")]
         )
     ])
