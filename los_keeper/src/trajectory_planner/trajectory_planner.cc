@@ -11,7 +11,7 @@ std::optional<StatePoly> TrajectoryPlanner::ComputeChasingTrajectory(
 
 void TrajectoryPlanner::SetTargetState(const PrimitiveList &target_trajectory_list) {
   target_trajectory_list_.clear();
-  target_trajectory_list_ = target_trajectory_list;
+  target_trajectory_list_ = target_trajectory_list; // TODO: change the order 3 to order 5
   num_target_ = (int)target_trajectory_list.size();
 }
 
@@ -33,10 +33,18 @@ void TrajectoryPlanner::ComputePrimitives() {}
 void TrajectoryPlanner::ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                                     PrimitiveList &primitive_list_sub) {}
 TrajectoryPlanner::TrajectoryPlanner(const PlanningParameter &param) { param_ = param; }
-StatePoly TrajectoryPlanner::GetBestKeeperTrajectory() { return primitives_list_[0]; };
+StatePoly TrajectoryPlanner::GetBestKeeperTrajectory() {}
+void TrajectoryPlanner::CheckDistanceFromTargets() {}
+void TrajectoryPlanner::CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
+                                                           IndexList &dist_idx_sub){
+
+};
 
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
   SampleShootingPoints();
+  ComputePrimitives();
+  CheckDistanceFromTargets();
+
   return false;
 }
 
@@ -170,9 +178,72 @@ optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
   else
     return std::nullopt;
 }
+void TrajectoryPlanner2D::CheckDistanceFromTargets() {
+  good_target_distance_index_list_.clear();
+  int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
+  vector<thread> worker_thread;
+  IndexListSet good_target_distance_index_list_temp(param_.sampling.num_thread);
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread.emplace_back(&TrajectoryPlanner2D::CheckDistanceFromTargetsSubProcess, this,
+                               num_chunk * (i), num_chunk * (i + 1),
+                               std::ref(good_target_distance_index_list_temp[i]));
+  }
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread[i].join();
+  }
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    for (int j = 0; j < good_target_distance_index_list_temp[i].size(); j++) {
+      good_target_distance_index_list_.push_back(good_target_distance_index_list_temp[i][j]);
+    }
+  }
+}
+void TrajectoryPlanner2D::CheckDistanceFromTargetsSubProcess(const int &start_idx,
+                                                             const int &end_idx,
+                                                             IndexList &dist_idx_sub) {
+  bool flag_store_in;
+  bool flag_store_out;
+  float value;
+  for (int idx = start_idx; idx < end_idx; idx++) {
+    flag_store_out = true;
+    for (int k = 0; k < num_target_; k++) {
+      flag_store_in = true;
+      for (int i = 0; i <= 2 * 5; i++) {
+        value = 0.0f;
+        for (int j = std::max(0, i - 5); j <= std::min(5, i); j++) {
+          value += (float)nchoosek(5, j) * (float)nchoosek(5, i - j) / (float)nchoosek(2 * 5, i) *
+                   (primitives_list_[idx].px.GetBernsteinCoefficient()[j] *
+                        primitives_list_[idx].px.GetBernsteinCoefficient()[i - j] -
+                    2 * primitives_list_[idx].px.GetBernsteinCoefficient()[j] *
+                        target_trajectory_list_[k].px.GetBernsteinCoefficient()[i - j] +
+                    target_trajectory_list_[k].px.GetBernsteinCoefficient()[j] *
+                        target_trajectory_list_[k].px.GetBernsteinCoefficient()[i - j] +
+                    primitives_list_[idx].py.GetBernsteinCoefficient()[j] *
+                        primitives_list_[idx].py.GetBernsteinCoefficient()[i - j] -
+                    2 * primitives_list_[idx].py.GetBernsteinCoefficient()[j] *
+                        target_trajectory_list_[k].py.GetBernsteinCoefficient()[i - j] +
+                    target_trajectory_list_[k].py.GetBernsteinCoefficient()[j] *
+                        target_trajectory_list_[k].py.GetBernsteinCoefficient()[i - j]);
+        }
+        if (value - param_.distance.target_min * param_.distance.target_min < 0.0f or
+            value - param_.distance.target_max * param_.distance.target_max > 0.0f) {
+          flag_store_in = false;
+          break;
+        }
+      }
+      if (not flag_store_in) {
+        flag_store_out = false;
+        break;
+      }
+    }
+    if (flag_store_out)
+      dist_idx_sub.push_back(idx);
+  }
+}
 
 bool TrajectoryPlanner3D::PlanKeeperTrajectory() {
   SampleShootingPoints();
+  ComputePrimitives();
+  CheckDistanceFromTargets();
   return false;
 }
 
@@ -325,5 +396,72 @@ optional<StatePoly> TrajectoryPlanner3D::ComputeChasingTrajectory(
     return StatePoly();
   } else {
     return nullopt;
+  }
+}
+void TrajectoryPlanner3D::CheckDistanceFromTargets() {
+  good_target_distance_index_list_.clear();
+  int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
+  vector<thread> worker_thread;
+  IndexListSet good_target_distance_index_list_temp(param_.sampling.num_thread);
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread.emplace_back(&TrajectoryPlanner3D::CheckDistanceFromTargetsSubProcess, this,
+                               num_chunk * (i), num_chunk * (i + 1),
+                               std::ref(good_target_distance_index_list_temp[i]));
+  }
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread[i].join();
+  }
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    for (int j = 0; j < good_target_distance_index_list_temp[i].size(); j++) {
+      good_target_distance_index_list_.push_back(good_target_distance_index_list_temp[i][j]);
+    }
+  }
+}
+void TrajectoryPlanner3D::CheckDistanceFromTargetsSubProcess(const int &start_idx,
+                                                             const int &end_idx,
+                                                             IndexList &dist_idx_sub) {
+  bool flag_store_in;
+  bool flag_store_out;
+  float value;
+  for (int idx = start_idx; idx < end_idx; idx++) {
+    flag_store_out = true;
+    for (int k = 0; k < num_target_; k++) {
+      flag_store_in = true;
+      for (int i = 0; i <= 2 * 5; i++) {
+        value = 0.0f;
+        for (int j = std::max(0, i - 5); j <= std::min(5, i); j++) {
+          value += (float)nchoosek(5, j) * (float)nchoosek(5, i - j) / (float)nchoosek(2 * 5, i) *
+                   (primitives_list_[idx].px.GetBernsteinCoefficient()[j] *
+                        primitives_list_[idx].px.GetBernsteinCoefficient()[i - j] -
+                    2 * primitives_list_[idx].px.GetBernsteinCoefficient()[j] *
+                        target_trajectory_list_[k].px.GetBernsteinCoefficient()[i - j] +
+                    target_trajectory_list_[k].px.GetBernsteinCoefficient()[j] *
+                        target_trajectory_list_[k].px.GetBernsteinCoefficient()[i - j] +
+                    primitives_list_[idx].py.GetBernsteinCoefficient()[j] *
+                        primitives_list_[idx].py.GetBernsteinCoefficient()[i - j] -
+                    2 * primitives_list_[idx].py.GetBernsteinCoefficient()[j] *
+                        target_trajectory_list_[k].py.GetBernsteinCoefficient()[i - j] +
+                    target_trajectory_list_[k].py.GetBernsteinCoefficient()[j] *
+                        target_trajectory_list_[k].py.GetBernsteinCoefficient()[i - j] +
+                    primitives_list_[idx].pz.GetBernsteinCoefficient()[j] *
+                        primitives_list_[idx].pz.GetBernsteinCoefficient()[i - j] -
+                    2 * primitives_list_[idx].pz.GetBernsteinCoefficient()[j] *
+                        target_trajectory_list_[k].pz.GetBernsteinCoefficient()[i - j] +
+                    target_trajectory_list_[k].pz.GetBernsteinCoefficient()[j] *
+                        target_trajectory_list_[k].pz.GetBernsteinCoefficient()[i - j]);
+        }
+        if (value - param_.distance.target_min * param_.distance.target_min < 0.0f or
+            value - param_.distance.target_max * param_.distance.target_max > 0.0f) {
+          flag_store_in = false;
+          break;
+        }
+      }
+      if (not flag_store_in) {
+        flag_store_out = false;
+        break;
+      }
+    }
+    if (flag_store_out)
+      dist_idx_sub.push_back(idx);
   }
 }

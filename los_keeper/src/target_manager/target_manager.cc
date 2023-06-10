@@ -78,7 +78,7 @@ bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
 
 void los_keeper::TargetManager2D::SampleEndPoints() {
   end_points_.clear();
-  end_points_.reserve(target_state_list_.size()); // TODO: Reserve vs Resize?
+  end_points_.resize(target_state_list_.size()); //
   for (int i = 0; i < target_state_list_.size(); i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
@@ -100,7 +100,7 @@ void los_keeper::TargetManager2D::SampleEndPoints() {
 
 void los_keeper::TargetManager2D::ComputePrimitives() {
   primitives_list_.clear();
-  primitives_list_.reserve(num_target_);
+  primitives_list_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
@@ -195,7 +195,7 @@ bool los_keeper::TargetManager2D::CheckCollision() {
 
 void los_keeper::TargetManager2D::CalculateCentroid() {
   primitive_best_index_.clear();
-  primitive_best_index_.reserve(num_target_);
+  primitive_best_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = (int)primitive_safe_total_index_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
@@ -225,7 +225,7 @@ void los_keeper::TargetManager2D::CheckPclCollision() {
 
 void los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
-  primitive_safe_structured_obstacle_index_.reserve(num_target_);
+  primitive_safe_structured_obstacle_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = (int)primitives_list_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
@@ -275,7 +275,7 @@ std::vector<LinearConstraint2D> los_keeper::TargetManager2D::GenLinearConstraint
 void los_keeper::TargetManager2D::CalculateSafePclIndex(
     const std::vector<LinearConstraint2D> &safe_corridor_list) {
   primitive_safe_pcl_index_.clear();
-  primitive_safe_pcl_index_.reserve(num_target_);
+  primitive_safe_pcl_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
@@ -565,7 +565,7 @@ bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
 
 void los_keeper::TargetManager3D::SampleEndPoints() {
   end_points_.clear();
-  end_points_.reserve(target_state_list_.size()); // TODO: Reserve vs Resize?
+  end_points_.resize(target_state_list_.size());
   for (int i = 0; i < target_state_list_.size(); i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
@@ -661,7 +661,7 @@ bool los_keeper::TargetManager3D::CheckCollision() {
 
 void los_keeper::TargetManager3D::ComputePrimitives() {
   primitives_list_.clear();
-  primitives_list_.reserve(num_target_);
+  primitives_list_.resize(num_target_);
 
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
@@ -685,7 +685,7 @@ void los_keeper::TargetManager3D::ComputePrimitives() {
 
 void los_keeper::TargetManager3D::CalculateCentroid() {
   primitive_best_index_.clear();
-  primitive_best_index_.reserve(num_target_);
+  primitive_best_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = (int)primitive_safe_total_index_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
@@ -715,7 +715,7 @@ void los_keeper::TargetManager3D::CheckPclCollision() {
 
 void los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
-  primitive_safe_structured_obstacle_index_.reserve(num_target_);
+  primitive_safe_structured_obstacle_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = (int)primitives_list_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
@@ -768,7 +768,7 @@ std::vector<LinearConstraint3D> los_keeper::TargetManager3D::GenLinearConstraint
 void los_keeper::TargetManager3D::CalculateSafePclIndex(
     const std::vector<LinearConstraint3D> &safe_corridor_list) {
   primitive_safe_pcl_index_.clear();
-  primitive_safe_pcl_index_.reserve(num_target_);
+  primitive_safe_pcl_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;

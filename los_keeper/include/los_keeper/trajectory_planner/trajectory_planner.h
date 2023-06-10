@@ -24,12 +24,13 @@ protected:
 
   PointList shooting_points_;
   PrimitiveList primitives_list_;
+  IndexList good_target_distance_index_list_;
 
   // RefinePcl
-  // SampleShootingPoints
-  // GeneratePrimitives
+  // SampleShootingPoints Done
+  // GeneratePrimitives Done
 
-  // TargetDistance
+  // TargetDistance Done
   // CheckCollision
   // CheckDynamicFeasibility
   // CheckFovLimit
@@ -39,8 +40,13 @@ protected:
   virtual void SampleShootingPointsSubProcess(const int &target_id, const int &chunk_size,
                                               PointList &shooting_points_sub);
   virtual void ComputePrimitives();
+
   virtual void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                            PrimitiveList &primitive_list_sub);
+  virtual void CheckDistanceFromTargets();
+  virtual void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
+                                                  IndexList &dist_idx_sub);
+
   void SetTargetState(const PrimitiveList &target_trajectory_list);
   void SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
                         const PrimitiveList &structured_obstacle_poly_list);
@@ -64,6 +70,9 @@ private:
   void ComputePrimitives() override;
   void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                    PrimitiveList &primitive_list_sub) override;
+  void CheckDistanceFromTargets() override;
+  void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
+                                          IndexList &dist_idx_sub) override;
   bool PlanKeeperTrajectory() override;
 
 public:
@@ -83,6 +92,9 @@ private:
   void ComputePrimitives() override;
   void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                    PrimitiveList &primitive_list_sub) override;
+  void CheckDistanceFromTargets() override;
+  void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
+                                          IndexList &dist_idx_sub) override;
   bool PlanKeeperTrajectory() override;
 
 public:
