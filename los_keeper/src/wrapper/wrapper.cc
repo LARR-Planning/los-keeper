@@ -1,6 +1,15 @@
 #include "los_keeper/wrapper/wrapper.h"
 using namespace los_keeper;
 
+std::optional<JerkControlInput> PlanningResult::GetJerkInputAtTime(double t) const {
+  if (!chasing_trajectory.has_value())
+    return std::nullopt;
+  JerkControlInput input;
+  input.seq = seq;
+  input.t_sec = t;
+  return input;
+}
+
 Wrapper::Wrapper() {
   // TODO(@): remove if unnecessary
   //  obstacle_manager_ = std::make_shared<ObstacleManager>();
@@ -132,12 +141,13 @@ void Wrapper::SetTargetStateArray(const vector<ObjectState> &target_state_list) 
     target_state_list_ = target_state_list;
   }
 }
-std::optional<Point> Wrapper::GenerateControlInputFromPlanning(double time) {
-  // TODO(@): generate jerk
-  std::optional<Point> control_input;
+
+std::optional<JerkControlInput> Wrapper::GenerateControlInputFromPlanning(double time) {
+  std::optional<JerkControlInput> control_input;
   {
     std::unique_lock<std::mutex> lock(mutex_list_.control);
-    control_input = planning_result_.GetPointAtTime(time);
+    // TODO(Lee): compute jerk from planning result
+    control_input = planning_result_.GetJerkInputAtTime(time);
   }
   return control_input;
 }
