@@ -10,8 +10,9 @@ namespace store {
 struct State {
   bool is_activated{false};
   bool is_data_received{false};
-  bool is_planning_safe{false};
-  bool is_planning_visible{false};
+  // TODO(@): set to false when safe / visible checks work
+  bool is_planning_safe{true};
+  bool is_planning_visible{true};
   bool is_planning_expired{false};
   bool is_currently_safe{true};
 };

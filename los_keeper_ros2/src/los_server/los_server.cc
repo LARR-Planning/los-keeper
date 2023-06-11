@@ -55,10 +55,17 @@ los_keeper::ConvertToObjectStateArray(const ObjectStateArrayMsg &object_state_ar
   return object_state_array;
 }
 
-InputMsg los_keeper::ConvertToInputMsg(const int drone_input) {
+InputMsg los_keeper::ConvertToInputMsg(const JerkControlInput &jerk_control_input) {
+  InputMsg input_msg;
+  input_msg.seq = jerk_control_input.seq;
+  input_msg.header.stamp.sec = std::floor(jerk_control_input.t_sec);
+  input_msg.header.stamp.nanosec =
+      std::round((jerk_control_input.t_sec - input_msg.header.stamp.sec) * 1E+9);
+  input_msg.jx = jerk_control_input.jx;
+  input_msg.jy = jerk_control_input.jy;
+  input_msg.jz = jerk_control_input.jz;
 
-  // TODO(@): change argument
-  return InputMsg();
+  return input_msg;
 }
 
 void LosServer::PlanningTimerCallback() { wrapper_ptr_->OnPlanningTimerCallback(); }
@@ -66,6 +73,9 @@ void LosServer::PlanningTimerCallback() { wrapper_ptr_->OnPlanningTimerCallback(
 void LosServer::ControlTimerCallback() {
   auto t = now();
   auto control_input = wrapper_ptr_->GenerateControlInputFromPlanning(t.seconds());
+  if (control_input.has_value()) {
+    input_publisher_->publish(ConvertToInputMsg(control_input.value()));
+  }
 }
 
 void los_keeper::LosServer::ToggleActivateCallback(
@@ -113,6 +123,8 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   structured_obstacle_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
       "~/object_state_array", rclcpp::QoS(10),
       std::bind(&LosServer::ObjectStateArrayCallback, this, std::placeholders::_1), options);
+
+  input_publisher_ = create_publisher<InputMsg>("~/input", rclcpp::QoS(10));
 
   options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   target_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
