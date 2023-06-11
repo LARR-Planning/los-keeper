@@ -46,8 +46,9 @@ void Wrapper::HandleReplanAction() {
     std::scoped_lock lock(mutex_list_.drone_state, mutex_list_.point_cloud);
     planning_problem.drone_state = drone_state_;
     planning_problem.point_cloud = obstacle_manager_->GetPointCloud();
-    planning_problem.target_state_list = object_state_list_;
-    // TODO(Lee): add target_state_list and structure_obstacle_poly_list
+    planning_problem.structured_obstacle_poly_list =
+        obstacle_manager_->GetStructuredObstaclePolyList();
+    planning_problem.target_state_list = target_state_list_;
   }
   const auto &point_cloud = planning_problem.point_cloud;
   const auto &structured_obstacle_poly_list = planning_problem.structured_obstacle_poly_list;
@@ -117,6 +118,7 @@ void Wrapper::SetObjectStateArray(const std::vector<ObjectState> &object_state_l
   std::unique_lock<std::mutex> lock(mutex_list_.object_state_list, std::defer_lock);
   if (lock.try_lock()) {
     object_state_list_ = object_state_list;
+    obstacle_manager_->SetStructuredObstacleState(object_state_list_);
   }
 }
 void Wrapper::SetTargetStateArray(const vector<ObjectState> &target_state_list) {

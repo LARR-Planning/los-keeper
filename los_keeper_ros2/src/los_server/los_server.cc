@@ -187,4 +187,3 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
 
   wrapper_ptr_ = new Wrapper(parameters);
 }
-
