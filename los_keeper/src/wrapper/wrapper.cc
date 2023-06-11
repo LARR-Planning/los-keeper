@@ -119,7 +119,12 @@ void Wrapper::SetObjectStateArray(const std::vector<ObjectState> &object_state_l
     object_state_list_ = object_state_list;
   }
 }
-
+void Wrapper::SetTargetStateArray(const vector<ObjectState> &target_state_list) {
+  std::unique_lock<std::mutex> lock(mutex_list_.target_state_list, std::defer_lock);
+  if (lock.try_lock()) {
+    target_state_list_ = target_state_list;
+  }
+}
 std::optional<Point> Wrapper::GenerateControlInputFromPlanning(double time) {
   // TODO(@): generate jerk
   std::optional<Point> control_input;

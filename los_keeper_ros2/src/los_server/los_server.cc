@@ -38,7 +38,6 @@ los_keeper::ConvertToObjectStateArray(const ObjectStateArrayMsg &object_state_ar
   double t_sec =
       object_state_array_msg.header.stamp.sec + object_state_array_msg.header.stamp.nanosec * 1E-9;
   for (const auto &object_state_msg : object_state_array_msg.object_state_array) {
-    // TODO(Lee): add id of object and rx,ry,rz
     ObjectState object_state;
     object_state.t_sec = t_sec;
     object_state.id = object_state_msg.id;
@@ -90,6 +89,11 @@ void los_keeper::LosServer::ObjectStateArrayCallback(const ObjectStateArrayMsg::
   wrapper_ptr_->SetObjectStateArray(object_state_array);
 };
 
+void LosServer::TargetStateArrayCallback(const ObjectStateArrayMsg::SharedPtr msg) {
+  const auto target_state_array = ConvertToObjectStateArray(*msg);
+  wrapper_ptr_->SetTargetStateArray(target_state_array);
+}
+
 LosServer::LosServer(const rclcpp::NodeOptions &options_input)
     : Node("los_server_node", options_input) {
 
@@ -105,9 +109,14 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
       std::bind(&LosServer::PointsCallback, this, std::placeholders::_1), options);
 
   options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  object_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
+  structured_obstacle_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
       "~/object_state_array", rclcpp::QoS(10),
       std::bind(&LosServer::ObjectStateArrayCallback, this, std::placeholders::_1), options);
+
+  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  target_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
+      "~/target_state_array", rclcpp::QoS(10),
+      std::bind(&LosServer::TargetStateArrayCallback, this, std::placeholders::_1), options);
 
   planning_timer_ =
       this->create_wall_timer(10ms, std::bind(&LosServer::PlanningTimerCallback, this));
@@ -178,3 +187,4 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
 
   wrapper_ptr_ = new Wrapper(parameters);
 }
+
