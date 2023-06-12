@@ -25,7 +25,7 @@ def generate_launch_description():
             output={'both': 'log'},
             remappings=[("~/state", "/los_keeper/los_server_node/state"),
                         ("~/points", "/los_keeper/los_server_node/points"),
-                        ("~/object_state_array", 
-                         "/los_keeper/los_server_node/object_state_array")]
+                        ("~/target_state_array", 
+                         "/los_keeper/los_server_node/target_state_array")]
         )
     ])
