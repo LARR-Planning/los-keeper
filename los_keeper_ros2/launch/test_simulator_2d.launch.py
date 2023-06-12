@@ -3,7 +3,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
-parameters = [os.path.join(current_directory, os.pardir, 'config', 'parameters.yaml')]
+parameters = [os.path.join(current_directory, os.pardir, 'config', 'parameters_2d.yaml')]
 
 
 def generate_launch_description():

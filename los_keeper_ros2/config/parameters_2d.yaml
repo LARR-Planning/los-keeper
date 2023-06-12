@@ -1,0 +1,43 @@
+/**:
+  ros__parameters:
+    problem:
+      is_2d: true
+    obstacle_manager:
+      planning_horizon: 1.0 # TODO: (1)
+    target_manager:
+      sampling:
+        num_sample: 500
+        num_thread: 2
+        is_lite: false
+      horizon:
+        prediction: 1.0 # TODO: (2)
+      dynamic_limits:
+        vel_max: 1.0
+        acc_max: 3.0
+      distance:
+        obstacle_max: 5.0
+      virtual_pcl_bbox:
+        width: 10.0
+        height: 3.0
+    trajectory_planner:
+      sampling:
+        num_sample: 500
+        num_thread: 2
+        is_lite: false
+      horizon:
+        planning: 1.0 #TODO: (3) -> (1)-(3) should be same
+      distance:
+        obstacle_max: 4.0
+        target_min: 2.0
+        target_max: 5.0
+      dynamic_limits:
+        vel_max: 2.0
+        acc_max: 5.0
+      drone:
+        rx: 0.2
+        ry: 0.2
+        rz: 0.3
+      virtual_pcl_bbox:
+        width: 5.0
+        height: 3.0
+

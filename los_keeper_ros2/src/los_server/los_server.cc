@@ -133,7 +133,7 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   PlanningParameter planning_param;
   ProblemParameter problem_param;
   { // Parameter Settings for Problem
-    get_parameter<bool>("problem.is_2d", problem_param.is_2d);
+    get_parameter<bool>("problem/is_2d", problem_param.is_2d);
   }
   { // Parameter Settings for ObstacleManager
     get_parameter<float>("obstacle_manager.planning_horizon", obstacle_param.planning_horizon);

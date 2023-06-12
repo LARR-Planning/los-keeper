@@ -3,20 +3,23 @@ using namespace los_keeper;
 
 Wrapper::Wrapper() {
   // TODO(@): remove if unnecessary
-
-  obstacle_manager_ = std::make_shared<ObstacleManager>();
-  target_manager_ = std::make_shared<TargetManager3D>();
-  trajectory_planner_ = std::make_shared<TrajectoryPlanner3D>();
+  cout << "Default Constructor for Wrapper" << endl;
+  //  obstacle_manager_ = std::make_shared<ObstacleManager>();
+  //  target_manager_ = std::make_shared<TargetManager>();
+  //  trajectory_planner_ = std::make_shared<TrajectoryPlanner>();
 }
 
 Wrapper::Wrapper(const Parameters &parameters) {
+  cout << "Constructor of Wrapper with parameters" << endl;
   obstacle_manager_.reset(new ObstacleManager(parameters.obstacle));
   if (parameters.problem.is_2d) {
     target_manager_.reset(new TargetManager2D(parameters.prediction));
     trajectory_planner_.reset(new TrajectoryPlanner2D(parameters.planning));
+    cout << "2D TARGET and DRONE TRAJECTORY" << endl;
   } else {
     target_manager_.reset(new TargetManager3D(parameters.prediction));
     trajectory_planner_.reset(new TrajectoryPlanner3D(parameters.planning));
+    cout << "3D TARGET and DRONE TRAJECTORY" << endl;
   }
 }
 
@@ -49,18 +52,18 @@ void Wrapper::HandleReplanAction() {
     planning_problem.structured_obstacle_poly_list =
         obstacle_manager_->GetStructuredObstaclePolyList();
     planning_problem.target_state_list = target_state_list_;
+    cout << "Size of Target Prediction Ingredient: " << target_state_list_.size() << endl;
   }
   const auto &point_cloud = planning_problem.point_cloud;
   const auto &structured_obstacle_poly_list = planning_problem.structured_obstacle_poly_list;
 
   PlanningResult new_planning_result;
   new_planning_result.seq = planning_result_.seq + 1;
-
   auto target_prediction_list = target_manager_->PredictTargetList(
       planning_problem.target_state_list, point_cloud, structured_obstacle_poly_list);
   if (!target_prediction_list)
     goto update;
-
+  cout << "Size of Target Prediction Result" << target_prediction_list->size() << endl;
   new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
       target_prediction_list.value(), point_cloud, structured_obstacle_poly_list);
 
