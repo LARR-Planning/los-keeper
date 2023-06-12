@@ -551,7 +551,6 @@ los_keeper::TargetManager2D::TargetManager2D(const los_keeper::PredictionParamet
     : TargetManager(param) {}
 
 bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
-  /** TODO(Lee): fix bug
   SampleEndPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();
@@ -559,7 +558,6 @@ bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
   if (is_safe_traj_exist)
     CalculateCentroid();
   return is_safe_traj_exist;
-  **/
   return true;
 }
 

@@ -26,7 +26,7 @@ std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
 }
 
 void Wrapper::UpdateState(store::State &state) {
-  state.is_data_received = drone_state_.t_sec > 0.0 && object_state_list_.size() > 0;
+  state.is_data_received = drone_state_.t_sec > 0.0 && target_state_list_.size() > 0;
   double t_current =
       std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
 
