@@ -10,7 +10,7 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='los_keeper_ros2',
-            # namespace='los_keeper',
+            namespace='los_keeper',
             executable='los_server_node',
             name='los_server_node',
             output='screen',

@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     problem:
-      is_2d: true
+      is_2d: false
     obstacle_manager:
       planning_horizon: 1.0 # TODO: (1)
     target_manager:

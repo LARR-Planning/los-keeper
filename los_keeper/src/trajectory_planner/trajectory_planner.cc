@@ -42,11 +42,8 @@ void TrajectoryPlanner::CheckDistanceFromTargetsSubProcess(const int &start_idx,
 
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
   SampleShootingPoints();
-  cout << "Sample End Points Done" << endl;
   ComputePrimitives();
-  cout << "Compute Primitives Done" << endl;
   CheckDistanceFromTargets();
-  cout << "Compute Distance Index Done" << endl;
   return false;
 }
 

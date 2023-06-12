@@ -27,7 +27,7 @@ def generate_launch_description():
     planner_node = Node(
         package='los_keeper_ros2',
         executable='los_server_node',
-        # namespace='los_keeper',
+        namespace='los_keeper',
         name='los_server_node',
         output='screen',
         parameters=[param_dir],

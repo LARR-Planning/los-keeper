@@ -18,7 +18,6 @@ void los_keeper::TargetManager::SetObstacleState(
 }
 
 bool los_keeper::TargetManager::PredictTargetTrajectory() {
-  cout << "Default Target Manager" << endl;
   SampleEndPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();
@@ -80,7 +79,6 @@ bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
 void los_keeper::TargetManager2D::SampleEndPoints() {
   end_points_.clear();
   end_points_.resize(target_state_list_.size()); //
-  cout << "target_state_list_size: " << end_points_.size() << endl;
   for (int i = 0; i < target_state_list_.size(); i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
@@ -553,7 +551,6 @@ los_keeper::TargetManager2D::TargetManager2D(const los_keeper::PredictionParamet
     : TargetManager(param) {}
 
 bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
-  cout << "3D Prediction" << endl;
   /** TODO(Lee): fix bug
   SampleEndPoints();
   ComputePrimitives();
