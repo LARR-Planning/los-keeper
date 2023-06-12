@@ -7,10 +7,14 @@
 #include <pcl/point_types.h>
 
 #include "los_keeper/type_manager/type_manager.h"
+#include "gtest/gtest.h"
 #include <vector>
 
 namespace los_keeper {
 class ObstacleManager {
+  friend class ApiTestFixtureObstacle;
+  FRIEND_TEST(ApiTestFixtureObstacle, heckCollisionBetweenTrajectoryAndObstacles);
+
 private:
   PclPointCloud cloud_;
   std::vector<ObjectState> structured_obstacle_state_list_;
