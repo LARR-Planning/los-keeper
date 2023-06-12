@@ -8,6 +8,7 @@ void ObstacleManager::SetObstacleCloud(const pcl::PointCloud<pcl::PointXYZ> &clo
 
 void ObstacleManager::SetStructuredObstacleState(
     const std::vector<ObjectState> &structured_obstacle_state_list) {
+  structured_obstacle_state_list_.clear();
   structured_obstacle_state_list_ = structured_obstacle_state_list;
   TranslateStateToPoly();
 }
@@ -16,6 +17,8 @@ void ObstacleManager::TranslateStateToPoly() {
   structured_obstacle_poly_list_.clear();
   StatePoly temp_state_poly;
   temp_state_poly.SetDegree(3);
+  float time_interval[2]{0.0f, param_.planning_horizon};
+  temp_state_poly.SetTimeInterval(time_interval);
   for (const auto &i : structured_obstacle_state_list_) {
     float temp_coefficient_x[4]{i.px, i.px + 0.33333333f * i.vx * param_.planning_horizon,
                                 i.px + 0.66666667f * i.vx * param_.planning_horizon,
@@ -32,6 +35,7 @@ void ObstacleManager::TranslateStateToPoly() {
     temp_state_poly.rx = i.rx;
     temp_state_poly.ry = i.ry;
     temp_state_poly.rz = i.rz;
+    structured_obstacle_poly_list_.push_back(temp_state_poly);
   }
 }
 

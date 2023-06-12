@@ -6,7 +6,7 @@ std::optional<StatePoly> TrajectoryPlanner::ComputeChasingTrajectory(
     const std::vector<StatePoly> &target_prediction_list,
     const los_keeper::PclPointCloud &obstacle_points,
     const std::vector<StatePoly> &structured_obstacle_poly_list) {
-  return std::optional<StatePoly>();
+  return std::nullopt;
 }
 
 void TrajectoryPlanner::SetTargetState(const PrimitiveList &target_trajectory_list) {
@@ -44,7 +44,6 @@ bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
   SampleShootingPoints();
   ComputePrimitives();
   CheckDistanceFromTargets();
-
   return false;
 }
 
@@ -95,7 +94,7 @@ void TrajectoryPlanner2D::ComputePrimitives() {
   primitives_list_.clear();
   int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
   vector<thread> worker_thread;
-  PrimitiveListSet primitive_list_temp;
+  PrimitiveListSet primitive_list_temp(param_.sampling.num_thread);
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     worker_thread.emplace_back(&TrajectoryPlanner2D::ComputePrimitivesSubProcess, this,
                                num_chunk * (i), num_chunk * (i + 1),
@@ -160,6 +159,9 @@ void TrajectoryPlanner2D::ComputePrimitivesSubProcess(const int &start_idx, cons
       bernstein_coeff_temp[5] = drone_state_.pz + 1.0f * param_.horizon.planning * drone_state_.vz;
       primitive_temp.pz.SetBernsteinCoeff(bernstein_coeff_temp);
     }
+    primitive_temp.rx = param_.drone.rx;
+    primitive_temp.ry = param_.drone.ry;
+    primitive_temp.rz = param_.drone.rz;
     primitive_list_sub.push_back(primitive_temp);
   }
 }
@@ -173,6 +175,7 @@ optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
   this->SetTargetState(target_prediction_list);
   this->SetObstacleState(obstacle_points, structured_obstacle_poly_list);
   bool plan_success = this->PlanKeeperTrajectory();
+  plan_success = false;
   if (plan_success)
     return GetBestKeeperTrajectory();
   else
@@ -296,7 +299,7 @@ void TrajectoryPlanner3D::ComputePrimitives() {
   primitives_list_.clear();
   int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
   vector<thread> worker_thread;
-  PrimitiveListSet primitive_list_temp;
+  PrimitiveListSet primitive_list_temp(param_.sampling.num_thread);
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     worker_thread.emplace_back(&TrajectoryPlanner3D::ComputePrimitivesSubProcess, this,
                                num_chunk * (i), num_chunk * (i + 1),
@@ -391,7 +394,7 @@ optional<StatePoly> TrajectoryPlanner3D::ComputeChasingTrajectory(
 
   // TODO(Lee): change after adding exception handling
 
-  bool plan_success = true;
+  bool plan_success = false;
   if (plan_success) {
     return StatePoly();
   } else {

@@ -3,10 +3,9 @@ using namespace los_keeper;
 
 Wrapper::Wrapper() {
   // TODO(@): remove if unnecessary
-
-  obstacle_manager_ = std::make_shared<ObstacleManager>();
-  target_manager_ = std::make_shared<TargetManager3D>();
-  trajectory_planner_ = std::make_shared<TrajectoryPlanner3D>();
+  //  obstacle_manager_ = std::make_shared<ObstacleManager>();
+  //  target_manager_ = std::make_shared<TargetManager>();
+  //  trajectory_planner_ = std::make_shared<TrajectoryPlanner>();
 }
 
 Wrapper::Wrapper(const Parameters &parameters) {
@@ -27,7 +26,7 @@ std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
 }
 
 void Wrapper::UpdateState(store::State &state) {
-  state.is_data_received = drone_state_.t_sec > 0.0 && object_state_list_.size() > 0;
+  state.is_data_received = drone_state_.t_sec > 0.0 && target_state_list_.size() > 0;
   double t_current =
       std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
 
@@ -44,30 +43,31 @@ void Wrapper::UpdateState(store::State &state) {
 void Wrapper::HandleStopAction() { state_.is_activated = false; }
 void Wrapper::HandleActivateAction() { state_.is_activated = true; }
 void Wrapper::HandleReplanAction() {
-  printf("Handle ReplanAction\n");
+  //  printf("Handle ReplanAction\n");
   PlanningProblem planning_problem;
   {
     std::scoped_lock lock(mutex_list_.drone_state, mutex_list_.point_cloud);
     planning_problem.drone_state = drone_state_;
     planning_problem.point_cloud = obstacle_manager_->GetPointCloud();
-    planning_problem.target_state_list = object_state_list_;
-    // TODO(Lee): add target_state_list and structure_obstacle_poly_list
+    planning_problem.structured_obstacle_poly_list =
+        obstacle_manager_->GetStructuredObstaclePolyList();
+    planning_problem.target_state_list = target_state_list_;
   }
   const auto &point_cloud = planning_problem.point_cloud;
   const auto &structured_obstacle_poly_list = planning_problem.structured_obstacle_poly_list;
 
   PlanningResult new_planning_result;
   new_planning_result.seq = planning_result_.seq + 1;
-
   auto target_prediction_list = target_manager_->PredictTargetList(
       planning_problem.target_state_list, point_cloud, structured_obstacle_poly_list);
   if (!target_prediction_list)
     goto update;
 
-  new_planning_result.last_plan_success_t_sec =
-      std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
-  new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
-      target_prediction_list.value(), point_cloud, structured_obstacle_poly_list);
+  //  new_planning_result.last_plan_success_t_sec =
+  //      std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
+  //
+  //  new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
+  //      target_prediction_list.value(), point_cloud, structured_obstacle_poly_list);
 
 update : {
   std::unique_lock<std::mutex> lock(mutex_list_.control);
@@ -123,9 +123,15 @@ void Wrapper::SetObjectStateArray(const std::vector<ObjectState> &object_state_l
   std::unique_lock<std::mutex> lock(mutex_list_.object_state_list, std::defer_lock);
   if (lock.try_lock()) {
     object_state_list_ = object_state_list;
+    obstacle_manager_->SetStructuredObstacleState(object_state_list_);
   }
 }
-
+void Wrapper::SetTargetStateArray(const vector<ObjectState> &target_state_list) {
+  std::unique_lock<std::mutex> lock(mutex_list_.target_state_list, std::defer_lock);
+  if (lock.try_lock()) {
+    target_state_list_ = target_state_list;
+  }
+}
 std::optional<Point> Wrapper::GenerateControlInputFromPlanning(double time) {
   // TODO(@): generate jerk
   std::optional<Point> control_input;

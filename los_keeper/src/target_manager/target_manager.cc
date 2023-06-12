@@ -10,7 +10,6 @@ void los_keeper::TargetManager::SetTargetState(const std::vector<ObjectState> &t
 
 void los_keeper::TargetManager::SetObstacleState(
     pcl::PointCloud<pcl::PointXYZ> cloud, const PrimitiveList &structured_obstacle_poly_list) {
-
   structured_obstacle_poly_list_.clear();
   structured_obstacle_poly_list_ = structured_obstacle_poly_list;
   cloud_.points.clear();
@@ -69,7 +68,9 @@ PrimitiveList los_keeper::TargetManager::GetTargetPredictionResult() {
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
   SampleEndPoints();
   ComputePrimitives();
+
   CalculateCloseObstacleIndex();
+
   bool is_safe_traj_exist = CheckCollision();
   if (is_safe_traj_exist)
     CalculateCentroid();
@@ -159,15 +160,13 @@ bool los_keeper::TargetManager2D::CheckCollision() {
       }
       primitive_safe_total_index_.push_back(primitive_safe_total_index_temp_);
     }
-  }
-  if (is_cloud_empty and (not is_structured_obstacle_empty)) { // Case II: Only Ellipsoidal Obstacle
+  } else if (is_cloud_empty and
+             (not is_structured_obstacle_empty)) { // Case II: Only Ellipsoidal Obstacle
     primitive_safe_total_index_ = primitive_safe_structured_obstacle_index_;
-  }
-  if ((not is_cloud_empty) and
-      is_structured_obstacle_empty) { // Case III: Only Unstructured Obstacle
+  } else if ((not is_cloud_empty) and
+             is_structured_obstacle_empty) { // Case III: Only Unstructured Obstacle
     primitive_safe_total_index_ = primitive_safe_pcl_index_;
-  }
-  if (not is_cloud_empty and not is_structured_obstacle_empty) { // Case IV: Ellipsoidal and
+  } else if (not is_cloud_empty and not is_structured_obstacle_empty) { // Case IV: Ellipsoidal and
     // Unstructured Obstacle
     for (int i = 0; i < num_target_; i++) {
       std::vector<bool> is_primitive_safe_pcl_temp;
@@ -306,7 +305,7 @@ void los_keeper::TargetManager2D::SampleEndPointsSubProcess(const int &target_id
                          float(target_state_list_[target_id].pz +
                                target_state_list_[target_id].vz * param_.horizon.prediction)};
   uint n_cols = 2;
-  uint n_rows = param_.sampling.num_sample;
+  uint n_rows = chunk_size;
   using namespace Eigen;
   Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> gaussian_data_eigen;
   gaussian_data_eigen.setZero(n_rows, n_cols);
@@ -375,6 +374,9 @@ void los_keeper::TargetManager2D::ComputePrimitivesSubProcess(const int &target_
                                 target_state_list_[target_id].vz * param_.horizon.prediction;
       primitive_temp.pz.SetBernsteinCoeff(bernstein_coeff_temp);
     }
+    primitive_temp.rx = target_state_list_[target_id].rx;
+    primitive_temp.ry = target_state_list_[target_id].ry;
+    primitive_temp.rz = target_state_list_[target_id].rz;
     primitive_list_sub.push_back(primitive_temp);
   }
 }
@@ -551,7 +553,6 @@ los_keeper::TargetManager2D::TargetManager2D(const los_keeper::PredictionParamet
     : TargetManager(param) {}
 
 bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
-  /** TODO(Lee): fix bug
   SampleEndPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();
@@ -559,7 +560,6 @@ bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
   if (is_safe_traj_exist)
     CalculateCentroid();
   return is_safe_traj_exist;
-  **/
   return true;
 }
 
@@ -1071,15 +1071,12 @@ std::optional<std::vector<StatePoly>> los_keeper::TargetManager3D::PredictTarget
     const vector<StatePoly> &structured_obstacle_poly_list) {
   this->SetTargetState(target_state_list);
   this->SetObstacleState(point_cloud, structured_obstacle_poly_list);
-  // TODO(Lee): Temporarily, return two empty statepoly for pipeline testing purposes.
-  return std::vector<StatePoly>(2);
-  /**
+  //  return std::vector<StatePoly>(3);
   bool is_target_trajectory_exist = PredictTargetTrajectory();
   if (is_target_trajectory_exist) // target trajectories exist
     return GetTargetPredictionResult();
   else // no target trajectory exists
     return std::nullopt;
-  */
 }
 los_keeper::TargetManager3D::TargetManager3D(const los_keeper::PredictionParameter &param)
     : TargetManager(param) {}

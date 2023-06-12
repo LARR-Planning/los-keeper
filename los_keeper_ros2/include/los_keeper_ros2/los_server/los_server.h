@@ -43,7 +43,8 @@ private:
 
   PointCloudSubscriber points_subscriber_;
   StateSubscriber state_subscriber_;
-  ObjectStateArraySubscriber object_state_array_subscriber_;
+  ObjectStateArraySubscriber structured_obstacle_state_array_subscriber_;
+  ObjectStateArraySubscriber target_state_array_subscriber_;
   InputPublisher input_publisher_;
 
   RosTimer planning_timer_;
@@ -54,6 +55,7 @@ private:
   void DroneStateCallback(const DroneStateMsg::SharedPtr msg);
   void PointsCallback(const PointCloudMsg::SharedPtr msg);
   void ObjectStateArrayCallback(const ObjectStateArrayMsg::SharedPtr msg);
+  void TargetStateArrayCallback(const ObjectStateArrayMsg::SharedPtr msg);
   void PlanningTimerCallback();
   void ControlTimerCallback();
   void ToggleActivateCallback(const std::shared_ptr<ToggleActivateService::Request> reqeust,

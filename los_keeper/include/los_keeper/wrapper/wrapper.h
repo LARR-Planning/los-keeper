@@ -40,11 +40,13 @@ private:
   DroneState drone_state_;
   store::State state_;
   std::vector<ObjectState> object_state_list_;
+  std::vector<ObjectState> target_state_list_;
   PlanningResult planning_result_;
 
   struct {
     std::mutex drone_state;
     std::mutex object_state_list;
+    std::mutex target_state_list;
     std::mutex point_cloud;
     std::mutex control;
   } mutex_list_;
@@ -67,8 +69,8 @@ public:
   void SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points);
   void SetDroneState(const DroneState &drone_state);
   void SetObjectStateArray(const std::vector<ObjectState> &object_state_list);
+  void SetTargetStateArray(const std::vector<ObjectState> &target_state_list);
   std::optional<Point> GenerateControlInputFromPlanning(double time);
-
   void OnPlanningTimerCallback();
   void OnToggleActivateServiceCallback();
 };
