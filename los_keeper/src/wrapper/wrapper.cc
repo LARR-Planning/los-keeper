@@ -43,7 +43,7 @@ void Wrapper::UpdateState(store::State &state) {
 void Wrapper::HandleStopAction() { state_.is_activated = false; }
 void Wrapper::HandleActivateAction() { state_.is_activated = true; }
 void Wrapper::HandleReplanAction() {
-  printf("Handle ReplanAction\n");
+  //  printf("Handle ReplanAction\n");
   PlanningProblem planning_problem;
   {
     std::scoped_lock lock(mutex_list_.drone_state, mutex_list_.point_cloud);
@@ -52,7 +52,6 @@ void Wrapper::HandleReplanAction() {
     planning_problem.structured_obstacle_poly_list =
         obstacle_manager_->GetStructuredObstaclePolyList();
     planning_problem.target_state_list = target_state_list_;
-    printf("Size of Target Prediction Ingredient:%d. \n", (int)target_state_list_.size());
   }
   const auto &point_cloud = planning_problem.point_cloud;
   const auto &structured_obstacle_poly_list = planning_problem.structured_obstacle_poly_list;
@@ -64,11 +63,11 @@ void Wrapper::HandleReplanAction() {
   if (!target_prediction_list)
     goto update;
 
-  new_planning_result.last_plan_success_t_sec =
-      std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
-
-  new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
-      target_prediction_list.value(), point_cloud, structured_obstacle_poly_list);
+  //  new_planning_result.last_plan_success_t_sec =
+  //      std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
+  //
+  //  new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
+  //      target_prediction_list.value(), point_cloud, structured_obstacle_poly_list);
 
 update : {
   std::unique_lock<std::mutex> lock(mutex_list_.control);

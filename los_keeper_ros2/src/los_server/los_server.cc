@@ -86,6 +86,7 @@ void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
 
 void los_keeper::LosServer::ObjectStateArrayCallback(const ObjectStateArrayMsg::SharedPtr msg) {
   const auto object_state_array = ConvertToObjectStateArray(*msg);
+  //  printf("OBJECT SIZE: %d \n",(int)object_state_array.size());
   wrapper_ptr_->SetObjectStateArray(object_state_array);
 };
 
