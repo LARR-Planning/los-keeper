@@ -68,7 +68,6 @@ PrimitiveList los_keeper::TargetManager::GetTargetPredictionResult() {
 }
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
-  cout << "2D" << endl;
   SampleEndPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();

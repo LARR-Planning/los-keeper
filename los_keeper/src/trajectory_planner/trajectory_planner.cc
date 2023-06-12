@@ -42,9 +42,11 @@ void TrajectoryPlanner::CheckDistanceFromTargetsSubProcess(const int &start_idx,
 
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
   SampleShootingPoints();
+  cout << "Sample End Points Done" << endl;
   ComputePrimitives();
+  cout << "Compute Primitives Done" << endl;
   CheckDistanceFromTargets();
-
+  cout << "Compute Distance Index Done" << endl;
   return false;
 }
 
@@ -95,7 +97,7 @@ void TrajectoryPlanner2D::ComputePrimitives() {
   primitives_list_.clear();
   int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
   vector<thread> worker_thread;
-  PrimitiveListSet primitive_list_temp;
+  PrimitiveListSet primitive_list_temp(param_.sampling.num_thread);
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     worker_thread.emplace_back(&TrajectoryPlanner2D::ComputePrimitivesSubProcess, this,
                                num_chunk * (i), num_chunk * (i + 1),
@@ -173,6 +175,7 @@ optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
   this->SetTargetState(target_prediction_list);
   this->SetObstacleState(obstacle_points, structured_obstacle_poly_list);
   bool plan_success = this->PlanKeeperTrajectory();
+
   if (plan_success)
     return GetBestKeeperTrajectory();
   else
@@ -296,7 +299,7 @@ void TrajectoryPlanner3D::ComputePrimitives() {
   primitives_list_.clear();
   int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
   vector<thread> worker_thread;
-  PrimitiveListSet primitive_list_temp;
+  PrimitiveListSet primitive_list_temp(param_.sampling.num_thread);
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     worker_thread.emplace_back(&TrajectoryPlanner3D::ComputePrimitivesSubProcess, this,
                                num_chunk * (i), num_chunk * (i + 1),
