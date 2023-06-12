@@ -27,6 +27,7 @@ public:
   void SetStructuredObstacleState(const std::vector<ObjectState> &structured_obstacle_state_list);
   std::vector<StatePoly> GetStructuredObstaclePolyList() { return structured_obstacle_poly_list_; };
   PclPointCloud GetPointCloud();
+  bool CheckCollisionAlongTrajectory(const StatePoly &trajectory);
 };
 } // namespace los_keeper
 #endif /* HEADER_OBSTACLE_MANAGER */

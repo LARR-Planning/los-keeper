@@ -176,7 +176,7 @@ TEST_F(ApiTestFixture, RePlanningShouldTriedWhenSomethingWrong) {
 
   // Still, planning not expired
   wrapper_.OnPlanningTimerCallback();
-  EXPECT_GT(wrapper_.planning_result_.seq, current_planning_seq);
+  EXPECT_EQ(wrapper_.planning_result_.seq, current_planning_seq);
 
   // But if planning expired, planning again
   std::chrono::seconds duration(int(wrapper_.parameters_.planning.replan_period_sec));
