@@ -30,8 +30,12 @@ std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
 }
 
 void Wrapper::UpdateState(store::State &state) {
-  // TODO(Jeon): add object state, etc,.
   state.is_data_received = drone_state_.t_sec > 0.0 && object_state_list_.size() > 0;
+  double t_current =
+      std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+  state.is_planning_expired = (t_current - planning_result_.last_plan_success_t_sec) >
+                              parameters_.planning.replan_period_sec;
 
   // TODO(Lee): implement these
   // state.is_currently_safe =
@@ -63,7 +67,10 @@ void Wrapper::HandleReplanAction() {
       planning_problem.target_state_list, point_cloud, structured_obstacle_poly_list);
   if (!target_prediction_list)
     goto update;
-  cout << "Size of Target Prediction Result" << target_prediction_list->size() << endl;
+
+  new_planning_result.last_plan_success_t_sec =
+      std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
+
   new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
       target_prediction_list.value(), point_cloud, structured_obstacle_poly_list);
 

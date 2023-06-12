@@ -45,4 +45,42 @@ TEST_F(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived) {
   // EXPECT_EQ(wrapper_.planning_result_.chasing_trajectory, std::nullopt);
 }
 
+TEST_F(ApiTestFixture, RePlanningShouldTriedWhenSomethingWrong) {
+  // Once crone state and object state are received, planning will triggerred by toggle
+  DroneState drone_state;
+  std::vector<ObjectState> object_state_list(2);
+  drone_state.t_sec = 1.0;
+  wrapper_.SetDroneState(drone_state);
+  wrapper_.SetObjectStateArray(object_state_list);
+
+  wrapper_.OnToggleActivateServiceCallback();
+
+  wrapper_.OnPlanningTimerCallback();
+  int current_planning_seq = wrapper_.planning_result_.seq;
+  EXPECT_GT(current_planning_seq, 0);
+
+  // If the planning success, the planing will be safe and visible.
+  // Currently, we simulate this
+  // TODO(Lee): when `Wrapper::UpdateState` is done, change these
+  wrapper_.state_.is_planning_safe = true;
+  wrapper_.state_.is_currently_safe = true;
+  wrapper_.state_.is_planning_visible = true;
+
+  // Still, planning not expired
+  wrapper_.OnPlanningTimerCallback();
+  EXPECT_EQ(wrapper_.planning_result_.seq, current_planning_seq);
+
+  // But if planning expired, planning again
+  std::chrono::seconds duration(int(wrapper_.parameters_.planning.replan_period_sec));
+  std::this_thread::sleep_for(duration);
+  wrapper_.OnPlanningTimerCallback();
+  EXPECT_GT(wrapper_.planning_result_.seq, current_planning_seq);
+  current_planning_seq = wrapper_.planning_result_.seq;
+
+  // Even if planning is not expired, planning if something wrong
+  wrapper_.state_.is_planning_visible = false;
+  wrapper_.OnPlanningTimerCallback();
+  EXPECT_GT(wrapper_.planning_result_.seq, current_planning_seq);
+}
+
 } // namespace los_keeper
