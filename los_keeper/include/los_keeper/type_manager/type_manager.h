@@ -34,7 +34,7 @@ struct PlanningParameter {
     float rx{0.0f};
     float ry{0.0f};
     float rz{0.0f};
-  } drone;
+  } safe_distance;
   struct {
     float height{0.0f};
     float width{0.0f};
@@ -102,6 +102,9 @@ struct DroneState {
   float ax;
   float ay;
   float az;
+  float rx;
+  float ry;
+  float rz;
 };
 
 struct JerkControlInput {

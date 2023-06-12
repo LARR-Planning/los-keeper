@@ -33,7 +33,7 @@
       dynamic_limits:
         vel_max: 2.0
         acc_max: 5.0
-      drone:
+      safe_distance:
         rx: 0.2
         ry: 0.2
         rz: 0.3

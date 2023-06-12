@@ -54,9 +54,9 @@ TEST_F(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived) {
   planning_param.distance.obstacle_max = 100.0f;
   planning_param.distance.target_min = 0.3f;
   planning_param.distance.target_max = 5.0f;
-  planning_param.drone.rx = 0.1f;
-  planning_param.drone.ry = 0.1f;
-  planning_param.drone.rz = 0.1f;
+  planning_param.safe_distance.rx = 0.1f;
+  planning_param.safe_distance.ry = 0.1f;
+  planning_param.safe_distance.rz = 0.1f;
 
   DroneState drone_state;
   //  std::vector<ObjectState> object_state_list(2);
@@ -130,9 +130,9 @@ TEST_F(ApiTestFixture, RePlanningShouldTriedWhenSomethingWrong) {
   planning_param.distance.obstacle_max = 100.0f;
   planning_param.distance.target_min = 0.3f;
   planning_param.distance.target_max = 5.0f;
-  planning_param.drone.rx = 0.1f;
-  planning_param.drone.ry = 0.1f;
-  planning_param.drone.rz = 0.1f;
+  planning_param.safe_distance.rx = 0.1f;
+  planning_param.safe_distance.ry = 0.1f;
+  planning_param.safe_distance.rz = 0.1f;
 
   DroneState drone_state;
   //  std::vector<ObjectState> object_state_list(2);

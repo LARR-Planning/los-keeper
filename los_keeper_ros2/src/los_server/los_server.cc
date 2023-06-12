@@ -19,6 +19,10 @@ DroneState los_keeper::ConvertToDroneState(const DroneStateMsg &drone_state_msg)
   drone_state.ay = drone_state_msg.ay;
   drone_state.az = drone_state_msg.az;
 
+  drone_state.rx = drone_state_msg.rx;
+  drone_state.ry = drone_state_msg.ry;
+  drone_state.rz = drone_state_msg.rz;
+
   return drone_state;
 }
 
@@ -172,9 +176,9 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
                          planning_param.dynamic_limits.vel_max);
     get_parameter<float>("trajectory_planner.dynamic_limits.acc_max",
                          planning_param.dynamic_limits.acc_max);
-    get_parameter<float>("trajectory_planner.drone.rx", planning_param.drone.rx);
-    get_parameter<float>("trajectory_planner.drone.ry", planning_param.drone.ry);
-    get_parameter<float>("trajectory_planner.drone.rz", planning_param.drone.rz);
+    get_parameter<float>("trajectory_planner.safe_distance.rx", planning_param.safe_distance.rx);
+    get_parameter<float>("trajectory_planner.safe_distance.ry", planning_param.safe_distance.ry);
+    get_parameter<float>("trajectory_planner.safe_distance.rz", planning_param.safe_distance.rz);
     get_parameter<float>("trajectory_planner.virtual_pcl_bbox.width",
                          planning_param.virtual_pcl_bbox.width);
     get_parameter<float>("trajectory_planner.virtual_pcl_bbox.height",
