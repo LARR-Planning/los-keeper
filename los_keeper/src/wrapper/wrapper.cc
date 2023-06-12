@@ -63,8 +63,8 @@ void Wrapper::HandleReplanAction() {
   if (!target_prediction_list)
     goto update;
 
-  //  new_planning_result.last_plan_success_t_sec =
-  //      std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
+  new_planning_result.last_plan_success_t_sec =
+      std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
   //
   //  new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
   //      target_prediction_list.value(), point_cloud, structured_obstacle_poly_list);

@@ -41,3 +41,49 @@ void ObstacleManager::TranslateStateToPoly() {
 
 PclPointCloud ObstacleManager::GetPointCloud() { return cloud_; }
 ObstacleManager::ObstacleManager(const ObstacleParameter &param) : param_(param) {}
+bool ObstacleManager::CheckCollisionAlongTrajectory(const StatePoly &trajectory) {
+  int num_sample = 20;
+  float time_sample[20];
+  for (int i = 0; i < num_sample; i++) {
+    time_sample[i] = param_.planning_horizon / float(num_sample - 1) * (float)i;
+  }
+  bool safe_pcl = true;
+  bool safe_structured = true;
+  if (not cloud_.points.empty()) {
+    for (int i = 0; i < cloud_.points.size(); i++) {
+      if (powf(trajectory.GetPointAtTime(time_sample[i]).x - cloud_.points[i].x, 2) /
+                  powf(trajectory.rx, 2) +
+              powf(trajectory.GetPointAtTime(time_sample[i]).y - cloud_.points[i].y, 2) /
+                  powf(trajectory.ry, 2) +
+              powf(trajectory.GetPointAtTime(time_sample[i]).z - cloud_.points[i].z, 2) /
+                  powf(trajectory.rz, 2) <
+          1.0f) {
+        safe_pcl = false;
+        break;
+      }
+    }
+  }
+  if (not structured_obstacle_state_list_.empty()) {
+    for (int i = 0; i < structured_obstacle_state_list_.size(); i++) {
+      if (powf(trajectory.GetPointAtTime(time_sample[i]).x - structured_obstacle_state_list_[i].px,
+               2) /
+                  powf(trajectory.rx + structured_obstacle_state_list_[i].rx, 2) +
+              powf(trajectory.GetPointAtTime(time_sample[i]).y -
+                       structured_obstacle_state_list_[i].py,
+                   2) /
+                  powf(trajectory.ry + structured_obstacle_state_list_[i].ry, 2) +
+              powf(trajectory.GetPointAtTime(time_sample[i]).z -
+                       structured_obstacle_state_list_[i].pz,
+                   2) /
+                  powf(trajectory.rz + structured_obstacle_state_list_[i].rz, 2) <
+          1.0f) {
+        safe_structured = false;
+        break;
+      }
+    }
+  }
+  if (safe_pcl and safe_structured)
+    return false;
+  else
+    return true;
+}
