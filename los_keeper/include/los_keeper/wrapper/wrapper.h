@@ -22,6 +22,7 @@ struct PlanningProblem {
 };
 
 struct PlanningResult {
+  double last_plan_success_t_sec{0};
   int seq{0};
   std::optional<StatePoly> chasing_trajectory;
   std::optional<Point> GetPointAtTime(double t) const;
@@ -32,6 +33,7 @@ class Wrapper {
   friend class ApiTestFixture;
   FRIEND_TEST(ApiTestFixture, PlanningShouldNullWhenNotActivatedOrNotReceived);
   FRIEND_TEST(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived);
+  FRIEND_TEST(ApiTestFixture, RePlanningShouldTriedWhenSomethingWrong);
 
 private:
   Parameters parameters_;
