@@ -109,6 +109,7 @@ struct DroneState {
 
 struct JerkControlInput {
   double t_sec{0.0};
+  size_t seq{0};
   float jx{0.0f};
   float jy{0.0f};
   float jz{0.0f};

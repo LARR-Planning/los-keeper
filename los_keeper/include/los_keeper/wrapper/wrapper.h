@@ -30,6 +30,7 @@ struct PlanningResult {
   int seq{0};
   std::optional<StatePoly> chasing_trajectory;
   std::optional<Point> GetPointAtTime(double t) const;
+  std::optional<JerkControlInput> GetJerkInputAtTime(double t) const;
 };
 
 class Wrapper {
@@ -75,7 +76,7 @@ public:
   void SetDroneState(const DroneState &drone_state);
   void SetObjectStateArray(const std::vector<ObjectState> &object_state_list);
   void SetTargetStateArray(const std::vector<ObjectState> &target_state_list);
-  std::optional<Point> GenerateControlInputFromPlanning(double time);
+  std::optional<JerkControlInput> GenerateControlInputFromPlanning(double time);
   std::optional<DebugInfo> GetDebugInfo();
   void OnPlanningTimerCallback();
   void OnToggleActivateServiceCallback();

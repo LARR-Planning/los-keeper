@@ -6,7 +6,7 @@ namespace los_keeper {
 
 class ApiTestFixture : public ::testing::Test {
 public:
-  ApiTestFixture() {}
+  ApiTestFixture() : wrapper_(Parameters()) {}
 
 protected:
   Wrapper wrapper_;
@@ -195,6 +195,28 @@ TEST_F(ApiTestFixture, RePlanningShouldTriedWhenSomethingWrong) {
   wrapper_.state_.is_planning_visible = false;
   wrapper_.OnPlanningTimerCallback();
   EXPECT_GT(wrapper_.planning_result_.seq, current_planning_seq);
+}
+
+TEST_F(ApiTestFixture, ControlInput) {
+  DroneState drone_state;
+  std::vector<ObjectState> object_state_list(2);
+  drone_state.t_sec = 1.0;
+  wrapper_.SetDroneState(drone_state);
+  wrapper_.SetTargetStateArray(object_state_list);
+
+  wrapper_.OnToggleActivateServiceCallback();
+
+  // TODO(Lee): once your prediction works, uncomment and test them
+  /**
+  double t_eval = 1.0;
+  wrapper_.OnPlanningTimerCallback();
+  auto control_input = wrapper_.GenerateControlInputFromPlanning(t_eval);
+  EXPECT_EQ(control_input->seq, 1);
+
+  wrapper_.OnPlanningTimerCallback();
+  control_input = wrapper_.GenerateControlInputFromPlanning(t_eval);
+  EXPECT_EQ(control_input->seq, 2);
+   */
 }
 
 } // namespace los_keeper

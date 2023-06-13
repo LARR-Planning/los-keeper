@@ -40,7 +40,7 @@ DroneState ConvertToDroneState(const DroneStateMsg &drone_state_msg);
 pcl::PointCloud<pcl::PointXYZ> ConvertToPointCloud(const PointCloudMsg &point_cloud_msg);
 std::vector<ObjectState>
 ConvertToObjectStateArray(const ObjectStateArrayMsg &object_state_array_msg);
-InputMsg ConvertToInputMsg(const int drone_input);
+InputMsg ConvertToInputMsg(const JerkControlInput &jerk_control_input);
 
 class LosServer : public rclcpp::Node {
 private:

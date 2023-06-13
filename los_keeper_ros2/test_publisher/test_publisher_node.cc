@@ -26,7 +26,7 @@ public:
   TestPublisherNode() : Node("test_publisher_node") {
     state_publisher_ = create_publisher<DroneStateMsg>("~/state", 10);
     points_publisher_ = create_publisher<PointCloudMsg>("~/points", 10);
-    objects_publisher_ = create_publisher<ObjectStateMsgArray>("~/object_state_array", 10);
+    objects_publisher_ = create_publisher<ObjectStateMsgArray>("~/target_state_array", 10);
 
     short_timer_ = create_wall_timer(10ms, [this]() { PublishStateMessage(); });
 
