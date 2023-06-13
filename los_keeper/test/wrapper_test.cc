@@ -82,6 +82,9 @@ TEST_F(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived) {
   drone_state.ax = 0.0;
   drone_state.ay = 0.0;
   drone_state.az = 0.0;
+  drone_state.rx = 0.1;
+  drone_state.ry = 0.1;
+  drone_state.rz = 0.15;
 
   wrapper_.SetDroneState(drone_state);
   wrapper_.SetTargetStateArray(target_state_list);
@@ -158,6 +161,9 @@ TEST_F(ApiTestFixture, RePlanningShouldTriedWhenSomethingWrong) {
   drone_state.ax = 0.0;
   drone_state.ay = 0.0;
   drone_state.az = 0.0;
+  drone_state.rx = 0.1;
+  drone_state.ry = 0.1;
+  drone_state.rz = 0.15;
   wrapper_.SetDroneState(drone_state);
   //  wrapper_.SetObjectStateArray(object_state_list);
   wrapper_.SetTargetStateArray(target_state_list);

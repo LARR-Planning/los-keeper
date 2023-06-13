@@ -134,7 +134,9 @@ struct StatePoly {
     px.SetTimeInterval(time_interval), py.SetTimeInterval(time_interval),
         pz.SetTimeInterval(time_interval);
   };
-  Point GetPointAtTime(double time) const { return Point(); };
+  Point GetPointAtTime(float time) const {
+    return Point{px.GetValue(time), py.GetValue(time), pz.GetValue(time)};
+  };
 };
 
 using namespace std;
