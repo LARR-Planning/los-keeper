@@ -11,6 +11,11 @@
 #include <vector>
 
 namespace los_keeper {
+
+struct ObstacleManagerDebugInfo {
+  int some_debug_info{0};
+};
+
 class ObstacleManager {
   friend class ApiTestFixtureObstacle;
   FRIEND_TEST(ApiTestFixtureObstacle, CheckCollisionBetweenTrajectoryAndObstacles);
@@ -21,6 +26,7 @@ private:
   std::vector<ObjectState> structured_obstacle_state_list_;
   std::vector<StatePoly> structured_obstacle_poly_list_;
   ObstacleParameter param_;
+  ObstacleManagerDebugInfo debug_info_;
 
   Eigen::Affine3d pose_;
   void TranslateStateToPoly();
@@ -34,6 +40,7 @@ public:
   PclPointCloud GetPointCloud();
   bool CheckCollisionAlongTrajectory(const StatePoly &trajectory);
   bool CheckCollisionWithPoint(const DroneState &drone_state);
+  ObstacleManagerDebugInfo GetDebugInfo() const;
 };
 } // namespace los_keeper
 #endif /* HEADER_OBSTACLE_MANAGER */

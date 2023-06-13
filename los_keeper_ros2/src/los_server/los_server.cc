@@ -72,6 +72,18 @@ void LosServer::ControlTimerCallback() {
   auto control_input = wrapper_ptr_->GenerateControlInputFromPlanning(t.seconds());
 }
 
+void LosServer::VisualizationTimerCallback() {
+  auto t = now();
+  auto debug_info = wrapper_ptr_->GetDebugInfo();
+  if (debug_info.has_value()) {
+    visualization_.some_debug_info =
+        visualizer_.DeriveSomeDebugInfo(debug_info.value().obstacle_manager.some_debug_info);
+  }
+
+  visualizer_.UpdateTime(t); // TODO(@): set time for individual debug info?
+  visualization_.some_debug_info_publisher->publish(visualization_.some_debug_info);
+}
+
 void los_keeper::LosServer::ToggleActivateCallback(
     const std::shared_ptr<ToggleActivateService::Request> reqeust,
     std::shared_ptr<ToggleActivateService::Response> response) {
@@ -127,6 +139,13 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
       this->create_wall_timer(10ms, std::bind(&LosServer::PlanningTimerCallback, this));
 
   control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
+
+  visualization_.some_debug_info_publisher = create_publisher<SomeDebugInfoVisualization>(
+      "~/visualization/some_debug_info", rclcpp::QoS(10));
+  visualization_callback_group_ =
+      this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  visualization_timer_ = this->create_wall_timer(
+      50ms, std::bind(&LosServer::VisualizationTimerCallback, this), visualization_callback_group_);
 
   toggle_activate_server_ = this->create_service<ToggleActivateService>(
       "~/toggle_activate", std::bind(&LosServer::ToggleActivateCallback, this,
