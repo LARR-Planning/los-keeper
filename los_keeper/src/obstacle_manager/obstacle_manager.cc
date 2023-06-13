@@ -4,6 +4,7 @@ using namespace los_keeper;
 
 void ObstacleManager::SetObstacleCloud(const pcl::PointCloud<pcl::PointXYZ> &cloud) {
   cloud_.points = cloud.points;
+  debug_info_.some_debug_info++;
 }
 
 void ObstacleManager::SetStructuredObstacleState(
@@ -41,3 +42,102 @@ void ObstacleManager::TranslateStateToPoly() {
 
 PclPointCloud ObstacleManager::GetPointCloud() { return cloud_; }
 ObstacleManager::ObstacleManager(const ObstacleParameter &param) : param_(param) {}
+
+bool ObstacleManager::CheckCollisionAlongTrajectory(const StatePoly &trajectory) {
+  int num_sample = 20;
+  float time_sample[num_sample];
+  for (int i = 0; i < num_sample; i++) {
+    time_sample[i] = param_.planning_horizon / float(num_sample - 1) * (float)i;
+  }
+  bool safe_pcl = true;
+  bool safe_structured = true;
+  if (not cloud_.points.empty()) {
+    printf("HIHIHI\n");
+    for (int i = 0; i < num_sample; i++) {
+      for (int j = 0; j < cloud_.points.size(); j++) {
+        if (powf(trajectory.GetPointAtTime(time_sample[i]).x - cloud_.points[j].x, 2) /
+                    powf(trajectory.rx, 2) +
+                powf(trajectory.GetPointAtTime(time_sample[i]).y - cloud_.points[j].y, 2) /
+                    powf(trajectory.ry, 2) +
+                powf(trajectory.GetPointAtTime(time_sample[i]).z - cloud_.points[j].z, 2) /
+                    powf(trajectory.rz, 2) <
+            1.0f) {
+          safe_pcl = false;
+          break;
+        }
+      }
+      if (not safe_pcl)
+        break;
+    }
+  }
+  if (not structured_obstacle_state_list_.empty()) {
+    for (int i = 0; i < num_sample; i++) {
+      for (int j = 0; j < structured_obstacle_state_list_.size(); j++) {
+        if (powf(trajectory.GetPointAtTime(time_sample[i]).x -
+                     (structured_obstacle_state_list_[j].px +
+                      structured_obstacle_state_list_[j].vx * time_sample[i]),
+                 2) /
+                    powf(trajectory.rx + structured_obstacle_state_list_[j].rx, 2) +
+                powf(trajectory.GetPointAtTime(time_sample[i]).y -
+                         (structured_obstacle_state_list_[j].py +
+                          structured_obstacle_state_list_[j].vy * time_sample[i]),
+                     2) /
+                    powf(trajectory.ry + structured_obstacle_state_list_[j].ry, 2) +
+                powf(trajectory.GetPointAtTime(time_sample[i]).z -
+                         (structured_obstacle_state_list_[j].pz +
+                          structured_obstacle_state_list_[j].vz * time_sample[i]),
+                     2) /
+                    powf(trajectory.rz + structured_obstacle_state_list_[j].rz, 2) <
+            1.0f) {
+          safe_structured = false;
+          break;
+        }
+      }
+      if (not safe_structured)
+        break;
+    }
+  }
+  if (safe_pcl and safe_structured)
+    return false;
+  else
+    return true;
+}
+bool ObstacleManager::CheckCollisionWithPoint(const DroneState &drone_state) {
+  bool safe_pcl = true;
+  bool safe_structured = true;
+  if (not cloud_.points.empty()) {
+    for (int i = 0; i < cloud_.points.size(); i++) {
+      if (powf(drone_state.px - cloud_.points[i].x, 2) / powf(drone_state.rx, 2) +
+              powf(drone_state.py - cloud_.points[i].y, 2) / powf(drone_state.ry, 2) +
+              powf(drone_state.pz - cloud_.points[i].z, 2) / powf(drone_state.rz, 2) <
+          1.0f) {
+        safe_pcl = false;
+        break;
+      }
+    }
+  }
+  if (not structured_obstacle_state_list_.empty()) {
+    for (int i = 0; i < structured_obstacle_state_list_.size(); i++) {
+      if (powf(drone_state.px - structured_obstacle_state_list_[i].px, 2) /
+                  powf(drone_state.rx, 2) +
+              powf(drone_state.py - structured_obstacle_state_list_[i].py, 2) /
+                  powf(drone_state.ry, 2) +
+              powf(drone_state.pz - structured_obstacle_state_list_[i].pz, 2) /
+                  powf(drone_state.rz, 2) <
+          1.0f) {
+        safe_structured = false;
+        break;
+      }
+    }
+  }
+  if (safe_pcl and safe_structured)
+    return false;
+  else
+    return true;
+}
+
+ObstacleManagerDebugInfo ObstacleManager::GetDebugInfo() const {
+  ObstacleManagerDebugInfo debug_info;
+  debug_info.some_debug_info = debug_info_.some_debug_info;
+  return debug_info;
+}

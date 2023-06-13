@@ -19,6 +19,10 @@ DroneState los_keeper::ConvertToDroneState(const DroneStateMsg &drone_state_msg)
   drone_state.ay = drone_state_msg.ay;
   drone_state.az = drone_state_msg.az;
 
+  drone_state.rx = drone_state_msg.rx;
+  drone_state.ry = drone_state_msg.ry;
+  drone_state.rz = drone_state_msg.rz;
+
   return drone_state;
 }
 
@@ -76,6 +80,18 @@ void LosServer::ControlTimerCallback() {
   if (control_input.has_value()) {
     input_publisher_->publish(ConvertToInputMsg(control_input.value()));
   }
+}
+
+void LosServer::VisualizationTimerCallback() {
+  auto t = now();
+  auto debug_info = wrapper_ptr_->GetDebugInfo();
+  if (debug_info.has_value()) {
+    visualization_.some_debug_info =
+        visualizer_.DeriveSomeDebugInfo(debug_info.value().obstacle_manager.some_debug_info);
+  }
+
+  visualizer_.UpdateTime(t); // TODO(@): set time for individual debug info?
+  visualization_.some_debug_info_publisher->publish(visualization_.some_debug_info);
 }
 
 void los_keeper::LosServer::ToggleActivateCallback(
@@ -136,6 +152,13 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
 
   control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
 
+  visualization_.some_debug_info_publisher = create_publisher<SomeDebugInfoVisualization>(
+      "~/visualization/some_debug_info", rclcpp::QoS(10));
+  visualization_callback_group_ =
+      this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  visualization_timer_ = this->create_wall_timer(
+      50ms, std::bind(&LosServer::VisualizationTimerCallback, this), visualization_callback_group_);
+
   toggle_activate_server_ = this->create_service<ToggleActivateService>(
       "~/toggle_activate", std::bind(&LosServer::ToggleActivateCallback, this,
                                      std::placeholders::_1, std::placeholders::_2));
@@ -184,9 +207,9 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
                          planning_param.dynamic_limits.vel_max);
     get_parameter<float>("trajectory_planner.dynamic_limits.acc_max",
                          planning_param.dynamic_limits.acc_max);
-    get_parameter<float>("trajectory_planner.drone.rx", planning_param.drone.rx);
-    get_parameter<float>("trajectory_planner.drone.ry", planning_param.drone.ry);
-    get_parameter<float>("trajectory_planner.drone.rz", planning_param.drone.rz);
+    get_parameter<float>("trajectory_planner.safe_distance.rx", planning_param.safe_distance.rx);
+    get_parameter<float>("trajectory_planner.safe_distance.ry", planning_param.safe_distance.ry);
+    get_parameter<float>("trajectory_planner.safe_distance.rz", planning_param.safe_distance.rz);
     get_parameter<float>("trajectory_planner.virtual_pcl_bbox.width",
                          planning_param.virtual_pcl_bbox.width);
     get_parameter<float>("trajectory_planner.virtual_pcl_bbox.height",

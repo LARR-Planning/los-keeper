@@ -28,7 +28,7 @@ BernsteinPoly::BernsteinPoly(float time_interval[], float bernstein_coeff[], con
   for (int i = 0; i <= degree_; i++)
     new_coeff[i] = bernstein_coeff[i];
   bernstein_coeff_ = new_coeff;
-  delete[] new_coeff;
+  //  delete[] new_coeff;
 }
 
 BernsteinPoly::~BernsteinPoly() {}
@@ -43,14 +43,14 @@ void BernsteinPoly::SetBernsteinCoeff(float bernstein_coeff[]) {
   for (int i = 0; i <= degree_; i++)
     new_coeff[i] = bernstein_coeff[i];
   bernstein_coeff_ = new_coeff;
-  delete[] new_coeff;
+  //  delete[] new_coeff;
 }
 
 void BernsteinPoly::SetDegree(int degree) { degree_ = degree; }
 
 int BernsteinPoly::GetDegree() const { return degree_; }
 
-float BernsteinPoly::GetValue(float t) {
+float BernsteinPoly::GetValue(float t) const {
   int poly_order = this->degree_;
   float value = 0.0f;
   for (int i = 0; i < poly_order + 1; i++)

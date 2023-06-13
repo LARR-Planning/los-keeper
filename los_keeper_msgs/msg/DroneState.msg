@@ -9,3 +9,6 @@ float32 vz
 float32 ax
 float32 ay
 float32 az
+float32 rx
+float32 ry
+float32 rz

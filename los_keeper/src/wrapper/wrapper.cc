@@ -74,7 +74,6 @@ void Wrapper::HandleReplanAction() {
 
   new_planning_result.last_plan_success_t_sec =
       std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
-
   new_planning_result.chasing_trajectory = StatePoly();
 
 update : {
@@ -149,4 +148,14 @@ std::optional<JerkControlInput> Wrapper::GenerateControlInputFromPlanning(double
     control_input = planning_result_.GetJerkInputAtTime(time);
   }
   return control_input;
+}
+
+std::optional<DebugInfo> Wrapper::GetDebugInfo() {
+  std::optional<DebugInfo> debug_info;
+  std::unique_lock<std::mutex> lock(mutex_list_.debug_info, std::defer_lock);
+  if (lock.try_lock()) {
+    debug_info = DebugInfo();
+    debug_info.value().obstacle_manager = obstacle_manager_->GetDebugInfo();
+  }
+  return debug_info;
 }

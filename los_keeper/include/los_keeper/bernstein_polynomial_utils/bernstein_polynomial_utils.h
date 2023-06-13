@@ -32,7 +32,7 @@ public:
   bool IsSet() { return ((time_interval_ != nullptr) and (bernstein_coeff_ != nullptr)); };
   float *GetTimeInterval() { return time_interval_; };
   float *GetBernsteinCoefficient() { return this->bernstein_coeff_; };
-  float GetValue(float t);
+  float GetValue(float t) const;
   float GetInitialValue() { return bernstein_coeff_[0]; };
   float GetTerminalValue() { return bernstein_coeff_[degree_]; };
   BernsteinPoly ElevateDegree(int m); // Change to higher degree (m)
