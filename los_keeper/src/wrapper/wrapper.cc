@@ -141,3 +141,13 @@ std::optional<Point> Wrapper::GenerateControlInputFromPlanning(double time) {
   }
   return control_input;
 }
+
+std::optional<DebugInfo> Wrapper::GetDebugInfo() {
+  std::optional<DebugInfo> debug_info;
+  std::unique_lock<std::mutex> lock(mutex_list_.debug_info, std::defer_lock);
+  if (lock.try_lock()) {
+    debug_info = DebugInfo();
+    debug_info.value().obstacle_manager = obstacle_manager_->GetDebugInfo();
+  }
+  return debug_info;
+}

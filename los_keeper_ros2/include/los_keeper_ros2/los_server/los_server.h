@@ -7,6 +7,7 @@
 #include "los_keeper_msgs/msg/object_state_array.hpp"
 #include "los_keeper_msgs/srv/toggle_activate.hpp"
 
+#include "los_keeper_ros2/visualization/visualizer.h"
 #include <pcl/PCLPointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <rclcpp/rclcpp.hpp>
@@ -20,6 +21,7 @@ using InputMsg = los_keeper_msgs::msg::JerkControlInput;
 using PointCloudMsg = sensor_msgs::msg::PointCloud2;
 using ObjectStateMsg = los_keeper_msgs::msg::ObjectState;
 using ObjectStateArrayMsg = los_keeper_msgs::msg::ObjectStateArray;
+using VisualizationMsg = visualization_msgs::msg::Marker;
 
 using PointCloudSubscriber = rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr;
 using StateSubscriber = rclcpp::Subscription<DroneStateMsg>::SharedPtr;
@@ -28,6 +30,9 @@ using InputPublisher = rclcpp::Publisher<InputMsg>::SharedPtr;
 using RosTimer = rclcpp::TimerBase::SharedPtr;
 using ToggleActivateService = los_keeper_msgs::srv::ToggleActivate;
 using ToggleActivateServer = rclcpp::Service<ToggleActivateService>::SharedPtr;
+
+using SomeDebugInfoVisualization = VisualizationMsg;
+using SomeDebugInfoPublisher = rclcpp::Publisher<VisualizationMsg>::SharedPtr;
 
 namespace los_keeper {
 
@@ -40,6 +45,7 @@ InputMsg ConvertToInputMsg(const int drone_input);
 class LosServer : public rclcpp::Node {
 private:
   Wrapper *wrapper_ptr_;
+  Visualizer visualizer_;
 
   PointCloudSubscriber points_subscriber_;
   StateSubscriber state_subscriber_;
@@ -47,8 +53,16 @@ private:
   ObjectStateArraySubscriber target_state_array_subscriber_;
   InputPublisher input_publisher_;
 
+  struct {
+    SomeDebugInfoPublisher some_debug_info_publisher;
+    SomeDebugInfoVisualization some_debug_info;
+  } visualization_;
+
   RosTimer planning_timer_;
   RosTimer control_timer_;
+  rclcpp::CallbackGroup::SharedPtr visualization_callback_group_;
+
+  RosTimer visualization_timer_;
 
   ToggleActivateServer toggle_activate_server_;
 
@@ -58,6 +72,7 @@ private:
   void TargetStateArrayCallback(const ObjectStateArrayMsg::SharedPtr msg);
   void PlanningTimerCallback();
   void ControlTimerCallback();
+  void VisualizationTimerCallback();
   void ToggleActivateCallback(const std::shared_ptr<ToggleActivateService::Request> reqeust,
                               std::shared_ptr<ToggleActivateService::Response> response);
 
