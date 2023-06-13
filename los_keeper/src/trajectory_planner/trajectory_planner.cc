@@ -159,9 +159,9 @@ void TrajectoryPlanner2D::ComputePrimitivesSubProcess(const int &start_idx, cons
       bernstein_coeff_temp[5] = drone_state_.pz + 1.0f * param_.horizon.planning * drone_state_.vz;
       primitive_temp.pz.SetBernsteinCoeff(bernstein_coeff_temp);
     }
-    primitive_temp.rx = param_.drone.rx;
-    primitive_temp.ry = param_.drone.ry;
-    primitive_temp.rz = param_.drone.rz;
+    primitive_temp.rx = drone_state_.rx;
+    primitive_temp.ry = drone_state_.ry;
+    primitive_temp.rz = drone_state_.rz;
     primitive_list_sub.push_back(primitive_temp);
   }
 }
@@ -323,9 +323,9 @@ void TrajectoryPlanner3D::ComputePrimitivesSubProcess(const int &start_idx, cons
   primitive_temp.SetTimeInterval(time_interval_temp);
   float bernstein_coeff_temp[6];
   float param_horizon_planning_square = param_.horizon.planning * param_.horizon.planning;
-  primitive_temp.rx = param_.drone.rx;
-  primitive_temp.ry = param_.drone.ry;
-  primitive_temp.rz = param_.drone.rz;
+  primitive_temp.rx = drone_state_.rx;
+  primitive_temp.ry = drone_state_.ry;
+  primitive_temp.rz = drone_state_.rz;
   for (int i = start_idx; i < end_idx; i++) {
     { // x-component
       bernstein_coeff_temp[0] = drone_state_.px;

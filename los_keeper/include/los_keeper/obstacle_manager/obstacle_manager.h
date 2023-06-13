@@ -13,7 +13,8 @@
 namespace los_keeper {
 class ObstacleManager {
   friend class ApiTestFixtureObstacle;
-  FRIEND_TEST(ApiTestFixtureObstacle, heckCollisionBetweenTrajectoryAndObstacles);
+  FRIEND_TEST(ApiTestFixtureObstacle, CheckCollisionBetweenTrajectoryAndObstacles);
+  FRIEND_TEST(ApiTestFixtureObstacle, CheckCollisionBetweenPointsAndObstacles);
 
 private:
   PclPointCloud cloud_;
@@ -32,6 +33,7 @@ public:
   std::vector<StatePoly> GetStructuredObstaclePolyList() { return structured_obstacle_poly_list_; };
   PclPointCloud GetPointCloud();
   bool CheckCollisionAlongTrajectory(const StatePoly &trajectory);
+  bool CheckCollisionWithPoint(const DroneState &drone_state);
 };
 } // namespace los_keeper
 #endif /* HEADER_OBSTACLE_MANAGER */

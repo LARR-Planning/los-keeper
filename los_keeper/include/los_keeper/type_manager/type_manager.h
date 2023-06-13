@@ -34,7 +34,7 @@ struct PlanningParameter {
     float rx{0.0f};
     float ry{0.0f};
     float rz{0.0f};
-  } drone;
+  } safe_distance;
   struct {
     float height{0.0f};
     float width{0.0f};
@@ -102,6 +102,9 @@ struct DroneState {
   float ax;
   float ay;
   float az;
+  float rx;
+  float ry;
+  float rz;
 };
 
 struct JerkControlInput {
@@ -131,7 +134,9 @@ struct StatePoly {
     px.SetTimeInterval(time_interval), py.SetTimeInterval(time_interval),
         pz.SetTimeInterval(time_interval);
   };
-  Point GetPointAtTime(double time) const { return Point(); };
+  Point GetPointAtTime(float time) const {
+    return Point{px.GetValue(time), py.GetValue(time), pz.GetValue(time)};
+  };
 };
 
 using namespace std;
