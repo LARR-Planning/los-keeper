@@ -14,11 +14,12 @@ class BernsteinPoly {
   FRIEND_TEST(ApiTestFixtureBernstein, CheckSetGetBernsteinCoefficients);
   FRIEND_TEST(ApiTestFixtureBernstein, CheckSetGetTimeInterval);
   FRIEND_TEST(ApiTestFixtureBernstein, CheckCopyConstructor);
+  FRIEND_TEST(ApiTestFixtureBernstein, CheckAllSet);
 
 private:
-  float time_interval_[2]; // initial time and terminal time
-  float *bernstein_coeff_; // bernstein coefficient
-  int degree_;             // The degree of a polynomial
+  float time_interval_[2]{-9999.0f, -9999.1f}; // initial time and terminal time
+  float *bernstein_coeff_;                     // bernstein coefficient
+  int degree_;                                 // The degree of a polynomial
 public:
   BernsteinPoly() {
     degree_ = -1;
@@ -36,7 +37,10 @@ public:
   void SetBernsteinCoeff(float bernstein_coeff_[]);
   void SetDegree(int degree_);
   int GetDegree() const;
-  bool IsSet() { return ((time_interval_ != nullptr) and (bernstein_coeff_ != nullptr)); };
+  bool IsSet() {
+    return ((time_interval_[0] < time_interval_[1]) and (bernstein_coeff_ != nullptr)) and
+           (degree_ != -1);
+  };
   float *GetTimeInterval() { return time_interval_; };
   float *GetBernsteinCoefficient() { return this->bernstein_coeff_; };
   float GetValue(float t) const;

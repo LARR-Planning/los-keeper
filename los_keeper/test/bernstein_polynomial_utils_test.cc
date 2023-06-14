@@ -74,5 +74,16 @@ TEST_F(ApiTestFixtureBernsteinUtils, CheckCopyConstructor) {
   EXPECT_EQ(bernstein_poly_.GetBernsteinCoefficient()[2], copied_one.GetBernsteinCoefficient()[2]);
   EXPECT_EQ(bernstein_poly_.GetBernsteinCoefficient()[3], copied_one.GetBernsteinCoefficient()[3]);
 }
+TEST_F(ApiTestFixtureBernsteinUtils, CheckAllSet) {
+  EXPECT_EQ(bernstein_poly_.IsSet(), false);
+  bernstein_poly_.SetDegree(3);
+  EXPECT_EQ(bernstein_poly_.IsSet(), false);
+  float coeff[4]{0.0f, 1.0f, 2.0f, 3.0f};
+  bernstein_poly_.SetBernsteinCoeff(coeff);
+  EXPECT_EQ(bernstein_poly_.IsSet(), false);
+  float time_interval[2]{0.0f, 2.5f};
+  bernstein_poly_.SetTimeInterval(time_interval);
+  EXPECT_EQ(bernstein_poly_.IsSet(), true);
+}
 
 } // namespace los_keeper
