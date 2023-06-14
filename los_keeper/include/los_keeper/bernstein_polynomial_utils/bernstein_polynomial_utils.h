@@ -5,9 +5,16 @@
 #define HEADER_BERNSTEIN_POLYNOMIAL_UTILS
 int factorial(int num);
 int nchoosek(int n, int r);
+#include "gtest/gtest.h"
 #include <cmath>
 
 class BernsteinPoly {
+  friend class ApiTestFixtureBernstein;
+  FRIEND_TEST(ApiTestFixtureBernstein, CheckSetGetDegree);
+  FRIEND_TEST(ApiTestFixtureBernstein, CheckSetGetBernsteinCoefficients);
+  FRIEND_TEST(ApiTestFixtureBernstein, CheckSetGetTimeInterval);
+  FRIEND_TEST(ApiTestFixtureBernstein, CheckCopyConstructor);
+
 private:
   float time_interval_[2]; // initial time and terminal time
   float *bernstein_coeff_; // bernstein coefficient
@@ -21,8 +28,8 @@ public:
   BernsteinPoly(const BernsteinPoly &bern_poly) {
     time_interval_[0] = bern_poly.time_interval_[0];
     time_interval_[1] = bern_poly.time_interval_[1];
-    bernstein_coeff_ = bern_poly.bernstein_coeff_;
     degree_ = bern_poly.degree_;
+    bernstein_coeff_ = bern_poly.bernstein_coeff_;
   };
   ~BernsteinPoly();
   void SetTimeInterval(float time_interval_[]);
