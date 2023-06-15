@@ -1,13 +1,11 @@
 #ifndef HEADER_OBSTACLE_MANAGER
 #define HEADER_OBSTACLE_MANAGER
 
+#include "los_keeper/type_manager/type_manager.h"
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-
-#include "los_keeper/type_manager/type_manager.h"
-#include "gtest/gtest.h"
 #include <vector>
 
 namespace los_keeper {
