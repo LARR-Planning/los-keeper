@@ -66,6 +66,9 @@ public:
 };
 
 class TargetManager2D : public los_keeper::TargetManager {
+  friend class ApiTestFixtureTargetManager2D;
+  FRIEND_TEST(ApiTestFixtureTargetManager2D, CheckSampleEndPoints);
+
 private:
   vector<LinearConstraint2D> GenLinearConstraint();
   vec_E<Polyhedron2D> polys;
@@ -102,6 +105,9 @@ public:
                     const PrimitiveList &structured_obstacle_poly_list) override;
 };
 class TargetManager3D : public los_keeper::TargetManager {
+  friend class ApiTestFixtureTargetManager3D;
+  FRIEND_TEST(ApiTestFixtureTargetManager3D, CheckSampleEndPoints);
+
 private:
   vector<LinearConstraint3D> GenLinearConstraint();
   vec_E<Polyhedron3D> polys;
