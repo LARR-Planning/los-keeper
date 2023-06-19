@@ -67,7 +67,7 @@ public:
 
 class TargetManager2D : public los_keeper::TargetManager {
   friend class ApiTestFixtureTargetManager2D;
-  FRIEND_TEST(ApiTestFixtureTargetManager2D, CheckSampleEndPoints);
+  FRIEND_TEST(ApiTestFixtureTargetManager2D, CheckWhenNoObstacles2D);
 
 private:
   vector<LinearConstraint2D> GenLinearConstraint();
@@ -106,7 +106,7 @@ public:
 };
 class TargetManager3D : public los_keeper::TargetManager {
   friend class ApiTestFixtureTargetManager3D;
-  FRIEND_TEST(ApiTestFixtureTargetManager3D, CheckSampleEndPoints);
+  FRIEND_TEST(ApiTestFixtureTargetManager3D, CheckWhenNoObstacles3D);
 
 private:
   vector<LinearConstraint3D> GenLinearConstraint();
