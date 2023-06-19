@@ -318,6 +318,7 @@ void los_keeper::TargetManager2D::SampleEndPointsSubProcess(const int &target_id
       (0.5f * 0.33333333f * param_.dynamic_limits.acc_max * param_.horizon.prediction *
        param_.horizon.prediction);
   Eigen::EigenMultivariateNormal<float> normX_solver1(mean, covar);
+  gaussian_data_eigen << normX_solver1.samples(n_rows).transpose();
   Point tempPoint{end_point_center.x, end_point_center.y, end_point_center.z};
   PointList end_points_temp;
   for (int j = 0; j < n_rows; j++) {
