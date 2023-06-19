@@ -92,6 +92,7 @@ void LosServer::VisualizationTimerCallback() {
 
   visualizer_.UpdateTime(t); // TODO(@): set time for individual debug info?
   visualization_.some_debug_info_publisher->publish(visualization_.some_debug_info);
+  visualization_.obstacle_path_vis_publisher->publish(visualization_.obstacle_path_vis);
 }
 
 void los_keeper::LosServer::ToggleActivateCallback(
@@ -154,6 +155,8 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
 
   visualization_.some_debug_info_publisher = create_publisher<SomeDebugInfoVisualization>(
       "~/visualization/some_debug_info", rclcpp::QoS(10));
+  visualization_.obstacle_path_vis_publisher = create_publisher<ObstaclePathVisualizationMsg>(
+      "~/visualization/obstacle_array_info", rclcpp::QoS(10));
   visualization_callback_group_ =
       this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   visualization_timer_ = this->create_wall_timer(

@@ -156,6 +156,7 @@ std::optional<DebugInfo> Wrapper::GetDebugInfo() {
   if (lock.try_lock()) {
     debug_info = DebugInfo();
     debug_info.value().obstacle_manager = obstacle_manager_->GetDebugInfo();
+    debug_info.value().target_manager = target_manager_->GetDebugInfo();
   }
   return debug_info;
 }

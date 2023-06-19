@@ -64,6 +64,20 @@ PrimitiveList los_keeper::TargetManager::GetTargetPredictionResult() {
 
   return prediction_result;
 }
+los_keeper::TargetManagerDebugInfo los_keeper::TargetManager::GetDebugInfo() const {
+  TargetManagerDebugInfo debug_info;
+  debug_info.has_structured_obstacle = not structured_obstacle_poly_list_.empty();
+  debug_info.has_structured_obstacle = not cloud_.points.empty();
+  debug_info.num_target = num_target_;
+  debug_info.end_points = end_points_;
+  debug_info.primitives_list = primitives_list_;
+  debug_info.close_obstacle_index = close_obstacle_index_;
+  debug_info.primitive_safe_structured_obstacle_index = primitive_safe_structured_obstacle_index_;
+  debug_info.primitive_safe_pcl_index = primitive_safe_pcl_index_;
+  debug_info.primitive_safe_total_index = primitive_safe_total_index_;
+  debug_info.primitive_best_index = primitive_best_index_;
+  return debug_info;
+}
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
   SampleEndPoints();

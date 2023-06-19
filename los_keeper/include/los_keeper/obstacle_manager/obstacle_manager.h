@@ -12,6 +12,7 @@ namespace los_keeper {
 
 struct ObstacleManagerDebugInfo {
   int some_debug_info{0};
+  int num_structured_obstacles{0};
 };
 
 class ObstacleManager {
@@ -24,7 +25,7 @@ private:
   std::vector<ObjectState> structured_obstacle_state_list_;
   std::vector<StatePoly> structured_obstacle_poly_list_;
   ObstacleParameter param_;
-  ObstacleManagerDebugInfo debug_info_;
+  //  ObstacleManagerDebugInfo debug_info_;
 
   Eigen::Affine3d pose_;
   void TranslateStateToPoly();

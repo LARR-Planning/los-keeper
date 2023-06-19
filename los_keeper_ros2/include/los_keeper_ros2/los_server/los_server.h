@@ -34,6 +34,9 @@ using ToggleActivateServer = rclcpp::Service<ToggleActivateService>::SharedPtr;
 using SomeDebugInfoVisualization = VisualizationMsg;
 using SomeDebugInfoPublisher = rclcpp::Publisher<VisualizationMsg>::SharedPtr;
 
+using ObstaclePathVisualizationMsg = visualization_msgs::msg::MarkerArray;
+using ObstaclePathVisPublisher = rclcpp::Publisher<ObstaclePathVisualizationMsg>::SharedPtr;
+
 namespace los_keeper {
 
 DroneState ConvertToDroneState(const DroneStateMsg &drone_state_msg);
@@ -54,6 +57,9 @@ private:
   InputPublisher input_publisher_;
 
   struct {
+    ObstaclePathVisPublisher
+        obstacle_path_vis_publisher;                // Obstacle Array Path Visualization Publisher
+    ObstaclePathVisualizationMsg obstacle_path_vis; // Obstacle Array Path Visualization Data
     SomeDebugInfoPublisher some_debug_info_publisher;
     SomeDebugInfoVisualization some_debug_info;
   } visualization_;

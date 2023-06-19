@@ -16,6 +16,7 @@ namespace los_keeper {
 
 struct DebugInfo {
   ObstacleManagerDebugInfo obstacle_manager;
+  TargetManagerDebugInfo target_manager;
 };
 
 struct PlanningProblem {

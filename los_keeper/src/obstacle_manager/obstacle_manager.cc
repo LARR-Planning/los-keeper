@@ -4,7 +4,7 @@ using namespace los_keeper;
 
 void ObstacleManager::SetObstacleCloud(const pcl::PointCloud<pcl::PointXYZ> &cloud) {
   cloud_.points = cloud.points;
-  debug_info_.some_debug_info++;
+  //  debug_info_.some_debug_info++;
 }
 
 void ObstacleManager::SetStructuredObstacleState(
@@ -138,6 +138,7 @@ bool ObstacleManager::CheckCollisionWithPoint(const DroneState &drone_state) {
 
 ObstacleManagerDebugInfo ObstacleManager::GetDebugInfo() const {
   ObstacleManagerDebugInfo debug_info;
-  debug_info.some_debug_info = debug_info_.some_debug_info;
+  debug_info.some_debug_info = 1;
+  debug_info.num_structured_obstacles = (int)structured_obstacle_poly_list_.size();
   return debug_info;
 }

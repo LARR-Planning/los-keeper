@@ -4,7 +4,7 @@
 #include "los_keeper/wrapper/wrapper.h"
 
 #include <rclcpp/time.hpp>
-#include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 namespace los_keeper {
 struct VisualizationParameters {
