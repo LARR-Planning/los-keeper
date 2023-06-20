@@ -80,14 +80,21 @@ los_keeper::TargetManagerDebugInfo los_keeper::TargetManager::GetDebugInfo() con
 }
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
+  printf("Prediction Triggerd.\n");
   SampleEndPoints();
+  printf("1111111111111111111.\n");
   ComputePrimitives();
-
+  printf("2222222222222222222.\n");
   CalculateCloseObstacleIndex();
-
+  printf("3333333333333333333.\n");
   bool is_safe_traj_exist = CheckCollision();
-  if (is_safe_traj_exist)
+  printf("4444444444444444444.\n");
+  if (is_safe_traj_exist) {
+    printf("55555555555555555.\n");
     CalculateCentroid();
+    printf("66666666666666666.\n");
+  }
+
   return is_safe_traj_exist;
 }
 
@@ -228,6 +235,7 @@ void los_keeper::TargetManager2D::CalculateCentroid() {
         primitive_best_index_[i] = min_dist_pair_temp[j].first;
       }
     }
+    printf("HEHEHEHE\n");
   }
 }
 
@@ -508,6 +516,7 @@ void los_keeper::TargetManager2D::CalculateCentroidSubProcess(const int &target_
   float distance_sum_list[chunk_size];
   for (int i = 0; i < chunk_size; i++) {
     distance_sum_list[i] = 0.0f;
+    printf("AAAAAAAAAAAA\n");
     for (int j = 0; j < primitive_safe_total_index_[target_id].size(); j++) {
       distance_sum_list[i] +=
           (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
@@ -544,6 +553,7 @@ void los_keeper::TargetManager2D::CalculateCentroidSubProcess(const int &target_
                                    .py.GetTerminalValue());
     }
   }
+
   min_dist.second = 99999999999.0f;
   for (int i = 0; i < chunk_size; i++) {
     if (min_dist.second > distance_sum_list[i]) {

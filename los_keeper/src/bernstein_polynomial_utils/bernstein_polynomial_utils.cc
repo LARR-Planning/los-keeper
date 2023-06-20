@@ -20,7 +20,8 @@ int nchoosek(int n, int r) {
   }
 }
 
-BernsteinPoly::BernsteinPoly(float time_interval[], float bernstein_coeff[], const int &degree) {
+BernsteinPoly::BernsteinPoly(const float time_interval[], float bernstein_coeff[],
+                             const int &degree) {
   time_interval_[0] = time_interval[0];
   time_interval_[1] = time_interval[1];
   auto *new_coeff = new float[degree_ + 1];

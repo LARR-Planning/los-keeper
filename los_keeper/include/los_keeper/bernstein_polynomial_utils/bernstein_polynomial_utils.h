@@ -25,7 +25,7 @@ public:
     degree_ = -1;
     bernstein_coeff_ = nullptr;
   };
-  BernsteinPoly(float time_interval[], float bernstein_coeff[], const int &degree);
+  BernsteinPoly(const float time_interval[], float bernstein_coeff[], const int &degree);
   BernsteinPoly(const BernsteinPoly &bern_poly) {
     time_interval_[0] = bern_poly.time_interval_[0];
     time_interval_[1] = bern_poly.time_interval_[1];
@@ -41,8 +41,8 @@ public:
     return ((time_interval_[0] < time_interval_[1]) and (bernstein_coeff_ != nullptr)) and
            (degree_ != -1);
   };
-  float *GetTimeInterval() { return time_interval_; };
-  float *GetBernsteinCoefficient() { return this->bernstein_coeff_; };
+  const float *GetTimeInterval() const { return time_interval_; };
+  const float *GetBernsteinCoefficient() const { return this->bernstein_coeff_; };
   float GetValue(float t) const;
   float GetInitialValue() { return bernstein_coeff_[0]; };
   float GetTerminalValue() { return bernstein_coeff_[degree_]; };

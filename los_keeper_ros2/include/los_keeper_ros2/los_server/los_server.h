@@ -34,8 +34,8 @@ using ToggleActivateServer = rclcpp::Service<ToggleActivateService>::SharedPtr;
 using SomeDebugInfoVisualization = VisualizationMsg;
 using SomeDebugInfoPublisher = rclcpp::Publisher<VisualizationMsg>::SharedPtr;
 
-using ObstaclePathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 using ObstaclePathVisPublisher = rclcpp::Publisher<ObstaclePathVisualizationMsg>::SharedPtr;
+using TargetBestPathVisPublisher = rclcpp::Publisher<TargetBestVisualizationMsg>::SharedPtr;
 
 namespace los_keeper {
 
@@ -57,11 +57,16 @@ private:
   InputPublisher input_publisher_;
 
   struct {
-    ObstaclePathVisPublisher
-        obstacle_path_vis_publisher;                // Obstacle Array Path Visualization Publisher
-    ObstaclePathVisualizationMsg obstacle_path_vis; // Obstacle Array Path Visualization Data
-    SomeDebugInfoPublisher some_debug_info_publisher;
     SomeDebugInfoVisualization some_debug_info;
+    ObstaclePathVisualizationMsg obstacle_path_vis;  // Obstacle Path Array  Visualization Data
+    TargetBestVisualizationMsg target_best_path_vis; // Target Best Path Array Visualization Data
+
+    SomeDebugInfoPublisher some_debug_info_publisher;
+    ObstaclePathVisPublisher
+        obstacle_path_vis_publisher; // Obstacle Array Path Visualization Publisher
+    TargetBestPathVisPublisher
+        target_best_path_vis_publisher; // Target Best Path Visualization Publisher
+
   } visualization_;
 
   RosTimer planning_timer_;
