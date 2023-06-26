@@ -116,7 +116,7 @@ void TrajectoryPlanner2D::ComputePrimitivesSubProcess(const int &start_idx, cons
   primitive_temp.SetDegree(5);
   float time_interval_temp[2]{0.0, param_.horizon.planning};
   primitive_temp.SetTimeInterval(time_interval_temp);
-  float bernstein_coeff_temp[6];
+  BernsteinCoefficients bernstein_coeff_temp(6);
   float param_horizon_planning_square = param_.horizon.planning * param_.horizon.planning;
 
   for (int i = start_idx; i < end_idx; i++) {
@@ -321,7 +321,7 @@ void TrajectoryPlanner3D::ComputePrimitivesSubProcess(const int &start_idx, cons
   primitive_temp.SetDegree(5);
   float time_interval_temp[2]{0.0, param_.horizon.planning};
   primitive_temp.SetTimeInterval(time_interval_temp);
-  float bernstein_coeff_temp[6];
+  BernsteinCoefficients bernstein_coeff_temp(6);
   float param_horizon_planning_square = param_.horizon.planning * param_.horizon.planning;
   primitive_temp.rx = drone_state_.rx;
   primitive_temp.ry = drone_state_.ry;

@@ -49,9 +49,9 @@ TEST_F(ApiTestFixtureObstacle, CheckCollisionBetweenTrajectoryAndObstacles) {
   float time_interval[2]{0.0, obstacle_param.planning_horizon};
   trajectory.SetTimeInterval(time_interval);
   trajectory.SetDegree(3);
-  float bernstein_coeff_x[4]{0.0, 1.0, 2.0, 3.0};
-  float bernstein_coeff_y[4]{0.0, 1.0, 2.0, 3.0};
-  float bernstein_coeff_z[4]{0.0, 1.0, 2.0, 3.0};
+  BernsteinCoefficients bernstein_coeff_x{0.0, 1.0, 2.0, 3.0};
+  BernsteinCoefficients bernstein_coeff_y{0.0, 1.0, 2.0, 3.0};
+  BernsteinCoefficients bernstein_coeff_z{0.0, 1.0, 2.0, 3.0};
   trajectory.px.SetBernsteinCoeff(bernstein_coeff_x);
   trajectory.py.SetBernsteinCoeff(bernstein_coeff_y);
   trajectory.pz.SetBernsteinCoeff(bernstein_coeff_z);

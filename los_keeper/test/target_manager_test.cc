@@ -89,9 +89,9 @@ TEST_F(ApiTestFixtureTargetManager2D, CheckWhenNoObstacles2D) {
                .px.GetBernsteinCoefficient()[i]);
   }
   printf("\n");
-  //  for(int i =0;i<10;i++){
-  //    target_manager_2d_.PredictTargetTrajectory();
-  //  }
+  for (int i = 0; i < 1000; i++) {
+    target_manager_2d_.PredictTargetTrajectory();
+  }
 }
 
 class ApiTestFixtureTargetManager3D : public ::testing::Test {

@@ -33,7 +33,7 @@ public:
   };
   ~BernsteinPoly();
   void SetTimeInterval(float time_interval_[]);
-  void SetBernsteinCoeff(const float bernstein_coeff_[]);
+  void SetBernsteinCoeff(const BernsteinCoefficients &bernstein_coeff);
   void SetDegree(int degree_);
   int GetDegree() const;
   bool IsSet() {

@@ -26,7 +26,6 @@ Visualizer::VisualizeObstaclePathArray(const PrimitiveList &obstacle_primitive) 
   bool is_primitive_generated = not obstacle_primitive.empty();
   if (is_primitive_generated) {
     visualization_msgs::msg::Marker line_strip;
-    line_strip.action = visualization_msgs::msg::Marker::DELETEALL;
     line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
     line_strip.header.frame_id = "map";
     line_strip.color.a = 0.2;

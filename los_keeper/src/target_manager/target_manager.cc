@@ -106,8 +106,8 @@ bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
 
 void los_keeper::TargetManager2D::SampleEndPoints() {
   end_points_.clear();
-  end_points_.resize(target_state_list_.size()); //
-  for (int i = 0; i < target_state_list_.size(); i++) {
+  end_points_.resize(num_target_); //
+  for (int i = 0; i < num_target_; i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
     vector<vector<Point>> end_point_temp(param_.sampling.num_thread);
@@ -379,7 +379,7 @@ void los_keeper::TargetManager2D::ComputePrimitivesSubProcess(const int &target_
   primitive_temp.SetDegree(3);
   float time_interval_temp[2]{0.0, param_.horizon.prediction};
   primitive_temp.SetTimeInterval(time_interval_temp);
-  float bernstein_coeff_temp[4];
+  BernsteinCoefficients bernstein_coeff_temp(4);
 
   for (int j = start_idx; j < end_idx; j++) {
     { // x-coefficient
@@ -871,7 +871,7 @@ void los_keeper::TargetManager3D::ComputePrimitivesSubProcess(const int &target_
   primitive_temp.SetDegree(3);
   float time_interval_temp[2]{0.0, param_.horizon.prediction};
   primitive_temp.SetTimeInterval(time_interval_temp);
-  float bernstein_coeff_temp[4];
+  BernsteinCoefficients bernstein_coeff_temp(4);
   for (int j = start_idx; j < end_idx; j++) {
     { // x-coefficient
       bernstein_coeff_temp[0] = target_state_list_[target_id].px;

@@ -34,10 +34,8 @@ void BernsteinPoly::SetTimeInterval(float time_interval[]) {
   this->time_interval_[1] = time_interval[1];
 }
 
-void BernsteinPoly::SetBernsteinCoeff(const float bernstein_coeff[]) {
-  bernstein_coeff_.clear();
-  for (int i = 0; i < degree_ + 1; i++)
-    bernstein_coeff_.push_back(bernstein_coeff[i]);
+void BernsteinPoly::SetBernsteinCoeff(const BernsteinCoefficients &bernstein_coeff) {
+  bernstein_coeff_ = bernstein_coeff;
 }
 
 void BernsteinPoly::SetDegree(int degree) { degree_ = degree; }
