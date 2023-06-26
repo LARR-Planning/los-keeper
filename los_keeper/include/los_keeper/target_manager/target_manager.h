@@ -55,7 +55,7 @@ protected:
                                               // target trajectory exists
   virtual bool CheckCollision() = 0;
   virtual void CheckPclCollision();
-  virtual void CheckStructuredObstacleCollision();
+  virtual bool CheckStructuredObstacleCollision() = 0;
   virtual void CheckStructuredObstacleCollisionSubProcess(const int &target_id,
                                                           const int &start_idx, const int &end_idx,
                                                           IndexList &safe_structured_index_sub);
@@ -96,7 +96,7 @@ private:
   void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint2D &constraints,
                                    const int &start_idx, const int &end_idx,
                                    IndexList &safe_pcl_index_sub);
-  void CheckStructuredObstacleCollision() override;
+  bool CheckStructuredObstacleCollision() override;
   void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx,
                                                   const int &end_idx,
                                                   IndexList &safe_structured_index_sub) override;
@@ -135,7 +135,7 @@ private:
   void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint3D &constraints,
                                    const int &start_idx, const int &end_idx,
                                    IndexList &safe_pcl_index_sub);
-  void CheckStructuredObstacleCollision() override;
+  bool CheckStructuredObstacleCollision() override;
   void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx,
                                                   const int &end_idx,
                                                   IndexList &safe_structured_index_sub) override;

@@ -26,6 +26,7 @@ Visualizer::VisualizeObstaclePathArray(const PrimitiveList &obstacle_primitive) 
   bool is_primitive_generated = not obstacle_primitive.empty();
   if (is_primitive_generated) {
     visualization_msgs::msg::Marker line_strip;
+    line_strip.action = visualization_msgs::msg::Marker::DELETEALL;
     line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
     line_strip.header.frame_id = "map";
     line_strip.color.a = 0.2;
@@ -57,21 +58,21 @@ Visualizer::VisualizeObstaclePathArray(const PrimitiveList &obstacle_primitive) 
   }
   return visual_output;
 }
-TargetBestVisualizationMsg
+TargetBestPathVisualizationMsg
 Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
                                          const IndexList &best_indices) {
-  TargetBestVisualizationMsg visual_output;
+  TargetBestPathVisualizationMsg visual_output;
   bool is_prediction_generated = not best_indices.empty();
-  //  printf("best_indices size: %d.\n", (int)best_indices.size());
   if (is_prediction_generated) {
+    //      printf("best_indices size: %d.\n", (int)best_indices.size());
     visualization_msgs::msg::Marker line_strip;
     line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
     line_strip.header.frame_id = "map";
-    line_strip.color.a = 1.0;
+    line_strip.color.a = 0.5;
     line_strip.color.r = 1.0;
     line_strip.color.g = 0.0;
     line_strip.color.b = 0.0;
-    line_strip.scale.x = 0.05;
+    line_strip.scale.x = 0.03;
     line_strip.action = visualization_msgs::msg::Marker::MODIFY;
     line_strip.pose.orientation.w = 1.0;
     int num_time_sample = 20;
@@ -92,7 +93,91 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
         line_strip.points.push_back(temp_point);
       }
       visual_output.markers.push_back(line_strip);
+      //      printf("visual output size: %d.\n", (int)visual_output.markers.size());
     }
   }
-  return TargetBestVisualizationMsg();
+  return visual_output;
+}
+TargetRawPathVisualizationMsg
+Visualizer::VisualizeRawTargetPathArray(const PrimitiveListSet &primitive_list) {
+  TargetBestPathVisualizationMsg visual_output;
+  bool is_primitive_generated = not primitive_list.empty();
+  if (is_primitive_generated) {
+    visualization_msgs::msg::Marker line_strip;
+    line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    line_strip.header.frame_id = "map";
+    line_strip.color.a = 0.3;
+    line_strip.color.r = 0.5;
+    line_strip.color.g = 0.5;
+    line_strip.color.b = 0.5;
+    line_strip.scale.x = 0.01;
+    line_strip.action = visualization_msgs::msg::Marker::MODIFY;
+    line_strip.pose.orientation.w = 1.0;
+    int num_time_sample = 20;
+    vector<float> time_seq;
+    float seg_t0 = primitive_list[0][0].px.GetTimeInterval()[0];
+    float seg_tf = primitive_list[0][0].px.GetTimeInterval()[1];
+    for (int i = 0; i < num_time_sample; i++)
+      time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) / (float)(num_time_sample - 1));
+    geometry_msgs::msg::Point temp_point;
+    int id = 0;
+    for (int i = 0; i < primitive_list.size(); i++) {
+      for (int j = 0; j < primitive_list[i].size(); j++) {
+        line_strip.points.clear();
+        line_strip.id = id;
+        line_strip.ns = std::to_string(id);
+        id++;
+        for (int k = 0; k < num_time_sample; k++) {
+          temp_point.x = primitive_list[i][j].px.GetValue(time_seq[k]);
+          temp_point.y = primitive_list[i][j].py.GetValue(time_seq[k]);
+          temp_point.z = primitive_list[i][j].pz.GetValue(time_seq[k]);
+          line_strip.points.push_back(temp_point);
+        }
+        visual_output.markers.push_back(line_strip);
+      }
+    }
+  }
+  return visual_output;
+}
+TargetSafePathVisualizationMsg
+Visualizer::VisualizeSafeTargetPathArray(const PrimitiveListSet &primitive_list,
+                                         const IndexListSet &safe_indices) {
+  TargetBestPathVisualizationMsg visual_output;
+  bool is_primitive_generated = (not primitive_list.empty()) and (not safe_indices.empty());
+  if (is_primitive_generated) {
+    visualization_msgs::msg::Marker line_strip;
+    line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    line_strip.header.frame_id = "map";
+    line_strip.color.a = 0.5;
+    line_strip.color.r = 0.8;
+    line_strip.color.g = 0.2;
+    line_strip.color.b = 0.0;
+    line_strip.scale.x = 0.02;
+    line_strip.action = visualization_msgs::msg::Marker::MODIFY;
+    line_strip.pose.orientation.w = 1.0;
+    int num_time_sample = 20;
+    vector<float> time_seq;
+    float seg_t0 = primitive_list[0][0].px.GetTimeInterval()[0];
+    float seg_tf = primitive_list[0][0].px.GetTimeInterval()[1];
+    for (int i = 0; i < num_time_sample; i++)
+      time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) / (float)(num_time_sample - 1));
+    geometry_msgs::msg::Point temp_point;
+    int id = 0;
+    for (int i = 0; i < primitive_list.size(); i++) {
+      for (int j = 0; j < safe_indices[i].size(); j++) {
+        line_strip.points.clear();
+        line_strip.id = id;
+        line_strip.ns = std::to_string(id);
+        id++;
+        for (int k = 0; k < num_time_sample; k++) {
+          temp_point.x = primitive_list[i][safe_indices[i][j]].px.GetValue(time_seq[k]);
+          temp_point.y = primitive_list[i][safe_indices[i][j]].py.GetValue(time_seq[k]);
+          temp_point.z = primitive_list[i][safe_indices[i][j]].pz.GetValue(time_seq[k]);
+          line_strip.points.push_back(temp_point);
+        }
+        visual_output.markers.push_back(line_strip);
+      }
+    }
+  }
+  return visual_output;
 }

@@ -88,16 +88,24 @@ void LosServer::VisualizationTimerCallback() {
   if (debug_info.has_value()) {
     visualization_.some_debug_info =
         visualizer_.DeriveSomeDebugInfo(debug_info.value().obstacle_manager.some_debug_info);
+
     visualization_.obstacle_path_vis = visualizer_.VisualizeObstaclePathArray(
         debug_info.value().obstacle_manager.structured_obstacle_poly_list);
     visualization_.target_best_path_vis = visualizer_.VisualizeBestTargetPathArray(
         debug_info.value().target_manager.primitives_list,
         debug_info.value().target_manager.primitive_best_index);
+    visualization_.target_safe_path_vis = visualizer_.VisualizeSafeTargetPathArray(
+        debug_info.value().target_manager.primitives_list,
+        debug_info.value().target_manager.primitive_safe_total_index);
+    visualization_.target_raw_path_vis =
+        visualizer_.VisualizeRawTargetPathArray(debug_info.value().target_manager.primitives_list);
   }
   visualizer_.UpdateTime(t); // TODO(@): set time for individual debug info?
   visualization_.some_debug_info_publisher->publish(visualization_.some_debug_info);
   visualization_.obstacle_path_vis_publisher->publish(visualization_.obstacle_path_vis);
   visualization_.target_best_path_vis_publisher->publish(visualization_.target_best_path_vis);
+  visualization_.target_safe_path_vis_publisher->publish(visualization_.target_safe_path_vis);
+  visualization_.target_raw_path_vis_publisher->publish(visualization_.target_raw_path_vis);
 }
 
 void los_keeper::LosServer::ToggleActivateCallback(
@@ -162,8 +170,13 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
       "~/visualization/some_debug_info", rclcpp::QoS(10));
   visualization_.obstacle_path_vis_publisher = create_publisher<ObstaclePathVisualizationMsg>(
       "~/visualization/obstacle_array_info", rclcpp::QoS(10));
-  visualization_.target_best_path_vis_publisher = create_publisher<TargetBestVisualizationMsg>(
+  visualization_.target_best_path_vis_publisher = create_publisher<TargetBestPathVisualizationMsg>(
       "~/visualization/target_best_array_info", rclcpp::QoS(10));
+  visualization_.target_safe_path_vis_publisher = create_publisher<TargetSafePathVisualizationMsg>(
+      "~/visualization/target_safe_array_info", rclcpp::QoS(10));
+  visualization_.target_raw_path_vis_publisher = create_publisher<TargetRawPathVisualizationMsg>(
+      "~/visualization/target_raw_array_info", rclcpp::QoS(10));
+
   visualization_callback_group_ =
       this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   visualization_timer_ = this->create_wall_timer(

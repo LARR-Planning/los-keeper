@@ -35,7 +35,9 @@ using SomeDebugInfoVisualization = VisualizationMsg;
 using SomeDebugInfoPublisher = rclcpp::Publisher<VisualizationMsg>::SharedPtr;
 
 using ObstaclePathVisPublisher = rclcpp::Publisher<ObstaclePathVisualizationMsg>::SharedPtr;
-using TargetBestPathVisPublisher = rclcpp::Publisher<TargetBestVisualizationMsg>::SharedPtr;
+using TargetBestPathVisPublisher = rclcpp::Publisher<TargetBestPathVisualizationMsg>::SharedPtr;
+using TargetSafePathVisPublisher = rclcpp::Publisher<TargetSafePathVisualizationMsg>::SharedPtr;
+using TargetRawPathVisPublisher = rclcpp::Publisher<TargetSafePathVisualizationMsg>::SharedPtr;
 
 namespace los_keeper {
 
@@ -58,15 +60,22 @@ private:
 
   struct {
     SomeDebugInfoVisualization some_debug_info;
-    ObstaclePathVisualizationMsg obstacle_path_vis;  // Obstacle Path Array  Visualization Data
-    TargetBestVisualizationMsg target_best_path_vis; // Target Best Path Array Visualization Data
+    ObstaclePathVisualizationMsg obstacle_path_vis; // Obstacle Path Array  Visualization Data
+    TargetBestPathVisualizationMsg
+        target_best_path_vis; // Target Best Path Array Visualization Data
+    TargetSafePathVisualizationMsg
+        target_safe_path_vis;                          // Target Safe Path Array Visualization Data
+    TargetRawPathVisualizationMsg target_raw_path_vis; // Target Primitive Array Visualization Data
 
     SomeDebugInfoPublisher some_debug_info_publisher;
     ObstaclePathVisPublisher
         obstacle_path_vis_publisher; // Obstacle Array Path Visualization Publisher
     TargetBestPathVisPublisher
         target_best_path_vis_publisher; // Target Best Path Visualization Publisher
-
+    TargetSafePathVisPublisher
+        target_safe_path_vis_publisher; // Target Safe Path Visualization Publisher
+    TargetRawPathVisPublisher
+        target_raw_path_vis_publisher; // Target Raw Path Visualization Publisher
   } visualization_;
 
   RosTimer planning_timer_;

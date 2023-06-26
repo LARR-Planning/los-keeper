@@ -38,7 +38,7 @@ void los_keeper::TargetManager::CalculateCentroid() {}
 
 void los_keeper::TargetManager::CheckPclCollision() {}
 
-void los_keeper::TargetManager::CheckStructuredObstacleCollision() {}
+bool los_keeper::TargetManager::CheckStructuredObstacleCollision() {}
 
 void los_keeper::TargetManager::SampleEndPointsSubProcess(const int &target_id,
                                                           const int &chunk_size,
@@ -80,7 +80,7 @@ los_keeper::TargetManagerDebugInfo los_keeper::TargetManager::GetDebugInfo() con
 }
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
-  //  printf("Prediction Triggerd.\n");
+  printf("0000000000000000000.\n");
   SampleEndPoints();
   printf("1111111111111111111.\n");
   ComputePrimitives();
@@ -90,9 +90,15 @@ bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
   bool is_safe_traj_exist = CheckCollision();
   printf("4444444444444444444.\n");
   if (is_safe_traj_exist) {
-    printf("55555555555555555.\n");
+    printf("555555555555555555.\n");
     CalculateCentroid();
-    printf("66666666666666666.\n");
+    printf("6666666666666666666.\n");
+  } else {
+    printf("7777777777777777777.\n");
+    primitive_best_index_.clear();
+    primitive_safe_total_index_.clear();
+    primitive_safe_pcl_index_.clear();
+    primitive_safe_structured_obstacle_index_.clear();
   }
 
   return is_safe_traj_exist;
@@ -167,11 +173,14 @@ bool los_keeper::TargetManager2D::CheckCollision() {
   primitive_safe_total_index_.clear();
   bool is_cloud_empty = cloud_.points.empty();
   bool is_structured_obstacle_empty = structured_obstacle_poly_list_.empty();
+  bool is_available_target_path;
   if (not is_cloud_empty) {
     CheckPclCollision();
   }
   if (not is_structured_obstacle_empty) {
-    CheckStructuredObstacleCollision();
+    printf("AAAAAAAAAAAAAAAAAAAAAA\n");
+    is_available_target_path = CheckStructuredObstacleCollision();
+    printf("BBBBBBBBBBBBBBBBBBBBBB\n");
   }
   if (is_cloud_empty and is_structured_obstacle_empty) { // Case I: No Obstacle
     for (int i = 0; i < num_target_; i++) {
@@ -210,7 +219,9 @@ bool los_keeper::TargetManager2D::CheckCollision() {
       primitive_safe_total_index_.push_back(primitive_safe_total_index_temp);
     }
   }
-  return not primitive_safe_total_index_.empty();
+  //  if(primitive_safe_total_index_.empty())
+  //    printf("NO TARGET")
+  return is_available_target_path;
 }
 
 void los_keeper::TargetManager2D::CalculateCentroid() {
@@ -243,13 +254,14 @@ void los_keeper::TargetManager2D::CheckPclCollision() {
   CalculateSafePclIndex(safe_corridor);
 }
 
-void los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
+bool los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
   primitive_safe_structured_obstacle_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = (int)primitives_list_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
     IndexListSet primitive_safe_structured_obstacle_index_temp(param_.sampling.num_thread);
+    printf("%d-th target close obstacle size: %d \n", i, (int)close_obstacle_index_[i].size());
     for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager2D::CheckStructuredObstacleCollisionSubProcess, this,
                                  i, num_chunk * (j), num_chunk * (j + 1),
@@ -258,13 +270,21 @@ void los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
     for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
+    printf("CDCDCDCDCDCDCDCDCD\n");
     for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < primitive_safe_structured_obstacle_index_temp[j].size(); k++) {
         primitive_safe_structured_obstacle_index_[i].push_back(
             primitive_safe_structured_obstacle_index_temp[j][k]);
       }
     }
+    printf("EFEFEFEFEFEFEFEFEF\n");
   }
+  for (int i = 0; i < num_target_; i++) {
+    if (primitive_safe_structured_obstacle_index_[i].empty()) {
+      return false;
+    }
+  }
+  return true;
 }
 
 std::vector<LinearConstraint2D> los_keeper::TargetManager2D::GenLinearConstraint() {
@@ -452,7 +472,10 @@ void los_keeper::TargetManager2D::CheckStructuredObstacleCollisionSubProcess(
   bool flag_store_in = true;
   bool flag_store_out = true;
   float value;
+  //  printf("%d-th target CLOSE OBSTACLE INDEX SIZE: %d
+  //  \n",target_id,(int)close_obstacle_index_[target_id].size());
   for (int j = start_idx; j < end_idx; j++) {
+    //    printf("%d -th index \n", j);
     for (int k = 0; k < close_obstacle_index_[target_id].size(); k++) {
       flag_store_out = true;
       for (int l = 0; l <= 2 * 3; l++) {
@@ -720,7 +743,7 @@ void los_keeper::TargetManager3D::CheckPclCollision() {
   CalculateSafePclIndex(safe_corridor);
 }
 
-void los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
+bool los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
   primitive_safe_structured_obstacle_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
@@ -742,6 +765,12 @@ void los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
       }
     }
   }
+  for (int i = 0; i < num_target_; i++) {
+    if (primitive_safe_structured_obstacle_index_[i].empty()) {
+      return false;
+    }
+  }
+  return true;
 }
 
 std::vector<LinearConstraint3D> los_keeper::TargetManager3D::GenLinearConstraint() {

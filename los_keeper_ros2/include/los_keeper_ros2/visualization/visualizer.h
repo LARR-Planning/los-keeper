@@ -9,7 +9,9 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 
 using ObstaclePathVisualizationMsg = visualization_msgs::msg::MarkerArray;
-using TargetBestVisualizationMsg = visualization_msgs::msg::MarkerArray;
+using TargetBestPathVisualizationMsg = visualization_msgs::msg::MarkerArray;
+using TargetSafePathVisualizationMsg = visualization_msgs::msg::MarkerArray;
+using TargetRawPathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 
 namespace los_keeper {
 struct VisualizationParameters {
@@ -34,8 +36,13 @@ public:
   void UpdateTime(const rclcpp::Time &time);
   visualization_msgs::msg::Marker DeriveSomeDebugInfo(const int some_debug_info) const;
   ObstaclePathVisualizationMsg VisualizeObstaclePathArray(const PrimitiveList &obstacle_primitive);
-  TargetBestVisualizationMsg VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
-                                                          const IndexList &best_indices);
+  TargetBestPathVisualizationMsg
+  VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
+                               const IndexList &best_indices);
+  TargetSafePathVisualizationMsg
+  VisualizeSafeTargetPathArray(const PrimitiveListSet &primitive_list,
+                               const IndexListSet &safe_indices);
+  TargetRawPathVisualizationMsg VisualizeRawTargetPathArray(const PrimitiveListSet &primitive_list);
 };
 
 } // namespace los_keeper
