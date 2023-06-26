@@ -62,7 +62,7 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
                                          const IndexList &best_indices) {
   TargetBestVisualizationMsg visual_output;
   bool is_prediction_generated = not best_indices.empty();
-  printf("best_indices size: %d.\n", (int)best_indices.size());
+  //  printf("best_indices size: %d.\n", (int)best_indices.size());
   if (is_prediction_generated) {
     visualization_msgs::msg::Marker line_strip;
     line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
