@@ -85,8 +85,13 @@ void LosServer::ControlTimerCallback() {
 void LosServer::VisualizationTimerCallback() {
   auto t = now();
   //  std::optional<DebugInfo> debug_info = wrapper_ptr_->GetDebugInfo();
-  auto debug_info = wrapper_ptr_->GetDebugInfo();
-  if (debug_info.has_value()) {
+  //  DebugInfo debug_info_temp = wrapper_ptr_->GetDebugInfo();
+  //  auto debug_info = wrapper_ptr_->GetDebugInfo()
+  //  static int count =0;
+  //  printf("COUNT: %d \n",count++);
+  DebugInfo debug_info = wrapper_ptr_->GetDebugInfoTemp();
+  //  if (debug_info.has_value()) {
+  if (true) {
     //    visualization_.some_debug_info =
     //        visualizer_.DeriveSomeDebugInfo(debug_info.value().obstacle_manager.some_debug_info);
     { // CLEAR
@@ -95,16 +100,25 @@ void LosServer::VisualizationTimerCallback() {
       visualization_.target_safe_path_vis.markers.clear();
       visualization_.target_raw_path_vis.markers.clear();
     }
+    //    visualization_.obstacle_path_vis = visualizer_.VisualizeObstaclePathArray(
+    //        debug_info.value().obstacle_manager.structured_obstacle_poly_list);
+    //    visualization_.target_best_path_vis = visualizer_.VisualizeBestTargetPathArray(
+    //        debug_info.value().target_manager.primitives_list,
+    //        debug_info.value().target_manager.primitive_best_index);
+    //    visualization_.target_safe_path_vis = visualizer_.VisualizeSafeTargetPathArray(
+    //        debug_info.value().target_manager.primitives_list,
+    //        debug_info.value().target_manager.primitive_safe_total_index);
+    //    visualization_.target_raw_path_vis =
+    //        visualizer_.VisualizeRawTargetPathArray(debug_info.value().target_manager.primitives_list);
     visualization_.obstacle_path_vis = visualizer_.VisualizeObstaclePathArray(
-        debug_info.value().obstacle_manager.structured_obstacle_poly_list);
+        debug_info.obstacle_manager.structured_obstacle_poly_list);
     visualization_.target_best_path_vis = visualizer_.VisualizeBestTargetPathArray(
-        debug_info.value().target_manager.primitives_list,
-        debug_info.value().target_manager.primitive_best_index);
+        debug_info.target_manager.primitives_list, debug_info.target_manager.primitive_best_index);
     visualization_.target_safe_path_vis = visualizer_.VisualizeSafeTargetPathArray(
-        debug_info.value().target_manager.primitives_list,
-        debug_info.value().target_manager.primitive_safe_total_index);
+        debug_info.target_manager.primitives_list,
+        debug_info.target_manager.primitive_safe_total_index);
     visualization_.target_raw_path_vis =
-        visualizer_.VisualizeRawTargetPathArray(debug_info.value().target_manager.primitives_list);
+        visualizer_.VisualizeRawTargetPathArray(debug_info.target_manager.primitives_list);
   }
   visualizer_.UpdateTime(t); // TODO(@): set time for individual debug info?
   //  visualization_.some_debug_info_publisher->publish(visualization_.some_debug_info);

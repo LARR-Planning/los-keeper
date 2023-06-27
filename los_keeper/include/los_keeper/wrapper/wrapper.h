@@ -79,6 +79,7 @@ public:
   void SetTargetStateArray(const std::vector<ObjectState> &target_state_list);
   std::optional<JerkControlInput> GenerateControlInputFromPlanning(double time);
   std::optional<DebugInfo> GetDebugInfo();
+  DebugInfo GetDebugInfoTemp();
   void OnPlanningTimerCallback();
   void OnToggleActivateServiceCallback();
 };

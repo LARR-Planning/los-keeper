@@ -155,15 +155,23 @@ std::optional<DebugInfo> Wrapper::GetDebugInfo() {
   std::unique_lock<std::mutex> lock(mutex_list_.debug_info, std::defer_lock);
   if (lock.try_lock()) {
     //    debug_info = DebugInfo();
-    DebugInfo temp_info;
-    temp_info.obstacle_manager = obstacle_manager_->GetDebugInfo();
-    temp_info.target_manager = target_manager_->GetDebugInfo();
+    //    DebugInfo temp_info;
+    //    temp_info.obstacle_manager = obstacle_manager_->GetDebugInfo();
+    //    temp_info.target_manager = target_manager_->GetDebugInfo();
     //    debug_info->obstacle_manager = obstacle_manager_->GetDebugInfo();
     //    debug_info->target_manager = target_manager_->GetDebugInfo();
-    //    printf("GET DEBUG INFO CALLED\n");
-    //    debug_info.value().obstacle_manager = obstacle_manager_->GetDebugInfo();
-    //    debug_info.value().target_manager = target_manager_->GetDebugInfo();
-    debug_info = temp_info;
+    debug_info.value().obstacle_manager = obstacle_manager_->GetDebugInfo();
+    debug_info.value().target_manager = target_manager_->GetDebugInfo();
+    //    debug_info = temp_info;
+  }
+  return debug_info;
+}
+DebugInfo Wrapper::GetDebugInfoTemp() {
+  std::unique_lock<std::mutex> lock(mutex_list_.debug_info, std::defer_lock);
+  DebugInfo debug_info;
+  if (lock.try_lock()) {
+    debug_info.obstacle_manager = obstacle_manager_->GetDebugInfo();
+    debug_info.target_manager = target_manager_->GetDebugInfo();
   }
   return debug_info;
 }

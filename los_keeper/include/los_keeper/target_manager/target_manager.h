@@ -13,16 +13,16 @@ using namespace std;
 
 namespace los_keeper {
 struct TargetManagerDebugInfo {
-  int num_target{0};
+  int num_target{-1};
   bool has_structured_obstacle{false};
   bool has_unstructured_obstacle{false};
-  PointListSet end_points{};
-  PrimitiveListSet primitives_list{};
-  IndexListSet close_obstacle_index{};
-  IndexListSet primitive_safe_pcl_index{};
-  IndexListSet primitive_safe_structured_obstacle_index{};
-  IndexListSet primitive_safe_total_index{};
-  IndexList primitive_best_index{};
+  //  PointListSet end_points{};
+  PrimitiveListSet primitives_list;
+  //  IndexListSet close_obstacle_index{};
+  //  IndexListSet primitive_safe_pcl_index{};
+  //  IndexListSet primitive_safe_structured_obstacle_index{};
+  IndexListSet primitive_safe_total_index;
+  IndexList primitive_best_index;
 };
 class TargetManager {
 private:

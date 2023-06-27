@@ -6,8 +6,8 @@
       planning_horizon: 1.0 # TODO: (1)
     target_manager:
       sampling:
-        num_sample: 5000
-        num_thread: 10
+        num_sample: 1000
+        num_thread: 2
         is_lite: false
       horizon:
         prediction: 1.0 # TODO: (2)
