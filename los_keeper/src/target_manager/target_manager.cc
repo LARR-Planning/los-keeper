@@ -80,21 +80,14 @@ los_keeper::TargetManagerDebugInfo los_keeper::TargetManager::GetDebugInfo() con
 }
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
-  printf("0000000000000000000.\n");
   SampleEndPoints();
-  printf("1111111111111111111.\n");
   ComputePrimitives();
-  printf("2222222222222222222.\n");
   CalculateCloseObstacleIndex();
-  printf("3333333333333333333.\n");
   bool is_safe_traj_exist = CheckCollision();
-  printf("4444444444444444444.\n");
   if (is_safe_traj_exist) {
-    printf("555555555555555555.\n");
     CalculateCentroid();
-    printf("6666666666666666666.\n");
   } else {
-    printf("7777777777777777777.\n");
+    primitives_list_.clear();
     primitive_best_index_.clear();
     primitive_safe_total_index_.clear();
     primitive_safe_pcl_index_.clear();
@@ -219,34 +212,34 @@ bool los_keeper::TargetManager2D::CheckCollision() {
       primitive_safe_total_index_.push_back(primitive_safe_total_index_temp);
     }
   }
-  //  if(primitive_safe_total_index_.empty())
-  //    printf("NO TARGET")
   return is_available_target_path;
 }
 
 void los_keeper::TargetManager2D::CalculateCentroid() {
   primitive_best_index_.clear();
   primitive_best_index_.resize(num_target_);
-  for (int i = 0; i < num_target_; i++) {
-    int num_chunk = (int)primitive_safe_total_index_[i].size() / param_.sampling.num_thread;
-    vector<thread> worker_thread;
-    vector<std::pair<int, float>> min_dist_pair_temp(param_.sampling.num_thread);
-    for (int j = 0; j < param_.sampling.num_thread; j++) {
-      worker_thread.emplace_back(&TargetManager2D::CalculateCentroidSubProcess, this, i,
-                                 num_chunk * (j), num_chunk * (j + 1),
-                                 std::ref(min_dist_pair_temp[j]));
-    }
-    for (int j = 0; j < param_.sampling.num_thread; j++) {
-      worker_thread[j].join();
-    }
-    float min_dist_temp = 99999999999999.0f;
-    for (int j = 0; j < param_.sampling.num_thread; j++) {
-      if (min_dist_temp > min_dist_pair_temp[j].second) {
-        min_dist_temp = min_dist_pair_temp[j].second;
-        primitive_best_index_[i] = min_dist_pair_temp[j].first;
-      }
-    }
-  }
+  //  for (int i = 0; i < num_target_; i++) {
+  //    int num_chunk = (int)primitive_safe_total_index_[i].size() / param_.sampling.num_thread;
+  //    vector<thread> worker_thread;
+  //    vector<std::pair<int, float>> min_dist_pair_temp(param_.sampling.num_thread);
+  //    for (int j = 0; j < param_.sampling.num_thread; j++) {
+  //      worker_thread.emplace_back(&TargetManager2D::CalculateCentroidSubProcess, this, i,
+  //                                 num_chunk * (j), num_chunk * (j + 1),
+  //                                 std::ref(min_dist_pair_temp[j]));
+  //    }
+  //    for (int j = 0; j < param_.sampling.num_thread; j++) {
+  //      worker_thread[j].join();
+  //    }
+  //    float min_dist_temp = 99999999999999.0f;
+  //    for (int j = 0; j < param_.sampling.num_thread; j++) {
+  //      if (min_dist_temp > min_dist_pair_temp[j].second) {
+  //        min_dist_temp = min_dist_pair_temp[j].second;
+  //        primitive_best_index_[i] = min_dist_pair_temp[j].first;
+  //      }
+  //    }
+  //  }
+  for (int i = 0; i < num_target_; i++)
+    primitive_best_index_[i] = 0;
 }
 
 void los_keeper::TargetManager2D::CheckPclCollision() {

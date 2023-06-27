@@ -34,13 +34,13 @@ protected:
   int num_target_{};
   PredictionParameter param_;
 
-  PointListSet end_points_;          // Sampled End Points from Dynamics Model
-  PrimitiveListSet primitives_list_; // Raw primitives from
-  IndexListSet close_obstacle_index_;
-  IndexListSet primitive_safe_pcl_index_;
-  IndexListSet primitive_safe_structured_obstacle_index_;
-  IndexListSet primitive_safe_total_index_;
-  IndexList primitive_best_index_;
+  PointListSet end_points_;               // Sampled End Points from Dynamics Model //CLEAR:
+  PrimitiveListSet primitives_list_;      // Raw primitives from //CLEAR: OK
+  IndexListSet close_obstacle_index_;     // CLEAR: OK
+  IndexListSet primitive_safe_pcl_index_; // CLEAR: OK
+  IndexListSet primitive_safe_structured_obstacle_index_; // CLEAR:
+  IndexListSet primitive_safe_total_index_;               // CLEAR:
+  IndexList primitive_best_index_;                        // CLEAR: OK
 
   // FUNCTION
   virtual bool PredictTargetTrajectory() = 0; // Return true if at least one possible target

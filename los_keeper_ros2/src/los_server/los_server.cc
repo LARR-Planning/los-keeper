@@ -84,11 +84,17 @@ void LosServer::ControlTimerCallback() {
 
 void LosServer::VisualizationTimerCallback() {
   auto t = now();
+  //  std::optional<DebugInfo> debug_info = wrapper_ptr_->GetDebugInfo();
   auto debug_info = wrapper_ptr_->GetDebugInfo();
   if (debug_info.has_value()) {
-    visualization_.some_debug_info =
-        visualizer_.DeriveSomeDebugInfo(debug_info.value().obstacle_manager.some_debug_info);
-
+    //    visualization_.some_debug_info =
+    //        visualizer_.DeriveSomeDebugInfo(debug_info.value().obstacle_manager.some_debug_info);
+    { // CLEAR
+      visualization_.obstacle_path_vis.markers.clear();
+      visualization_.target_best_path_vis.markers.clear();
+      visualization_.target_safe_path_vis.markers.clear();
+      visualization_.target_raw_path_vis.markers.clear();
+    }
     visualization_.obstacle_path_vis = visualizer_.VisualizeObstaclePathArray(
         debug_info.value().obstacle_manager.structured_obstacle_poly_list);
     visualization_.target_best_path_vis = visualizer_.VisualizeBestTargetPathArray(
@@ -101,7 +107,7 @@ void LosServer::VisualizationTimerCallback() {
         visualizer_.VisualizeRawTargetPathArray(debug_info.value().target_manager.primitives_list);
   }
   visualizer_.UpdateTime(t); // TODO(@): set time for individual debug info?
-  visualization_.some_debug_info_publisher->publish(visualization_.some_debug_info);
+  //  visualization_.some_debug_info_publisher->publish(visualization_.some_debug_info);
   visualization_.obstacle_path_vis_publisher->publish(visualization_.obstacle_path_vis);
   visualization_.target_best_path_vis_publisher->publish(visualization_.target_best_path_vis);
   visualization_.target_safe_path_vis_publisher->publish(visualization_.target_safe_path_vis);
@@ -137,28 +143,39 @@ void LosServer::TargetStateArrayCallback(const ObjectStateArrayMsg::SharedPtr ms
 
 LosServer::LosServer(const rclcpp::NodeOptions &options_input)
     : Node("los_server_node", options_input) {
-
   rclcpp::SubscriptionOptions options;
   options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  //  state_subscriber_ = create_subscription<DroneStateMsg>(
+  //      "~/state", rclcpp::QoS(10),
+  //      std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1), options);
   state_subscriber_ = create_subscription<DroneStateMsg>(
-      "~/state", rclcpp::QoS(10),
+      "/drone_state", rclcpp::QoS(10),
       std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1), options);
 
   options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  //  points_subscriber_ = create_subscription<PointCloudMsg>(
+  //      "~/points", rclcpp::QoS(10),
+  //      std::bind(&LosServer::PointsCallback, this, std::placeholders::_1), options);
   points_subscriber_ = create_subscription<PointCloudMsg>(
-      "~/points", rclcpp::QoS(10),
+      "~/point_cloud", rclcpp::QoS(10),
       std::bind(&LosServer::PointsCallback, this, std::placeholders::_1), options);
 
   options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  //  structured_obstacle_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
+  //      "~/object_state_array", rclcpp::QoS(10),
+  //      std::bind(&LosServer::ObjectStateArrayCallback, this, std::placeholders::_1), options);
   structured_obstacle_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
-      "~/object_state_array", rclcpp::QoS(10),
+      "~/obstacle_state_list", rclcpp::QoS(10),
       std::bind(&LosServer::ObjectStateArrayCallback, this, std::placeholders::_1), options);
 
   input_publisher_ = create_publisher<InputMsg>("~/input", rclcpp::QoS(10));
 
   options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  //  target_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
+  //      "~/target_state_array", rclcpp::QoS(10),
+  //      std::bind(&LosServer::TargetStateArrayCallback, this, std::placeholders::_1), options);
   target_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
-      "~/target_state_array", rclcpp::QoS(10),
+      "/target_state_list", rclcpp::QoS(10),
       std::bind(&LosServer::TargetStateArrayCallback, this, std::placeholders::_1), options);
 
   planning_timer_ =
@@ -166,8 +183,8 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
 
   control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
 
-  visualization_.some_debug_info_publisher = create_publisher<SomeDebugInfoVisualization>(
-      "~/visualization/some_debug_info", rclcpp::QoS(10));
+  //  visualization_.some_debug_info_publisher = create_publisher<SomeDebugInfoVisualization>(
+  //      "~/visualization/some_debug_info", rclcpp::QoS(10));
   visualization_.obstacle_path_vis_publisher = create_publisher<ObstaclePathVisualizationMsg>(
       "~/visualization/obstacle_array_info", rclcpp::QoS(10));
   visualization_.target_best_path_vis_publisher = create_publisher<TargetBestPathVisualizationMsg>(

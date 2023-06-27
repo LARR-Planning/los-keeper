@@ -52,7 +52,7 @@ void Wrapper::UpdateState(store::State &state) {
 void Wrapper::HandleStopAction() { state_.is_activated = false; }
 void Wrapper::HandleActivateAction() { state_.is_activated = true; }
 void Wrapper::HandleReplanAction() {
-  //  printf("Handle ReplanAction\n");
+  //    printf("Handle ReplanAction\n");
   PlanningProblem planning_problem;
   {
     std::scoped_lock lock(mutex_list_.drone_state, mutex_list_.point_cloud);
@@ -154,9 +154,16 @@ std::optional<DebugInfo> Wrapper::GetDebugInfo() {
   std::optional<DebugInfo> debug_info;
   std::unique_lock<std::mutex> lock(mutex_list_.debug_info, std::defer_lock);
   if (lock.try_lock()) {
-    debug_info = DebugInfo();
-    debug_info.value().obstacle_manager = obstacle_manager_->GetDebugInfo();
-    debug_info.value().target_manager = target_manager_->GetDebugInfo();
+    //    debug_info = DebugInfo();
+    DebugInfo temp_info;
+    temp_info.obstacle_manager = obstacle_manager_->GetDebugInfo();
+    temp_info.target_manager = target_manager_->GetDebugInfo();
+    //    debug_info->obstacle_manager = obstacle_manager_->GetDebugInfo();
+    //    debug_info->target_manager = target_manager_->GetDebugInfo();
+    //    printf("GET DEBUG INFO CALLED\n");
+    //    debug_info.value().obstacle_manager = obstacle_manager_->GetDebugInfo();
+    //    debug_info.value().target_manager = target_manager_->GetDebugInfo();
+    debug_info = temp_info;
   }
   return debug_info;
 }

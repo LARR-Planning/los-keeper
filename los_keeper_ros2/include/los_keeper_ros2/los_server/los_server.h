@@ -59,7 +59,7 @@ private:
   InputPublisher input_publisher_;
 
   struct {
-    SomeDebugInfoVisualization some_debug_info;
+    //    SomeDebugInfoVisualization some_debug_info;
     ObstaclePathVisualizationMsg obstacle_path_vis; // Obstacle Path Array  Visualization Data
     TargetBestPathVisualizationMsg
         target_best_path_vis; // Target Best Path Array Visualization Data
@@ -67,7 +67,7 @@ private:
         target_safe_path_vis;                          // Target Safe Path Array Visualization Data
     TargetRawPathVisualizationMsg target_raw_path_vis; // Target Primitive Array Visualization Data
 
-    SomeDebugInfoPublisher some_debug_info_publisher;
+    //    SomeDebugInfoPublisher some_debug_info_publisher;
     ObstaclePathVisPublisher
         obstacle_path_vis_publisher; // Obstacle Array Path Visualization Publisher
     TargetBestPathVisPublisher

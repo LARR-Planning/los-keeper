@@ -27,8 +27,6 @@ BernsteinPoly::BernsteinPoly(const float time_interval[],
   bernstein_coeff_ = bernstein_coeff;
 }
 
-BernsteinPoly::~BernsteinPoly() {}
-
 void BernsteinPoly::SetTimeInterval(float time_interval[]) {
   this->time_interval_[0] = time_interval[0];
   this->time_interval_[1] = time_interval[1];

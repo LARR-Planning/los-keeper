@@ -31,7 +31,6 @@ public:
     degree_ = bern_poly.degree_;
     bernstein_coeff_ = bern_poly.bernstein_coeff_;
   };
-  ~BernsteinPoly();
   void SetTimeInterval(float time_interval_[]);
   void SetBernsteinCoeff(const BernsteinCoefficients &bernstein_coeff);
   void SetDegree(int degree_);

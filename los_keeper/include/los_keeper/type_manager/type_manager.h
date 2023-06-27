@@ -14,60 +14,60 @@ typedef pcl::PointCloud<PclPoint> PclPointCloud;
 struct PlanningParameter {
   double replan_period_sec{0.1};
   struct {
-    int num_sample{0};
-    int num_thread{0};
+    int num_sample{500};
+    int num_thread{2};
     bool is_lite{false};
   } sampling;
   struct {
-    float planning{0.0f};
+    float planning{1.0f};
   } horizon;
   struct {
-    float obstacle_max{0.0f};
-    float target_min{0.0f};
-    float target_max{0.0f};
+    float obstacle_max{4.0f};
+    float target_min{2.0f};
+    float target_max{5.0f};
   } distance;
   struct {
-    float vel_max{0.0f};
-    float acc_max{0.0f};
+    float vel_max{2.0f};
+    float acc_max{5.0f};
   } dynamic_limits;
   struct {
-    float rx{0.0f};
-    float ry{0.0f};
-    float rz{0.0f};
+    float rx{0.2f};
+    float ry{0.2f};
+    float rz{0.3f};
   } safe_distance;
   struct {
-    float height{0.0f};
-    float width{0.0f};
+    float height{5.0f};
+    float width{3.0f};
   } virtual_pcl_bbox;
 };
 
 struct PredictionParameter {
   struct {
-    int num_sample{0};
-    int num_thread{0};
+    int num_sample{500};
+    int num_thread{2};
     bool is_lite{false};
   } sampling;
   struct {
-    float prediction{0.0f};
+    float prediction{1.0f};
   } horizon;
   struct {
-    float vel_max{0.0f};
-    float acc_max{0.0f};
+    float vel_max{1.0f};
+    float acc_max{0.05f};
   } dynamic_limits;
   struct {
-    float obstacle_max{0.0f};
+    float obstacle_max{5.0f};
   } distance;
   struct {
-    float height{0.0f};
-    float width{0.0f};
+    float height{10.0f};
+    float width{3.0f};
   } virtual_pcl_bbox;
 };
 struct ObstacleParameter {
-  float planning_horizon{0.0f};
+  float planning_horizon{1.0f};
 };
 
 struct ProblemParameter {
-  bool is_2d{false};
+  bool is_2d{true};
 };
 
 struct Parameters {

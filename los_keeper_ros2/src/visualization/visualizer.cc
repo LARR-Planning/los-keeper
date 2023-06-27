@@ -61,8 +61,18 @@ TargetBestPathVisualizationMsg
 Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
                                          const IndexList &best_indices) {
   TargetBestPathVisualizationMsg visual_output;
-  bool is_prediction_generated = not best_indices.empty();
-  if (is_prediction_generated) {
+  bool is_best_indices_generated = not best_indices.empty();
+  bool is_primitive_generated_big = not primitive_list.empty();
+  bool is_primitive_generated = true;
+  if (is_primitive_generated_big) {
+    for (int i = 0; i < primitive_list.size(); i++) {
+      if (primitive_list[i].empty())
+        is_primitive_generated = false;
+    }
+  }
+  is_primitive_generated = is_primitive_generated and is_primitive_generated_big;
+
+  if (is_best_indices_generated and is_primitive_generated) {
     //      printf("best_indices size: %d.\n", (int)best_indices.size());
     visualization_msgs::msg::Marker line_strip;
     line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
@@ -76,8 +86,8 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
     line_strip.pose.orientation.w = 1.0;
     int num_time_sample = 20;
     vector<float> time_seq;
-    float seg_t0 = primitive_list[0][0].px.GetTimeInterval()[0];
-    float seg_tf = primitive_list[0][0].px.GetTimeInterval()[1];
+    float seg_t0 = primitive_list[0][best_indices[0]].px.GetTimeInterval()[0];
+    float seg_tf = primitive_list[0][best_indices[0]].px.GetTimeInterval()[1];
     for (int i = 0; i < num_time_sample; i++)
       time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) / (float)(num_time_sample - 1));
     geometry_msgs::msg::Point temp_point;
@@ -100,7 +110,15 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
 TargetRawPathVisualizationMsg
 Visualizer::VisualizeRawTargetPathArray(const PrimitiveListSet &primitive_list) {
   TargetBestPathVisualizationMsg visual_output;
-  bool is_primitive_generated = not primitive_list.empty();
+  bool is_primitive_generated_big = not primitive_list.empty();
+  bool is_primitive_generated = true;
+  if (is_primitive_generated_big) {
+    for (int i = 0; i < primitive_list.size(); i++) {
+      if (primitive_list[i].empty())
+        is_primitive_generated = false;
+    }
+  }
+  is_primitive_generated = is_primitive_generated and is_primitive_generated_big;
   if (is_primitive_generated) {
     visualization_msgs::msg::Marker line_strip;
     line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
@@ -142,8 +160,26 @@ TargetSafePathVisualizationMsg
 Visualizer::VisualizeSafeTargetPathArray(const PrimitiveListSet &primitive_list,
                                          const IndexListSet &safe_indices) {
   TargetBestPathVisualizationMsg visual_output;
-  bool is_primitive_generated = (not primitive_list.empty()) and (not safe_indices.empty());
-  if (is_primitive_generated) {
+
+  bool is_primitive_generated_big = not primitive_list.empty();
+  bool is_primitive_generated = true;
+  if (is_primitive_generated_big) {
+    for (int i = 0; i < primitive_list.size(); i++) {
+      if (primitive_list[i].empty())
+        is_primitive_generated = false;
+    }
+  }
+  is_primitive_generated = is_primitive_generated and is_primitive_generated_big;
+  bool is_safe_indices_big = not safe_indices.empty();
+  bool is_safe_indices_generated = true;
+  if (is_safe_indices_big) {
+    for (int i = 0; i < safe_indices.size(); i++) {
+      if (safe_indices[i].empty())
+        is_safe_indices_generated = false;
+    }
+  }
+  is_safe_indices_generated = is_safe_indices_generated and is_safe_indices_big;
+  if (is_primitive_generated and is_safe_indices_generated) {
     visualization_msgs::msg::Marker line_strip;
     line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
     line_strip.header.frame_id = "map";
