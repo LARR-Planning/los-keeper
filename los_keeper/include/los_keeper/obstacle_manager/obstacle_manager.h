@@ -26,8 +26,8 @@ private:
   std::vector<ObjectState> structured_obstacle_state_list_;
   std::vector<StatePoly> structured_obstacle_poly_list_;
   ObstacleParameter param_;
-  //  ObstacleManagerDebugInfo debug_info_;
-
+  ObstacleManagerDebugInfo debug_info_;
+  //  void UpdateDebugInfo();
   Eigen::Affine3d pose_;
   void TranslateStateToPoly();
 

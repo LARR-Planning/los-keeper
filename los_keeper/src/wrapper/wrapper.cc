@@ -55,7 +55,8 @@ void Wrapper::HandleReplanAction() {
   //    printf("Handle ReplanAction\n");
   PlanningProblem planning_problem;
   {
-    std::scoped_lock lock(mutex_list_.drone_state, mutex_list_.point_cloud);
+    std::scoped_lock lock(mutex_list_.drone_state, mutex_list_.point_cloud,
+                          mutex_list_.target_state_list, mutex_list_.object_state_list);
     planning_problem.drone_state = drone_state_;
     planning_problem.point_cloud = obstacle_manager_->GetPointCloud();
     planning_problem.structured_obstacle_poly_list =
@@ -69,9 +70,10 @@ void Wrapper::HandleReplanAction() {
   new_planning_result.seq = planning_result_.seq + 1;
   auto target_prediction_list = target_manager_->PredictTargetList(
       planning_problem.target_state_list, point_cloud, structured_obstacle_poly_list);
+  UpdateDebugInfo();
+
   if (!target_prediction_list)
     goto update;
-
   new_planning_result.last_plan_success_t_sec =
       std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
   new_planning_result.chasing_trajectory = StatePoly();
@@ -150,28 +152,35 @@ std::optional<JerkControlInput> Wrapper::GenerateControlInputFromPlanning(double
   return control_input;
 }
 
-std::optional<DebugInfo> Wrapper::GetDebugInfo() {
-  std::optional<DebugInfo> debug_info;
+// std::optional<DebugInfo> Wrapper::GetDebugInfo() {
+//   std::optional<DebugInfo> debug_info;
+//   std::unique_lock<std::mutex> lock(mutex_list_.debug_info, std::defer_lock);
+//   if (lock.try_lock()) {
+//     //    debug_info = DebugInfo();
+//     //    DebugInfo temp_info;
+//     //    temp_info.obstacle_manager = obstacle_manager_->GetDebugInfo();
+//     //    temp_info.target_manager = target_manager_->GetDebugInfo();
+//     //    debug_info->obstacle_manager = obstacle_manager_->GetDebugInfo();
+//     //    debug_info->target_manager = target_manager_->GetDebugInfo();
+//     debug_info.value().obstacle_manager = obstacle_manager_->GetDebugInfo();
+//     debug_info.value().target_manager = target_manager_->GetDebugInfo();
+//     //    debug_info = temp_info;
+//   }
+//   return debug_info;
+// }
+DebugInfo Wrapper::GetDebugInfo() {
+  DebugInfo debug_info{};
   std::unique_lock<std::mutex> lock(mutex_list_.debug_info, std::defer_lock);
   if (lock.try_lock()) {
-    //    debug_info = DebugInfo();
-    //    DebugInfo temp_info;
-    //    temp_info.obstacle_manager = obstacle_manager_->GetDebugInfo();
-    //    temp_info.target_manager = target_manager_->GetDebugInfo();
-    //    debug_info->obstacle_manager = obstacle_manager_->GetDebugInfo();
-    //    debug_info->target_manager = target_manager_->GetDebugInfo();
-    debug_info.value().obstacle_manager = obstacle_manager_->GetDebugInfo();
-    debug_info.value().target_manager = target_manager_->GetDebugInfo();
-    //    debug_info = temp_info;
+    debug_info = debug_info_;
   }
   return debug_info;
 }
-DebugInfo Wrapper::GetDebugInfoTemp() {
-  std::unique_lock<std::mutex> lock(mutex_list_.debug_info, std::defer_lock);
-  DebugInfo debug_info;
-  if (lock.try_lock()) {
-    debug_info.obstacle_manager = obstacle_manager_->GetDebugInfo();
-    debug_info.target_manager = target_manager_->GetDebugInfo();
+
+void Wrapper::UpdateDebugInfo() {
+  {
+    std::scoped_lock lock(mutex_list_.debug_info);
+    debug_info_.obstacle_manager = obstacle_manager_->GetDebugInfo();
+    debug_info_.target_manager = target_manager_->GetDebugInfo();
   }
-  return debug_info;
 }

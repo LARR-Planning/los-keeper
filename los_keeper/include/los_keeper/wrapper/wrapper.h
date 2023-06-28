@@ -48,6 +48,7 @@ private:
   std::vector<ObjectState> object_state_list_;
   std::vector<ObjectState> target_state_list_;
   PlanningResult planning_result_;
+  DebugInfo debug_info_;
 
   struct {
     std::mutex drone_state;
@@ -78,8 +79,8 @@ public:
   void SetObjectStateArray(const std::vector<ObjectState> &object_state_list);
   void SetTargetStateArray(const std::vector<ObjectState> &target_state_list);
   std::optional<JerkControlInput> GenerateControlInputFromPlanning(double time);
-  std::optional<DebugInfo> GetDebugInfo();
-  DebugInfo GetDebugInfoTemp();
+  DebugInfo GetDebugInfo();
+  void UpdateDebugInfo();
   void OnPlanningTimerCallback();
   void OnToggleActivateServiceCallback();
 };
