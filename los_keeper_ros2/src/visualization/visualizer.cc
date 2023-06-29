@@ -35,6 +35,7 @@ Visualizer::VisualizeObstaclePathArray(const PrimitiveList &obstacle_primitive) 
     line_strip.scale.x = 0.01;
     line_strip.action = visualization_msgs::msg::Marker::MODIFY;
     line_strip.pose.orientation.w = 1.0;
+    line_strip.ns = "obstacle_path";
     int num_time_sample = 20;
     std::vector<float> time_seq;
     float seg_t0 = obstacle_primitive[0].px.GetTimeInterval()[0];
@@ -45,7 +46,6 @@ Visualizer::VisualizeObstaclePathArray(const PrimitiveList &obstacle_primitive) 
     for (int i = 0; i < obstacle_primitive.size(); i++) { // the number of targets
       line_strip.points.clear();
       line_strip.id = i;
-      line_strip.ns = std::to_string(i);
       for (int k = 0; k < num_time_sample; k++) {
         temp_point.x = obstacle_primitive[i].px.GetValue(time_seq[k]);
         temp_point.y = obstacle_primitive[i].py.GetValue(time_seq[k]);
@@ -54,6 +54,13 @@ Visualizer::VisualizeObstaclePathArray(const PrimitiveList &obstacle_primitive) 
       }
       visual_output.markers.push_back(line_strip);
     }
+    //    visualization_msgs::msg::Marker erase_marker;
+    //    erase_marker.type = visualization_msgs::msg::Marker::DELETEALL;
+    //    erase_marker.action = visualization_msgs::msg::Marker::DELETEALL;
+    //    erase_marker.ns = line_strip.ns;
+    //    erase_marker.id = (int)obstacle_primitive.size();
+    //    erase_marker.header.frame_id = "map";
+    //    visual_output.markers.push_back(erase_marker);
   }
   return visual_output;
 }
@@ -84,6 +91,7 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
     line_strip.scale.x = 0.03;
     line_strip.action = visualization_msgs::msg::Marker::MODIFY;
     line_strip.pose.orientation.w = 1.0;
+
     int num_time_sample = 20;
     vector<float> time_seq;
     float seg_t0 = primitive_list[0][best_indices[0]].px.GetTimeInterval()[0];
@@ -93,8 +101,8 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
     geometry_msgs::msg::Point temp_point;
     for (int i = 0; i < best_indices.size(); i++) {
       line_strip.points.clear();
-      line_strip.id = i;
-      line_strip.ns = std::to_string(i);
+      line_strip.id = 0;
+      line_strip.ns = std::to_string(i) + "-th best_target_prediction";
       for (int j = 0; j < num_time_sample; j++) {
         temp_point.x = primitive_list[i][best_indices[i]].px.GetValue(time_seq[j]);
         temp_point.y = primitive_list[i][best_indices[i]].py.GetValue(time_seq[j]);
@@ -102,7 +110,13 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
         line_strip.points.push_back(temp_point);
       }
       visual_output.markers.push_back(line_strip);
-      //      printf("visual output size: %d.\n", (int)visual_output.markers.size());
+      visualization_msgs::msg::Marker erase_marker;
+      //      erase_marker.type = visualization_msgs::msg::Marker::DELETEALL;
+      erase_marker.action = visualization_msgs::msg::Marker::DELETEALL;
+      erase_marker.ns = line_strip.ns;
+      erase_marker.id = 1;
+      erase_marker.header.frame_id = "map";
+      visual_output.markers.push_back(erase_marker);
     }
   }
   return visual_output;
@@ -139,10 +153,10 @@ Visualizer::VisualizeRawTargetPathArray(const PrimitiveListSet &primitive_list) 
     geometry_msgs::msg::Point temp_point;
     int id = 0;
     for (int i = 0; i < primitive_list.size(); i++) {
+      line_strip.ns = std::to_string(i) + "-th target_primitive";
       for (int j = 0; j < primitive_list[i].size(); j++) {
         line_strip.points.clear();
         line_strip.id = id;
-        line_strip.ns = std::to_string(id);
         id++;
         for (int k = 0; k < num_time_sample; k++) {
           temp_point.x = primitive_list[i][j].px.GetValue(time_seq[k]);
@@ -152,6 +166,13 @@ Visualizer::VisualizeRawTargetPathArray(const PrimitiveListSet &primitive_list) 
         }
         visual_output.markers.push_back(line_strip);
       }
+      visualization_msgs::msg::Marker erase_marker;
+      erase_marker.type = visualization_msgs::msg::Marker::DELETEALL;
+      erase_marker.action = visualization_msgs::msg::Marker::DELETEALL;
+      erase_marker.ns = line_strip.ns;
+      erase_marker.id = id;
+      erase_marker.header.frame_id = "map";
+      visual_output.markers.push_back(erase_marker);
     }
   }
   return visual_output;
@@ -199,10 +220,11 @@ Visualizer::VisualizeSafeTargetPathArray(const PrimitiveListSet &primitive_list,
     geometry_msgs::msg::Point temp_point;
     int id = 0;
     for (int i = 0; i < primitive_list.size(); i++) {
+      line_strip.ns = std::to_string(i) + "-th safe_target_primitive";
+      id = 0;
       for (int j = 0; j < safe_indices[i].size(); j++) {
         line_strip.points.clear();
         line_strip.id = id;
-        line_strip.ns = std::to_string(id);
         id++;
         for (int k = 0; k < num_time_sample; k++) {
           temp_point.x = primitive_list[i][safe_indices[i][j]].px.GetValue(time_seq[k]);
@@ -212,6 +234,13 @@ Visualizer::VisualizeSafeTargetPathArray(const PrimitiveListSet &primitive_list,
         }
         visual_output.markers.push_back(line_strip);
       }
+      visualization_msgs::msg::Marker erase_marker;
+      erase_marker.type = visualization_msgs::msg::Marker::DELETEALL;
+      erase_marker.action = visualization_msgs::msg::Marker::DELETEALL;
+      erase_marker.ns = line_strip.ns;
+      erase_marker.id = id;
+      erase_marker.header.frame_id = "map";
+      visual_output.markers.push_back(erase_marker);
     }
   }
   return visual_output;

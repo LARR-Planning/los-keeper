@@ -186,9 +186,7 @@ bool los_keeper::TargetManager2D::CheckCollision() {
     CheckPclCollision();
   }
   if (not is_structured_obstacle_empty) {
-    printf("AAAAAAAAAAAAAAAAAAAAAA\n");
     is_available_target_path = CheckStructuredObstacleCollision();
-    printf("BBBBBBBBBBBBBBBBBBBBBB\n");
   }
   if (is_cloud_empty and is_structured_obstacle_empty) { // Case I: No Obstacle
     for (int i = 0; i < num_target_; i++) {
@@ -269,7 +267,6 @@ bool los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
     int num_chunk = (int)primitives_list_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
     IndexListSet primitive_safe_structured_obstacle_index_temp(param_.sampling.num_thread);
-    printf("%d-th target close obstacle size: %d \n", i, (int)close_obstacle_index_[i].size());
     for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread.emplace_back(&TargetManager2D::CheckStructuredObstacleCollisionSubProcess, this,
                                  i, num_chunk * (j), num_chunk * (j + 1),
@@ -278,14 +275,12 @@ bool los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
     for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
-    printf("CDCDCDCDCDCDCDCDCD\n");
     for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < primitive_safe_structured_obstacle_index_temp[j].size(); k++) {
         primitive_safe_structured_obstacle_index_[i].push_back(
             primitive_safe_structured_obstacle_index_temp[j][k]);
       }
     }
-    printf("EFEFEFEFEFEFEFEFEF\n");
   }
   for (int i = 0; i < num_target_; i++) {
     if (primitive_safe_structured_obstacle_index_[i].empty()) {
@@ -480,10 +475,7 @@ void los_keeper::TargetManager2D::CheckStructuredObstacleCollisionSubProcess(
   bool flag_store_in = true;
   bool flag_store_out = true;
   float value;
-  //  printf("%d-th target CLOSE OBSTACLE INDEX SIZE: %d
-  //  \n",target_id,(int)close_obstacle_index_[target_id].size());
   for (int j = start_idx; j < end_idx; j++) {
-    //    printf("%d -th index \n", j);
     for (int k = 0; k < close_obstacle_index_[target_id].size(); k++) {
       flag_store_out = true;
       for (int l = 0; l <= 2 * 3; l++) {

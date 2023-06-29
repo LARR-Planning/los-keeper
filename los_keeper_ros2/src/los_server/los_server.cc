@@ -86,10 +86,42 @@ void LosServer::VisualizationTimerCallback() {
   auto t = now();
   DebugInfo debug_info = wrapper_ptr_->GetDebugInfo();
   { // CLEAR
-    visualization_.obstacle_path_vis.markers.clear();
-    visualization_.target_best_path_vis.markers.clear();
-    visualization_.target_safe_path_vis.markers.clear();
-    visualization_.target_raw_path_vis.markers.clear();
+    visualization_msgs::msg::MarkerArray line_strip_array;
+    visualization_msgs::msg::Marker line_strip;
+    //    { // Obstacle Path
+    //      line_strip_array.markers.clear();
+    //      line_strip.ns = "obstacle_path";
+    //      line_strip.action = visualization_msgs::msg::Marker::DELETEALL;
+    //      line_strip_array.markers.push_back(line_strip);
+    //      visualization_.obstacle_path_vis_publisher->publish(line_strip_array);
+    //    }
+    //    { // Target Best Path
+    //      for(int i = 0;i<debug_info.target_manager.primitive_best_index.size();i++){
+    //        line_strip_array.markers.clear();
+    ////        line_strip.ns = std::to_string(i)+"-th best_target_prediction";
+    //        line_strip.action = visualization_msgs::msg::Marker::DELETEALL;
+    //        line_strip_array.markers.push_back(line_strip);
+    //        visualization_.target_best_path_vis_publisher->publish(line_strip_array);
+    //      }
+    //    }
+    //    { // Target Raw Path
+    //      for(int i = 0;i<debug_info.target_manager.primitives_list.size();i++){
+    //        line_strip_array.markers.clear();
+    ////        line_strip.ns = std::to_string(i)+"-th target_primitive";
+    //        line_strip.action = visualization_msgs::msg::Marker::DELETEALL;
+    //        line_strip_array.markers.push_back(line_strip);
+    //        visualization_.target_raw_path_vis_publisher->publish(line_strip_array);
+    //      }
+    //    }
+    //    { // Target Safe Path
+    //      for(int i = 0;i<debug_info.target_manager.primitive_safe_total_index.size();i++){
+    //        line_strip_array.markers.clear();
+    ////        line_strip.ns = std::to_string(i)+"-th safe_target_primitive";
+    //        line_strip.action = visualization_msgs::msg::Marker::DELETEALL;
+    //        line_strip_array.markers.push_back(line_strip);
+    //        visualization_.target_safe_path_vis_publisher->publish(line_strip_array);
+    //      }
+    //    }
   }
   visualization_.obstacle_path_vis = visualizer_.VisualizeObstaclePathArray(
       debug_info.obstacle_manager.structured_obstacle_poly_list);
@@ -127,7 +159,6 @@ void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
 
 void los_keeper::LosServer::ObjectStateArrayCallback(const ObjectStateArrayMsg::SharedPtr msg) {
   const auto object_state_array = ConvertToObjectStateArray(*msg);
-  //  printf("OBJECT SIZE: %d \n",(int)object_state_array.size());
   wrapper_ptr_->SetObjectStateArray(object_state_array);
 };
 
