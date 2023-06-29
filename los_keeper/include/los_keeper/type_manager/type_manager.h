@@ -12,7 +12,7 @@ typedef pcl::PointXYZ PclPoint;
 typedef pcl::PointCloud<PclPoint> PclPointCloud;
 
 struct PlanningParameter {
-  double replan_period_sec{0.1};
+  double replan_period_sec{0.05};
   struct {
     int num_sample{500};
     int num_thread{2};

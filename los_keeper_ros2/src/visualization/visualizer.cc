@@ -25,6 +25,7 @@ Visualizer::VisualizeObstaclePathArray(const PrimitiveList &obstacle_primitive) 
   visualization_msgs::msg::MarkerArray visual_output;
   bool is_primitive_generated = not obstacle_primitive.empty();
   if (is_primitive_generated) {
+    static int last_num_id = -1;
     visualization_msgs::msg::Marker line_strip;
     line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
     line_strip.header.frame_id = "map";
@@ -54,13 +55,17 @@ Visualizer::VisualizeObstaclePathArray(const PrimitiveList &obstacle_primitive) 
       }
       visual_output.markers.push_back(line_strip);
     }
-    //    visualization_msgs::msg::Marker erase_marker;
-    //    erase_marker.type = visualization_msgs::msg::Marker::DELETEALL;
-    //    erase_marker.action = visualization_msgs::msg::Marker::DELETEALL;
-    //    erase_marker.ns = line_strip.ns;
-    //    erase_marker.id = (int)obstacle_primitive.size();
-    //    erase_marker.header.frame_id = "map";
-    //    visual_output.markers.push_back(erase_marker);
+    visualization_msgs::msg::Marker erase_marker;
+    erase_marker.action = visualization_msgs::msg::Marker::DELETE;
+    erase_marker.ns = "obstacle_path";
+    erase_marker.header.stamp = time_;
+    erase_marker.header.frame_id = "map";
+    erase_marker.pose.orientation.w = 1.0;
+    for (int i = line_strip.id + 1; i <= last_num_id; i++) {
+      erase_marker.id = i;
+      visual_output.markers.push_back(erase_marker);
+    }
+    last_num_id = line_strip.id;
   }
   return visual_output;
 }
@@ -81,6 +86,7 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
 
   if (is_best_indices_generated and is_primitive_generated) {
     //      printf("best_indices size: %d.\n", (int)best_indices.size());
+    static vector<int> last_num_id;
     visualization_msgs::msg::Marker line_strip;
     line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
     line_strip.header.frame_id = "map";
@@ -110,13 +116,6 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
         line_strip.points.push_back(temp_point);
       }
       visual_output.markers.push_back(line_strip);
-      visualization_msgs::msg::Marker erase_marker;
-      //      erase_marker.type = visualization_msgs::msg::Marker::DELETEALL;
-      erase_marker.action = visualization_msgs::msg::Marker::DELETEALL;
-      erase_marker.ns = line_strip.ns;
-      erase_marker.id = 1;
-      erase_marker.header.frame_id = "map";
-      visual_output.markers.push_back(erase_marker);
     }
   }
   return visual_output;
