@@ -16,14 +16,55 @@ using TargetRawPathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 namespace los_keeper {
 struct VisualizationParameters {
   struct {
-    float color_r{0.3};
-    float color_g{0.3};
-    float color_b{0.3};
-    float color_a{0.2};
-    float scale_x{0.01};
-  } structured_obstacle_path;
-  double marker_size{1.2};
-  string frame_id;
+    bool publish{false};
+    int num_time_sample{2};
+    float line_scale{0.01};
+    struct {
+      float a{0.3};
+      float r{0.5};
+      float g{0.5};
+      float b{0.5};
+    } color;
+  } obstacle;
+  struct {
+    struct {
+      bool publish{false};
+      float proportion{1.0};
+      int num_time_sample{5};
+      struct {
+        float a{0.3};
+        float r{0.5};
+        float g{0.5};
+        float b{0.5};
+      } color;
+      float line_scale{0.01};
+    } raw;
+    struct {
+      bool publish{false};
+      float proportion{1.0};
+      int num_time_sample{5};
+      struct {
+        float a{0.3};
+        float r{1.0};
+        float g{0.0};
+        float b{1.0};
+      } color;
+      float line_scale{0.02};
+    } safe;
+    struct {
+      bool publish{true};
+      float proportion{1.0};
+      int num_time_sample{5};
+      struct {
+        float a{0.3};
+        float r{1.0};
+        float g{0.0};
+        float b{1.0};
+      } color;
+      float line_scale{0.02};
+    } best;
+  } target;
+  string frame_id{"world"};
 };
 
 class Visualizer {
@@ -34,7 +75,7 @@ public:
   Visualizer();
   Visualizer(const VisualizationParameters &parameters);
   void UpdateTime(const rclcpp::Time &time);
-  visualization_msgs::msg::Marker DeriveSomeDebugInfo(const int some_debug_info) const;
+  void UpdateParam(const VisualizationParameters &param) { parameters_ = param; };
   ObstaclePathVisualizationMsg VisualizeObstaclePathArray(const PrimitiveList &obstacle_primitive);
   TargetBestPathVisualizationMsg
   VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,

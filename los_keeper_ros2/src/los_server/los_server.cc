@@ -85,60 +85,28 @@ void LosServer::ControlTimerCallback() {
 void LosServer::VisualizationTimerCallback() {
   auto t = now();
   DebugInfo debug_info = wrapper_ptr_->GetDebugInfo();
-  { // CLEAR
-    visualization_msgs::msg::MarkerArray line_strip_array;
-    visualization_msgs::msg::Marker line_strip;
-    //    { // Obstacle Path
-    //      line_strip_array.markers.clear();
-    //      line_strip.ns = "obstacle_path";
-    //      line_strip.action = visualization_msgs::msg::Marker::DELETEALL;
-    //      line_strip_array.markers.push_back(line_strip);
-    //      visualization_.obstacle_path_vis_publisher->publish(line_strip_array);
-    //    }
-    //    { // Target Best Path
-    //      for(int i = 0;i<debug_info.target_manager.primitive_best_index.size();i++){
-    //        line_strip_array.markers.clear();
-    ////        line_strip.ns = std::to_string(i)+"-th best_target_prediction";
-    //        line_strip.action = visualization_msgs::msg::Marker::DELETEALL;
-    //        line_strip_array.markers.push_back(line_strip);
-    //        visualization_.target_best_path_vis_publisher->publish(line_strip_array);
-    //      }
-    //    }
-    //    { // Target Raw Path
-    //      for(int i = 0;i<debug_info.target_manager.primitives_list.size();i++){
-    //        line_strip_array.markers.clear();
-    ////        line_strip.ns = std::to_string(i)+"-th target_primitive";
-    //        line_strip.action = visualization_msgs::msg::Marker::DELETEALL;
-    //        line_strip_array.markers.push_back(line_strip);
-    //        visualization_.target_raw_path_vis_publisher->publish(line_strip_array);
-    //      }
-    //    }
-    //    { // Target Safe Path
-    //      for(int i = 0;i<debug_info.target_manager.primitive_safe_total_index.size();i++){
-    //        line_strip_array.markers.clear();
-    ////        line_strip.ns = std::to_string(i)+"-th safe_target_primitive";
-    //        line_strip.action = visualization_msgs::msg::Marker::DELETEALL;
-    //        line_strip_array.markers.push_back(line_strip);
-    //        visualization_.target_safe_path_vis_publisher->publish(line_strip_array);
-    //      }
-    //    }
-  }
-  visualization_.obstacle_path_vis = visualizer_.VisualizeObstaclePathArray(
-      debug_info.obstacle_manager.structured_obstacle_poly_list);
-  visualization_.target_best_path_vis = visualizer_.VisualizeBestTargetPathArray(
-      debug_info.target_manager.primitives_list, debug_info.target_manager.primitive_best_index);
-  visualization_.target_safe_path_vis = visualizer_.VisualizeSafeTargetPathArray(
-      debug_info.target_manager.primitives_list,
-      debug_info.target_manager.primitive_safe_total_index);
-  visualization_.target_raw_path_vis =
-      visualizer_.VisualizeRawTargetPathArray(debug_info.target_manager.primitives_list);
-
   visualizer_.UpdateTime(t); // TODO(@): set time for individual debug info?
-  //  visualization_.some_debug_info_publisher->publish(visualization_.some_debug_info);
-  visualization_.obstacle_path_vis_publisher->publish(visualization_.obstacle_path_vis);
-  visualization_.target_best_path_vis_publisher->publish(visualization_.target_best_path_vis);
-  visualization_.target_safe_path_vis_publisher->publish(visualization_.target_safe_path_vis);
-  visualization_.target_raw_path_vis_publisher->publish(visualization_.target_raw_path_vis);
+  {                          // Obstacle path
+    visualization_.obstacle_path_vis = visualizer_.VisualizeObstaclePathArray(
+        debug_info.obstacle_manager.structured_obstacle_poly_list);
+    visualization_.obstacle_path_vis_publisher->publish(visualization_.obstacle_path_vis);
+  }
+  { // Target raw path
+    visualization_.target_raw_path_vis =
+        visualizer_.VisualizeRawTargetPathArray(debug_info.target_manager.primitives_list);
+    visualization_.target_raw_path_vis_publisher->publish(visualization_.target_raw_path_vis);
+  }
+  { // Target safe path
+    visualization_.target_safe_path_vis = visualizer_.VisualizeSafeTargetPathArray(
+        debug_info.target_manager.primitives_list,
+        debug_info.target_manager.primitive_safe_total_index);
+    visualization_.target_safe_path_vis_publisher->publish(visualization_.target_safe_path_vis);
+  }
+  { // Target best path
+    visualization_.target_best_path_vis = visualizer_.VisualizeBestTargetPathArray(
+        debug_info.target_manager.primitives_list, debug_info.target_manager.primitive_best_index);
+    visualization_.target_best_path_vis_publisher->publish(visualization_.target_best_path_vis);
+  }
 }
 
 void los_keeper::LosServer::ToggleActivateCallback(
@@ -170,50 +138,54 @@ void LosServer::TargetStateArrayCallback(const ObjectStateArrayMsg::SharedPtr ms
 LosServer::LosServer(const rclcpp::NodeOptions &options_input)
     : Node("los_server_node", options_input) {
   rclcpp::SubscriptionOptions options;
-  //  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  //  state_subscriber_ = create_subscription<DroneStateMsg>(
-  //      "~/state", rclcpp::QoS(1),
-  //      std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1), options);
+  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  state_subscriber_ = create_subscription<DroneStateMsg>(
+      "~/state", rclcpp::QoS(1),
+      std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1), options);
 
-  //  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  //  points_subscriber_ = create_subscription<PointCloudMsg>(
-  //      "~/points", rclcpp::QoS(1),
-  //      std::bind(&LosServer::PointsCallback, this, std::placeholders::_1), options);
+  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  points_subscriber_ = create_subscription<PointCloudMsg>(
+      "~/points", rclcpp::QoS(1),
+      std::bind(&LosServer::PointsCallback, this, std::placeholders::_1), options);
 
-  //  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  //  structured_obstacle_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
-  //      "~/object_state_array", rclcpp::QoS(1),
-  //      std::bind(&LosServer::ObjectStateArrayCallback, this, std::placeholders::_1), options);
+  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  structured_obstacle_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
+      "~/object_state_array", rclcpp::QoS(1),
+      std::bind(&LosServer::ObjectStateArrayCallback, this, std::placeholders::_1), options);
+  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  target_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
+      "~/target_state_array", rclcpp::QoS(1),
+      std::bind(&LosServer::TargetStateArrayCallback, this, std::placeholders::_1), options);
 
   input_publisher_ = create_publisher<InputMsg>("~/input", rclcpp::QoS(10));
-
-  //  options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  //  target_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
-  //      "~/target_state_array", rclcpp::QoS(1),
-  //      std::bind(&LosServer::TargetStateArrayCallback, this, std::placeholders::_1), options);
-
   planning_timer_ =
-      this->create_wall_timer(10ms, std::bind(&LosServer::PlanningTimerCallback, this));
+      this->create_wall_timer(50ms, std::bind(&LosServer::PlanningTimerCallback, this));
 
   control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
 
   {
-    options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    state_subscriber_ = create_subscription<DroneStateMsg>(
-        "/drone_state", rclcpp::QoS(10),
-        std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1), options);
-    options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    points_subscriber_ = create_subscription<PointCloudMsg>(
-        "~/point_cloud", rclcpp::QoS(10),
-        std::bind(&LosServer::PointsCallback, this, std::placeholders::_1), options);
-    options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    structured_obstacle_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
-        "~/obstacle_state_list", rclcpp::QoS(10),
-        std::bind(&LosServer::ObjectStateArrayCallback, this, std::placeholders::_1), options);
-    options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    target_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
-        "/target_state_list", rclcpp::QoS(10),
-        std::bind(&LosServer::TargetStateArrayCallback, this, std::placeholders::_1), options);
+    //    options.callback_group =
+    //    create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive); state_subscriber_ =
+    //    create_subscription<DroneStateMsg>(
+    //        "/drone_state", rclcpp::QoS(2),
+    //        std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1), options);
+    //    options.callback_group =
+    //    create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive); points_subscriber_ =
+    //    create_subscription<PointCloudMsg>(
+    //        "/point_cloud", rclcpp::QoS(2),
+    //        std::bind(&LosServer::PointsCallback, this, std::placeholders::_1), options);
+    //    options.callback_group =
+    //    create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    //    structured_obstacle_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
+    //        "/obstacle_state_list", rclcpp::QoS(2),
+    //        std::bind(&LosServer::ObjectStateArrayCallback, this, std::placeholders::_1),
+    //        options);
+    //    options.callback_group =
+    //    create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    //    target_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
+    //        "/target_state_list", rclcpp::QoS(2),
+    //        std::bind(&LosServer::TargetStateArrayCallback, this, std::placeholders::_1),
+    //        options);
   }
 
   //  visualization_.some_debug_info_publisher = create_publisher<SomeDebugInfoVisualization>(
@@ -229,8 +201,9 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
 
   visualization_callback_group_ =
       this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  visualization_timer_ = this->create_wall_timer(
-      30ms, std::bind(&LosServer::VisualizationTimerCallback, this), visualization_callback_group_);
+  visualization_timer_ =
+      this->create_wall_timer(100ms, std::bind(&LosServer::VisualizationTimerCallback, this),
+                              visualization_callback_group_);
 
   toggle_activate_server_ = this->create_service<ToggleActivateService>(
       "~/toggle_activate", std::bind(&LosServer::ToggleActivateCallback, this,
@@ -293,6 +266,44 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   parameters.prediction = prediction_param;
   parameters.planning = planning_param;
   parameters.problem = problem_param;
-
   wrapper_ptr_ = new Wrapper(parameters);
+
+  VisualizationParameters parameters_vis;
+  {
+    get_parameter<string>("frame_id", parameters_vis.frame_id);
+    get_parameter<bool>("obstacle.publish", parameters_vis.obstacle.publish);
+    get_parameter<int>("obstacle.num_time_sample", parameters_vis.obstacle.num_time_sample);
+    get_parameter<float>("obstacle.line_scale", parameters_vis.obstacle.line_scale);
+    get_parameter<float>("obstacle.raw.color.a", parameters_vis.obstacle.color.a);
+    get_parameter<float>("obstacle.raw.color.r", parameters_vis.obstacle.color.r);
+    get_parameter<float>("obstacle.raw.color.g", parameters_vis.obstacle.color.g);
+    get_parameter<float>("obstacle.raw.color.b", parameters_vis.obstacle.color.b);
+
+    get_parameter<bool>("target.raw.publish", parameters_vis.target.raw.publish);
+    get_parameter<float>("target.raw.proportion", parameters_vis.target.raw.proportion);
+    get_parameter<int>("target.raw.num_time_sample", parameters_vis.target.raw.num_time_sample);
+    get_parameter<float>("target.raw.color.a", parameters_vis.target.raw.color.a);
+    get_parameter<float>("target.raw.color.r", parameters_vis.target.raw.color.r);
+    get_parameter<float>("target.raw.color.g", parameters_vis.target.raw.color.g);
+    get_parameter<float>("target.raw.color.b", parameters_vis.target.raw.color.b);
+    get_parameter<float>("target.raw.line_scale", parameters_vis.target.raw.line_scale);
+
+    get_parameter<bool>("target.safe.publish", parameters_vis.target.safe.publish);
+    get_parameter<float>("target.safe.proportion", parameters_vis.target.safe.proportion);
+    get_parameter<int>("target.safe.num_time_sample", parameters_vis.target.safe.num_time_sample);
+    get_parameter<float>("target.safe.color.a", parameters_vis.target.safe.color.a);
+    get_parameter<float>("target.safe.color.r", parameters_vis.target.safe.color.r);
+    get_parameter<float>("target.safe.color.g", parameters_vis.target.safe.color.g);
+    get_parameter<float>("target.safe.color.b", parameters_vis.target.safe.color.b);
+    get_parameter<float>("target.safe.line_scale", parameters_vis.target.safe.line_scale);
+
+    get_parameter<bool>("target.best.publish", parameters_vis.target.best.publish);
+    get_parameter<int>("target.best.num_time_sample", parameters_vis.target.best.num_time_sample);
+    get_parameter<float>("target.best.color.a", parameters_vis.target.best.color.a);
+    get_parameter<float>("target.best.color.r", parameters_vis.target.best.color.r);
+    get_parameter<float>("target.best.color.g", parameters_vis.target.best.color.g);
+    get_parameter<float>("target.best.color.b", parameters_vis.target.best.color.b);
+    get_parameter<float>("target.best.line_scale", parameters_vis.target.best.line_scale);
+  }
+  visualizer_.UpdateParam(parameters_vis);
 }

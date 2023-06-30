@@ -6,8 +6,8 @@
       planning_horizon: 1.0 # TODO: (1)
     target_manager:
       sampling:
-        num_sample: 200
-        num_thread: 4
+        num_sample: 500
+        num_thread: 5
         is_lite: false
       horizon:
         prediction: 1.0 # TODO: (2)
@@ -15,7 +15,7 @@
         vel_max: 1.0
         acc_max: 0.05
       distance:
-        obstacle_max: 5.0
+        obstacle_max: 1.0
       virtual_pcl_bbox:
         width: 10.0
         height: 3.0

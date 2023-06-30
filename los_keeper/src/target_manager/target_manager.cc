@@ -95,6 +95,7 @@ los_keeper::TargetManagerDebugInfo los_keeper::TargetManager::GetDebugInfo() con
 }
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
+
   SampleEndPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();

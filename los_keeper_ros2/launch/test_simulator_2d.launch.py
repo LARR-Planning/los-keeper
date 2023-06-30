@@ -12,7 +12,7 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    param_dir = LaunchConfiguration(
+    planning_param_dir = LaunchConfiguration(
         'param_dir',
         default=os.path.join(
             get_package_share_directory('los_keeper_ros2'),
@@ -21,7 +21,19 @@ def generate_launch_description():
     )
     DeclareLaunchArgument(
         'param_dir',
-        default_value=param_dir,
+        default_value=planning_param_dir,
+        description='YAML FILE',
+    )
+    visualization_param_dir = LaunchConfiguration(
+        'param_dir',
+        default=os.path.join(
+            get_package_share_directory('los_keeper_ros2'),
+            'config',
+            'visualization.yaml')
+    )
+    DeclareLaunchArgument(
+        'param_dir',
+        default_value=visualization_param_dir,
         description='YAML FILE',
     )
     planner_node = Node(
@@ -30,7 +42,7 @@ def generate_launch_description():
         namespace='los_keeper',
         name='los_server_node',
         output='screen',
-        parameters=[param_dir],
+        parameters=[planning_param_dir, visualization_param_dir],
         emulate_tty=True,
         remappings=[("~/state", "/drone_state"),
                     ("~/points", "/point_cloud"),

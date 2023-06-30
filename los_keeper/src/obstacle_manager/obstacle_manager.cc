@@ -139,7 +139,6 @@ ObstacleManagerDebugInfo ObstacleManager::GetDebugInfo() const {
   ObstacleManagerDebugInfo debug_info;
   debug_info.some_debug_info = 1;
   debug_info.num_structured_obstacles = (int)structured_obstacle_poly_list_.size();
-  debug_info.structured_obstacle_poly_list.clear();
   debug_info.structured_obstacle_poly_list = structured_obstacle_poly_list_;
   return debug_info;
 }

@@ -44,7 +44,7 @@ struct PlanningParameter {
 struct PredictionParameter {
   struct {
     int num_sample{500};
-    int num_thread{2};
+    int num_thread{4};
     bool is_lite{false};
   } sampling;
   struct {
