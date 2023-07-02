@@ -23,17 +23,17 @@ Visualizer::VisualizeObstaclePathArray(const PrimitiveList &obstacle_primitive) 
       line_strip.action = visualization_msgs::msg::Marker::MODIFY;
       line_strip.pose.orientation.w = 1.0;
       line_strip.ns = "obstacle_path";
-      int num_time_sample = 5;
       std::vector<float> time_seq;
       float seg_t0 = obstacle_primitive[0].px.GetTimeInterval()[0];
       float seg_tf = obstacle_primitive[0].px.GetTimeInterval()[1];
-      for (int i = 0; i < num_time_sample; i++)
-        time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) / (float)(num_time_sample - 1));
+      for (int i = 0; i < parameters_.obstacle.num_time_sample; i++)
+        time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) /
+                                        (float)(parameters_.obstacle.num_time_sample - 1));
       geometry_msgs::msg::Point temp_point;
       for (int i = 0; i < obstacle_primitive.size(); i++) { // the number of targets
         line_strip.points.clear();
         line_strip.id = i;
-        for (int k = 0; k < num_time_sample; k++) {
+        for (int k = 0; k < parameters_.obstacle.num_time_sample; k++) {
           temp_point.x = obstacle_primitive[i].px.GetValue(time_seq[k]);
           temp_point.y = obstacle_primitive[i].py.GetValue(time_seq[k]);
           temp_point.z = obstacle_primitive[i].pz.GetValue(time_seq[k]);
@@ -60,9 +60,7 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
       }
     }
     is_primitive_generated = is_primitive_generated and is_primitive_generated_big;
-
     if (is_best_indices_generated and is_primitive_generated) {
-      //      printf("best_indices size: %d.\n", (int)best_indices.size());
       static vector<int> last_num_id;
       visualization_msgs::msg::Marker line_strip;
       line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
@@ -75,18 +73,18 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
       line_strip.action = visualization_msgs::msg::Marker::MODIFY;
       line_strip.pose.orientation.w = 1.0;
 
-      int num_time_sample = 5;
       vector<float> time_seq;
       float seg_t0 = primitive_list[0][best_indices[0]].px.GetTimeInterval()[0];
       float seg_tf = primitive_list[0][best_indices[0]].px.GetTimeInterval()[1];
-      for (int i = 0; i < num_time_sample; i++)
-        time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) / (float)(num_time_sample - 1));
+      for (int i = 0; i < parameters_.target.best.num_time_sample; i++)
+        time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) /
+                                        (float)(parameters_.target.best.num_time_sample - 1));
       geometry_msgs::msg::Point temp_point;
       for (int i = 0; i < best_indices.size(); i++) {
         line_strip.points.clear();
         line_strip.id = 0;
         line_strip.ns = std::to_string(i) + "-th best_target_prediction";
-        for (int j = 0; j < num_time_sample; j++) {
+        for (int j = 0; j < parameters_.target.best.num_time_sample; j++) {
           temp_point.x = primitive_list[i][best_indices[i]].px.GetValue(time_seq[j]);
           temp_point.y = primitive_list[i][best_indices[i]].py.GetValue(time_seq[j]);
           temp_point.z = primitive_list[i][best_indices[i]].pz.GetValue(time_seq[j]);
@@ -122,24 +120,27 @@ Visualizer::VisualizeRawTargetPathArray(const PrimitiveListSet &primitive_list) 
       line_strip.scale.x = parameters_.target.raw.line_scale;
       line_strip.action = visualization_msgs::msg::Marker::MODIFY;
       line_strip.pose.orientation.w = 1.0;
-      int num_time_sample = 5;
       vector<float> time_seq;
       float seg_t0 = primitive_list[0][0].px.GetTimeInterval()[0];
       float seg_tf = primitive_list[0][0].px.GetTimeInterval()[1];
-      for (int i = 0; i < num_time_sample; i++)
-        time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) / (float)(num_time_sample - 1));
+      for (int i = 0; i < parameters_.target.raw.num_time_sample; i++)
+        time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) /
+                                        (float)(parameters_.target.raw.num_time_sample - 1));
       geometry_msgs::msg::Point temp_point;
-      int id = 0;
       for (int i = 0; i < primitive_list.size(); i++) {
+        int id = 0;
+        int num_primitive_vis =
+            int((float)primitive_list[i].size() * parameters_.target.raw.proportion);
+        int index_jump = primitive_list[i].size() / num_primitive_vis;
         line_strip.ns = std::to_string(i) + "-th target_primitive";
-        for (int j = 0; j < primitive_list[i].size(); j++) {
+        for (int j = 0; j < num_primitive_vis - 1; j++) {
           line_strip.points.clear();
           line_strip.id = id;
           id++;
-          for (int k = 0; k < num_time_sample; k++) {
-            temp_point.x = primitive_list[i][j].px.GetValue(time_seq[k]);
-            temp_point.y = primitive_list[i][j].py.GetValue(time_seq[k]);
-            temp_point.z = primitive_list[i][j].pz.GetValue(time_seq[k]);
+          for (int k = 0; k < parameters_.target.raw.num_time_sample; k++) {
+            temp_point.x = primitive_list[i][index_jump * j].px.GetValue(time_seq[k]);
+            temp_point.y = primitive_list[i][index_jump * j].py.GetValue(time_seq[k]);
+            temp_point.z = primitive_list[i][index_jump * j].pz.GetValue(time_seq[k]);
             line_strip.points.push_back(temp_point);
           }
           visual_output.markers.push_back(line_strip);
@@ -184,25 +185,30 @@ Visualizer::VisualizeSafeTargetPathArray(const PrimitiveListSet &primitive_list,
       line_strip.scale.x = parameters_.target.safe.line_scale;
       line_strip.action = visualization_msgs::msg::Marker::MODIFY;
       line_strip.pose.orientation.w = 1.0;
-      int num_time_sample = 5;
       vector<float> time_seq;
       float seg_t0 = primitive_list[0][0].px.GetTimeInterval()[0];
       float seg_tf = primitive_list[0][0].px.GetTimeInterval()[1];
-      for (int i = 0; i < num_time_sample; i++)
-        time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) / (float)(num_time_sample - 1));
+      for (int i = 0; i < parameters_.target.safe.num_time_sample; i++)
+        time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) /
+                                        (float)(parameters_.target.safe.num_time_sample - 1));
       geometry_msgs::msg::Point temp_point;
-      int id = 0;
       for (int i = 0; i < primitive_list.size(); i++) {
         line_strip.ns = std::to_string(i) + "-th safe_target_primitive";
-        id = 0;
-        for (int j = 0; j < safe_indices[i].size(); j++) {
+        int id = 0;
+        int num_safe_primitive_vis =
+            int((float)safe_indices[i].size() * parameters_.target.raw.proportion);
+        int index_jump = (int)safe_indices[i].size() / num_safe_primitive_vis;
+        for (int j = 0; j < num_safe_primitive_vis - 1; j++) {
           line_strip.points.clear();
           line_strip.id = id;
           id++;
-          for (int k = 0; k < num_time_sample; k++) {
-            temp_point.x = primitive_list[i][safe_indices[i][j]].px.GetValue(time_seq[k]);
-            temp_point.y = primitive_list[i][safe_indices[i][j]].py.GetValue(time_seq[k]);
-            temp_point.z = primitive_list[i][safe_indices[i][j]].pz.GetValue(time_seq[k]);
+          for (int k = 0; k < parameters_.target.safe.num_time_sample; k++) {
+            temp_point.x =
+                primitive_list[i][safe_indices[i][index_jump * j]].px.GetValue(time_seq[k]);
+            temp_point.y =
+                primitive_list[i][safe_indices[i][index_jump * j]].py.GetValue(time_seq[k]);
+            temp_point.z =
+                primitive_list[i][safe_indices[i][index_jump * j]].pz.GetValue(time_seq[k]);
             line_strip.points.push_back(temp_point);
           }
           visual_output.markers.push_back(line_strip);
@@ -211,7 +217,6 @@ Visualizer::VisualizeSafeTargetPathArray(const PrimitiveListSet &primitive_list,
           last_num_id.push_back(line_strip.id);
         } else {
           visualization_msgs::msg::Marker erase_marker;
-          //        erase_marker.type = visualization_msgs::msg::Marker::DELETE;
           erase_marker.action = visualization_msgs::msg::Marker::DELETE;
           erase_marker.ns = line_strip.ns;
           erase_marker.header.frame_id = parameters_.frame_id;

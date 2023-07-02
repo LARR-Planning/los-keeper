@@ -16,7 +16,7 @@ using TargetRawPathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 namespace los_keeper {
 struct VisualizationParameters {
   struct {
-    bool publish{false};
+    bool publish{true};
     int num_time_sample{2};
     float line_scale{0.01};
     struct {
@@ -28,8 +28,8 @@ struct VisualizationParameters {
   } obstacle;
   struct {
     struct {
-      bool publish{false};
-      float proportion{1.0};
+      bool publish{true};
+      float proportion{0.5};
       int num_time_sample{5};
       struct {
         float a{0.3};
@@ -40,8 +40,8 @@ struct VisualizationParameters {
       float line_scale{0.01};
     } raw;
     struct {
-      bool publish{false};
-      float proportion{1.0};
+      bool publish{true};
+      float proportion{0.5};
       int num_time_sample{5};
       struct {
         float a{0.3};
@@ -53,7 +53,6 @@ struct VisualizationParameters {
     } safe;
     struct {
       bool publish{true};
-      float proportion{1.0};
       int num_time_sample{5};
       struct {
         float a{0.3};
@@ -64,7 +63,7 @@ struct VisualizationParameters {
       float line_scale{0.02};
     } best;
   } target;
-  string frame_id{"world"};
+  string frame_id{"map"};
 };
 
 class Visualizer {

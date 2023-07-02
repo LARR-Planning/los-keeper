@@ -12,10 +12,10 @@ typedef pcl::PointXYZ PclPoint;
 typedef pcl::PointCloud<PclPoint> PclPointCloud;
 
 struct PlanningParameter {
-  double replan_period_sec{0.05};
+  double replan_period_sec{0.1};
   struct {
     int num_sample{500};
-    int num_thread{2};
+    int num_thread{4};
     bool is_lite{false};
   } sampling;
   struct {
@@ -55,7 +55,7 @@ struct PredictionParameter {
     float acc_max{0.05f};
   } dynamic_limits;
   struct {
-    float obstacle_max{5.0f};
+    float obstacle_max{3.0f};
   } distance;
   struct {
     float height{10.0f};
