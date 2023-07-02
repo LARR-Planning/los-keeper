@@ -2,12 +2,13 @@
   ros__parameters:
     problem:
       is_2d: true
+      replanning_period: 0.07
     obstacle_manager:
       planning_horizon: 1.0 # TODO: (1)
     target_manager:
       sampling:
-        num_sample: 500
-        num_thread: 5
+        num_sample: 400
+        num_thread: 10
         is_lite: false
       horizon:
         prediction: 1.0 # TODO: (2)

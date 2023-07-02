@@ -56,7 +56,8 @@ private:
     std::mutex target_state_list;
     std::mutex point_cloud;
     std::mutex control;
-    std::mutex debug_info;
+    std::mutex debug_obstacle_info;
+    std::mutex debug_target_info;
   } mutex_list_;
 
   std::shared_ptr<ObstacleManager> obstacle_manager_;
@@ -81,6 +82,8 @@ public:
   std::optional<JerkControlInput> GenerateControlInputFromPlanning(double time);
   DebugInfo GetDebugInfo();
   void UpdateDebugInfo();
+  void UpdateTargetDebugInfo();
+  void UpdateObstacleDeubgInfo();
   void OnPlanningTimerCallback();
   void OnToggleActivateServiceCallback();
 };

@@ -12,7 +12,6 @@ typedef pcl::PointXYZ PclPoint;
 typedef pcl::PointCloud<PclPoint> PclPointCloud;
 
 struct PlanningParameter {
-  double replan_period_sec{0.1};
   struct {
     int num_sample{500};
     int num_thread{4};
@@ -68,6 +67,7 @@ struct ObstacleParameter {
 
 struct ProblemParameter {
   bool is_2d{true};
+  double replanning_period{0.1};
 };
 
 struct Parameters {

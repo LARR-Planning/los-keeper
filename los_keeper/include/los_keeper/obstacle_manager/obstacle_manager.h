@@ -11,7 +11,6 @@
 namespace los_keeper {
 
 struct ObstacleManagerDebugInfo {
-  int some_debug_info{0};
   int num_structured_obstacles{0};
   PrimitiveList structured_obstacle_poly_list;
 };

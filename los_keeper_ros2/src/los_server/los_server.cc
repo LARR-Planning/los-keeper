@@ -197,8 +197,7 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
       "~/visualization/target_raw_array_info", rclcpp::QoS(1));
 
   input_publisher_ = create_publisher<InputMsg>("~/input", rclcpp::QoS(1));
-  planning_timer_ =
-      this->create_wall_timer(50ms, std::bind(&LosServer::PlanningTimerCallback, this));
+
   control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
 
   toggle_activate_server_ = this->create_service<ToggleActivateService>(
@@ -212,6 +211,7 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   ProblemParameter problem_param;
   { // Parameter Settings for Problem
     get_parameter<bool>("problem.is_2d", problem_param.is_2d);
+    get_parameter<double>("problem.replanning_period", problem_param.replanning_period);
   }
   { // Parameter Settings for ObstacleManager
     get_parameter<float>("obstacle_manager.planning_horizon", obstacle_param.planning_horizon);
@@ -270,10 +270,10 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
     get_parameter<bool>("obstacle.publish", parameters_vis.obstacle.publish);
     get_parameter<int>("obstacle.num_time_sample", parameters_vis.obstacle.num_time_sample);
     get_parameter<float>("obstacle.line_scale", parameters_vis.obstacle.line_scale);
-    get_parameter<float>("obstacle.raw.color.a", parameters_vis.obstacle.color.a);
-    get_parameter<float>("obstacle.raw.color.r", parameters_vis.obstacle.color.r);
-    get_parameter<float>("obstacle.raw.color.g", parameters_vis.obstacle.color.g);
-    get_parameter<float>("obstacle.raw.color.b", parameters_vis.obstacle.color.b);
+    get_parameter<float>("obstacle.color.a", parameters_vis.obstacle.color.a);
+    get_parameter<float>("obstacle.color.r", parameters_vis.obstacle.color.r);
+    get_parameter<float>("obstacle.color.g", parameters_vis.obstacle.color.g);
+    get_parameter<float>("obstacle.color.b", parameters_vis.obstacle.color.b);
 
     get_parameter<bool>("target.raw.publish", parameters_vis.target.raw.publish);
     get_parameter<float>("target.raw.proportion", parameters_vis.target.raw.proportion);
@@ -302,4 +302,7 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
     get_parameter<float>("target.best.line_scale", parameters_vis.target.best.line_scale);
   }
   visualizer_.UpdateParam(parameters_vis);
+  planning_timer_ =
+      this->create_wall_timer(std::chrono::duration<double>(problem_param.replanning_period),
+                              std::bind(&LosServer::PlanningTimerCallback, this));
 }
