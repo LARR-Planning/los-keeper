@@ -12,7 +12,18 @@
 using namespace std;
 
 namespace los_keeper {
-
+struct TargetManagerDebugInfo {
+  int num_target{-1};
+  bool has_structured_obstacle{false};
+  bool has_unstructured_obstacle{false};
+  //  PointListSet end_points{};
+  PrimitiveListSet primitives_list;
+  //  IndexListSet close_obstacle_index{};
+  //  IndexListSet primitive_safe_pcl_index{};
+  //  IndexListSet primitive_safe_structured_obstacle_index{};
+  IndexListSet primitive_safe_total_index;
+  IndexList primitive_best_index;
+};
 class TargetManager {
 private:
 protected:
@@ -23,13 +34,13 @@ protected:
   int num_target_{};
   PredictionParameter param_;
 
-  PointListSet end_points_;          // Sampled End Points from Dynamics Model
-  PrimitiveListSet primitives_list_; // Raw primitives from
-  IndexListSet close_obstacle_index_;
-  IndexListSet primitive_safe_pcl_index_;
-  IndexListSet primitive_safe_structured_obstacle_index_;
-  IndexListSet primitive_safe_total_index_;
-  IndexList primitive_best_index_;
+  PointListSet end_points_;               // Sampled End Points from Dynamics Model //CLEAR:
+  PrimitiveListSet primitives_list_;      // Raw primitives from //CLEAR: OK
+  IndexListSet close_obstacle_index_;     // CLEAR: OK
+  IndexListSet primitive_safe_pcl_index_; // CLEAR: OK
+  IndexListSet primitive_safe_structured_obstacle_index_; // CLEAR:
+  IndexListSet primitive_safe_total_index_;               // CLEAR:
+  IndexList primitive_best_index_;                        // CLEAR: OK
 
   // FUNCTION
   virtual bool PredictTargetTrajectory() = 0; // Return true if at least one possible target
@@ -44,7 +55,7 @@ protected:
                                               // target trajectory exists
   virtual bool CheckCollision() = 0;
   virtual void CheckPclCollision();
-  virtual void CheckStructuredObstacleCollision();
+  virtual bool CheckStructuredObstacleCollision() = 0;
   virtual void CheckStructuredObstacleCollisionSubProcess(const int &target_id,
                                                           const int &start_idx, const int &end_idx,
                                                           IndexList &safe_structured_index_sub);
@@ -63,6 +74,7 @@ public:
   PredictTargetList(const std::vector<ObjectState> &target_state_list,
                     const PclPointCloud &point_cloud,
                     const PrimitiveList &structured_obstacle_poly_list) = 0;
+  TargetManagerDebugInfo GetDebugInfo() const;
 };
 
 class TargetManager2D : public los_keeper::TargetManager {
@@ -84,7 +96,7 @@ private:
   void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint2D &constraints,
                                    const int &start_idx, const int &end_idx,
                                    IndexList &safe_pcl_index_sub);
-  void CheckStructuredObstacleCollision() override;
+  bool CheckStructuredObstacleCollision() override;
   void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx,
                                                   const int &end_idx,
                                                   IndexList &safe_structured_index_sub) override;
@@ -123,7 +135,7 @@ private:
   void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint3D &constraints,
                                    const int &start_idx, const int &end_idx,
                                    IndexList &safe_pcl_index_sub);
-  void CheckStructuredObstacleCollision() override;
+  bool CheckStructuredObstacleCollision() override;
   void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx,
                                                   const int &end_idx,
                                                   IndexList &safe_structured_index_sub) override;

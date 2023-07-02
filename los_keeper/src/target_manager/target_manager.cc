@@ -38,7 +38,7 @@ void los_keeper::TargetManager::CalculateCentroid() {}
 
 void los_keeper::TargetManager::CheckPclCollision() {}
 
-void los_keeper::TargetManager::CheckStructuredObstacleCollision() {}
+bool los_keeper::TargetManager::CheckStructuredObstacleCollision() {}
 
 void los_keeper::TargetManager::SampleEndPointsSubProcess(const int &target_id,
                                                           const int &chunk_size,
@@ -64,23 +64,59 @@ PrimitiveList los_keeper::TargetManager::GetTargetPredictionResult() {
 
   return prediction_result;
 }
+los_keeper::TargetManagerDebugInfo los_keeper::TargetManager::GetDebugInfo() const {
+  TargetManagerDebugInfo debug_info;
+  debug_info.has_structured_obstacle = not structured_obstacle_poly_list_.empty();
+  debug_info.has_structured_obstacle = not cloud_.points.empty();
+  debug_info.num_target = num_target_;
+
+  //  debug_info.end_points.clear();
+  debug_info.primitives_list.clear();
+  //  debug_info.close_obstacle_index.clear();
+  //  debug_info.primitive_safe_pcl_index.clear();
+  //  debug_info.primitive_safe_structured_obstacle_index.clear();
+  debug_info.primitive_safe_total_index.clear();
+  debug_info.primitive_best_index.clear();
+
+  //  debug_info.end_points = end_points_;
+  debug_info.primitives_list = primitives_list_;
+  //  debug_info.close_obstacle_index = close_obstacle_index_;
+  //  debug_info.primitive_safe_structured_obstacle_index =
+  //  primitive_safe_structured_obstacle_index_; debug_info.primitive_safe_pcl_index =
+  //  primitive_safe_pcl_index_; debug_info.primitive_safe_total_index =
+  //  primitive_safe_total_index_; debug_info.primitive_best_index = primitive_best_index_;
+  if (not primitives_list_.empty() and not primitive_safe_total_index_.empty() and
+      not primitive_best_index_.empty()) {
+    debug_info.primitives_list = primitives_list_;
+    debug_info.primitive_safe_total_index = primitive_safe_total_index_;
+    debug_info.primitive_best_index = primitive_best_index_;
+  }
+  return debug_info;
+}
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
+
   SampleEndPoints();
   ComputePrimitives();
-
   CalculateCloseObstacleIndex();
-
   bool is_safe_traj_exist = CheckCollision();
-  if (is_safe_traj_exist)
+  if (is_safe_traj_exist) {
     CalculateCentroid();
+  } else {
+    primitives_list_.clear();
+    primitive_best_index_.clear();
+    primitive_safe_total_index_.clear();
+    primitive_safe_pcl_index_.clear();
+    primitive_safe_structured_obstacle_index_.clear();
+  }
+
   return is_safe_traj_exist;
 }
 
 void los_keeper::TargetManager2D::SampleEndPoints() {
   end_points_.clear();
-  end_points_.resize(target_state_list_.size()); //
-  for (int i = 0; i < target_state_list_.size(); i++) {
+  end_points_.resize(num_target_); //
+  for (int i = 0; i < num_target_; i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
     vector<vector<Point>> end_point_temp(param_.sampling.num_thread);
@@ -146,11 +182,12 @@ bool los_keeper::TargetManager2D::CheckCollision() {
   primitive_safe_total_index_.clear();
   bool is_cloud_empty = cloud_.points.empty();
   bool is_structured_obstacle_empty = structured_obstacle_poly_list_.empty();
+  bool is_available_target_path;
   if (not is_cloud_empty) {
     CheckPclCollision();
   }
   if (not is_structured_obstacle_empty) {
-    CheckStructuredObstacleCollision();
+    is_available_target_path = CheckStructuredObstacleCollision();
   }
   if (is_cloud_empty and is_structured_obstacle_empty) { // Case I: No Obstacle
     for (int i = 0; i < num_target_; i++) {
@@ -189,32 +226,34 @@ bool los_keeper::TargetManager2D::CheckCollision() {
       primitive_safe_total_index_.push_back(primitive_safe_total_index_temp);
     }
   }
-  return not primitive_safe_total_index_.empty();
+  return is_available_target_path;
 }
 
 void los_keeper::TargetManager2D::CalculateCentroid() {
   primitive_best_index_.clear();
   primitive_best_index_.resize(num_target_);
-  for (int i = 0; i < num_target_; i++) {
-    int num_chunk = (int)primitive_safe_total_index_[i].size() / param_.sampling.num_thread;
-    vector<thread> worker_thread;
-    vector<std::pair<int, float>> min_dist_pair_temp(param_.sampling.num_thread);
-    for (int j = 0; j < param_.sampling.num_thread; j++) {
-      worker_thread.emplace_back(&TargetManager2D::CalculateCentroidSubProcess, this, i,
-                                 num_chunk * (j), num_chunk * (j + 1),
-                                 std::ref(min_dist_pair_temp[j]));
-    }
-    for (int j = 0; j < param_.sampling.num_thread; j++) {
-      worker_thread[j].join();
-    }
-    float min_dist_temp = 99999999999999.0f;
-    for (int j = 0; j < param_.sampling.num_thread; j++) {
-      if (min_dist_temp > min_dist_pair_temp[j].second) {
-        min_dist_temp = min_dist_pair_temp[j].second;
-        primitive_best_index_[i] = min_dist_pair_temp[j].first;
-      }
-    }
-  }
+  //  for (int i = 0; i < num_target_; i++) {
+  //    int num_chunk = (int)primitive_safe_total_index_[i].size() / param_.sampling.num_thread;
+  //    vector<thread> worker_thread;
+  //    vector<std::pair<int, float>> min_dist_pair_temp(param_.sampling.num_thread);
+  //    for (int j = 0; j < param_.sampling.num_thread; j++) {
+  //      worker_thread.emplace_back(&TargetManager2D::CalculateCentroidSubProcess, this, i,
+  //                                 num_chunk * (j), num_chunk * (j + 1),
+  //                                 std::ref(min_dist_pair_temp[j]));
+  //    }
+  //    for (int j = 0; j < param_.sampling.num_thread; j++) {
+  //      worker_thread[j].join();
+  //    }
+  //    float min_dist_temp = 99999999999999.0f;
+  //    for (int j = 0; j < param_.sampling.num_thread; j++) {
+  //      if (min_dist_temp > min_dist_pair_temp[j].second) {
+  //        min_dist_temp = min_dist_pair_temp[j].second;
+  //        primitive_best_index_[i] = min_dist_pair_temp[j].first;
+  //      }
+  //    }
+  //  }
+  for (int i = 0; i < num_target_; i++)
+    primitive_best_index_[i] = 0;
 }
 
 void los_keeper::TargetManager2D::CheckPclCollision() {
@@ -222,7 +261,7 @@ void los_keeper::TargetManager2D::CheckPclCollision() {
   CalculateSafePclIndex(safe_corridor);
 }
 
-void los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
+bool los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
   primitive_safe_structured_obstacle_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
@@ -244,6 +283,12 @@ void los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
       }
     }
   }
+  for (int i = 0; i < num_target_; i++) {
+    if (primitive_safe_structured_obstacle_index_[i].empty()) {
+      return false;
+    }
+  }
+  return true;
 }
 
 std::vector<LinearConstraint2D> los_keeper::TargetManager2D::GenLinearConstraint() {
@@ -338,7 +383,7 @@ void los_keeper::TargetManager2D::ComputePrimitivesSubProcess(const int &target_
   primitive_temp.SetDegree(3);
   float time_interval_temp[2]{0.0, param_.horizon.prediction};
   primitive_temp.SetTimeInterval(time_interval_temp);
-  float bernstein_coeff_temp[4];
+  BernsteinCoefficients bernstein_coeff_temp(4);
 
   for (int j = start_idx; j < end_idx; j++) {
     { // x-coefficient
@@ -498,38 +543,23 @@ void los_keeper::TargetManager2D::CalculateCentroidSubProcess(const int &target_
       distance_sum_list[i] +=
           (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
                .px.GetTerminalValue() -
-           primitives_list_[target_id]
-                           [primitive_safe_total_index_
-                                [target_id]
-                                [primitive_safe_total_index_
-                                     [target_id][primitive_safe_total_index_[target_id][j]]]]
-                               .px.GetTerminalValue()) *
+           primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+               .px.GetTerminalValue()) *
               (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
                    .px.GetTerminalValue() -
-               primitives_list_[target_id]
-                               [primitive_safe_total_index_
-                                    [target_id]
-                                    [primitive_safe_total_index_
-                                         [target_id][primitive_safe_total_index_[target_id][j]]]]
-                                   .px.GetTerminalValue()) +
+               primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+                   .px.GetTerminalValue()) +
           (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
                .py.GetTerminalValue() -
-           primitives_list_[target_id]
-                           [primitive_safe_total_index_
-                                [target_id]
-                                [primitive_safe_total_index_
-                                     [target_id][primitive_safe_total_index_[target_id][j]]]]
-                               .py.GetTerminalValue()) *
+           primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+               .py.GetTerminalValue()) *
               (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
                    .py.GetTerminalValue() -
-               primitives_list_[target_id]
-                               [primitive_safe_total_index_
-                                    [target_id]
-                                    [primitive_safe_total_index_
-                                         [target_id][primitive_safe_total_index_[target_id][j]]]]
-                                   .py.GetTerminalValue());
+               primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+                   .py.GetTerminalValue());
     }
   }
+
   min_dist.second = 99999999999.0f;
   for (int i = 0; i < chunk_size; i++) {
     if (min_dist.second > distance_sum_list[i]) {
@@ -714,7 +744,7 @@ void los_keeper::TargetManager3D::CheckPclCollision() {
   CalculateSafePclIndex(safe_corridor);
 }
 
-void los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
+bool los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
   primitive_safe_structured_obstacle_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
@@ -736,6 +766,12 @@ void los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
       }
     }
   }
+  for (int i = 0; i < num_target_; i++) {
+    if (primitive_safe_structured_obstacle_index_[i].empty()) {
+      return false;
+    }
+  }
+  return true;
 }
 
 std::vector<LinearConstraint3D> los_keeper::TargetManager3D::GenLinearConstraint() {
@@ -836,7 +872,7 @@ void los_keeper::TargetManager3D::ComputePrimitivesSubProcess(const int &target_
   primitive_temp.SetDegree(3);
   float time_interval_temp[2]{0.0, param_.horizon.prediction};
   primitive_temp.SetTimeInterval(time_interval_temp);
-  float bernstein_coeff_temp[4];
+  BernsteinCoefficients bernstein_coeff_temp(4);
   for (int j = start_idx; j < end_idx; j++) {
     { // x-coefficient
       bernstein_coeff_temp[0] = target_state_list_[target_id].px;
@@ -1010,52 +1046,28 @@ void los_keeper::TargetManager3D::CalculateCentroidSubProcess(const int &target_
       distance_sum_list[i] +=
           (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
                .px.GetTerminalValue() -
-           primitives_list_[target_id]
-                           [primitive_safe_total_index_
-                                [target_id]
-                                [primitive_safe_total_index_
-                                     [target_id][primitive_safe_total_index_[target_id][j]]]]
-                               .px.GetTerminalValue()) *
+           primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+               .px.GetTerminalValue()) *
               (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
                    .px.GetTerminalValue() -
-               primitives_list_[target_id]
-                               [primitive_safe_total_index_
-                                    [target_id]
-                                    [primitive_safe_total_index_
-                                         [target_id][primitive_safe_total_index_[target_id][j]]]]
-                                   .px.GetTerminalValue()) +
+               primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+                   .px.GetTerminalValue()) +
           (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
                .py.GetTerminalValue() -
-           primitives_list_[target_id]
-                           [primitive_safe_total_index_
-                                [target_id]
-                                [primitive_safe_total_index_
-                                     [target_id][primitive_safe_total_index_[target_id][j]]]]
-                               .py.GetTerminalValue()) *
+           primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+               .py.GetTerminalValue()) *
               (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
                    .py.GetTerminalValue() -
-               primitives_list_[target_id]
-                               [primitive_safe_total_index_
-                                    [target_id]
-                                    [primitive_safe_total_index_
-                                         [target_id][primitive_safe_total_index_[target_id][j]]]]
-                                   .py.GetTerminalValue()) +
+               primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+                   .py.GetTerminalValue()) +
           (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
                .pz.GetTerminalValue() -
-           primitives_list_[target_id]
-                           [primitive_safe_total_index_
-                                [target_id]
-                                [primitive_safe_total_index_
-                                     [target_id][primitive_safe_total_index_[target_id][j]]]]
-                               .pz.GetTerminalValue()) *
+           primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+               .pz.GetTerminalValue()) *
               (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
                    .pz.GetTerminalValue() -
-               primitives_list_[target_id]
-                               [primitive_safe_total_index_
-                                    [target_id]
-                                    [primitive_safe_total_index_
-                                         [target_id][primitive_safe_total_index_[target_id][j]]]]
-                                   .pz.GetTerminalValue());
+               primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+                   .pz.GetTerminalValue());
     }
   }
   min_dist.second = 99999999999.0f;

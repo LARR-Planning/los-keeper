@@ -4,7 +4,7 @@ using namespace los_keeper;
 
 void ObstacleManager::SetObstacleCloud(const pcl::PointCloud<pcl::PointXYZ> &cloud) {
   cloud_.points = cloud.points;
-  debug_info_.some_debug_info++;
+  //  debug_info_.some_debug_info++;
 }
 
 void ObstacleManager::SetStructuredObstacleState(
@@ -21,15 +21,15 @@ void ObstacleManager::TranslateStateToPoly() {
   float time_interval[2]{0.0f, param_.planning_horizon};
   temp_state_poly.SetTimeInterval(time_interval);
   for (const auto &i : structured_obstacle_state_list_) {
-    float temp_coefficient_x[4]{i.px, i.px + 0.33333333f * i.vx * param_.planning_horizon,
-                                i.px + 0.66666667f * i.vx * param_.planning_horizon,
-                                i.px + i.vx * param_.planning_horizon};
-    float temp_coefficient_y[4]{i.py, i.py + 0.33333333f * i.vy * param_.planning_horizon,
-                                i.py + 0.66666667f * i.vy * param_.planning_horizon,
-                                i.py + i.vy * param_.planning_horizon};
-    float temp_coefficient_z[4]{i.pz, i.pz + 0.33333333f * i.vz * param_.planning_horizon,
-                                i.pz + 0.66666667f * i.vz * param_.planning_horizon,
-                                i.pz + i.vz * param_.planning_horizon};
+    BernsteinCoefficients temp_coefficient_x{
+        i.px, i.px + 0.33333333f * i.vx * param_.planning_horizon,
+        i.px + 0.66666667f * i.vx * param_.planning_horizon, i.px + i.vx * param_.planning_horizon};
+    BernsteinCoefficients temp_coefficient_y{
+        i.py, i.py + 0.33333333f * i.vy * param_.planning_horizon,
+        i.py + 0.66666667f * i.vy * param_.planning_horizon, i.py + i.vy * param_.planning_horizon};
+    BernsteinCoefficients temp_coefficient_z{
+        i.pz, i.pz + 0.33333333f * i.vz * param_.planning_horizon,
+        i.pz + 0.66666667f * i.vz * param_.planning_horizon, i.pz + i.vz * param_.planning_horizon};
     temp_state_poly.px.SetBernsteinCoeff(temp_coefficient_x);
     temp_state_poly.py.SetBernsteinCoeff(temp_coefficient_y);
     temp_state_poly.pz.SetBernsteinCoeff(temp_coefficient_z);
@@ -52,7 +52,6 @@ bool ObstacleManager::CheckCollisionAlongTrajectory(const StatePoly &trajectory)
   bool safe_pcl = true;
   bool safe_structured = true;
   if (not cloud_.points.empty()) {
-    printf("HIHIHI\n");
     for (int i = 0; i < num_sample; i++) {
       for (int j = 0; j < cloud_.points.size(); j++) {
         if (powf(trajectory.GetPointAtTime(time_sample[i]).x - cloud_.points[j].x, 2) /
@@ -138,6 +137,7 @@ bool ObstacleManager::CheckCollisionWithPoint(const DroneState &drone_state) {
 
 ObstacleManagerDebugInfo ObstacleManager::GetDebugInfo() const {
   ObstacleManagerDebugInfo debug_info;
-  debug_info.some_debug_info = debug_info_.some_debug_info;
+  debug_info.num_structured_obstacles = (int)structured_obstacle_poly_list_.size();
+  debug_info.structured_obstacle_poly_list = structured_obstacle_poly_list_;
   return debug_info;
 }

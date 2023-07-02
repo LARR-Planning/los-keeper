@@ -7,7 +7,8 @@ int factorial(int num);
 int nchoosek(int n, int r);
 #include "gtest/gtest.h"
 #include <cmath>
-
+using namespace std;
+using BernsteinCoefficients = vector<float>;
 class BernsteinPoly {
   friend class ApiTestFixtureBernstein;
   FRIEND_TEST(ApiTestFixtureBernstein, CheckSetGetDegree);
@@ -18,31 +19,28 @@ class BernsteinPoly {
 
 private:
   float time_interval_[2]{-9999.0f, -9999.1f}; // initial time and terminal time
-  float *bernstein_coeff_;                     // bernstein coefficient
+  BernsteinCoefficients bernstein_coeff_;      // bernstein coefficient
   int degree_;                                 // The degree of a polynomial
 public:
-  BernsteinPoly() {
-    degree_ = -1;
-    bernstein_coeff_ = nullptr;
-  };
-  BernsteinPoly(float time_interval[], float bernstein_coeff[], const int &degree);
+  BernsteinPoly() { degree_ = -1; };
+  BernsteinPoly(const float time_interval[], const BernsteinCoefficients &bernstein_coeff,
+                const int &degree);
   BernsteinPoly(const BernsteinPoly &bern_poly) {
     time_interval_[0] = bern_poly.time_interval_[0];
     time_interval_[1] = bern_poly.time_interval_[1];
     degree_ = bern_poly.degree_;
     bernstein_coeff_ = bern_poly.bernstein_coeff_;
   };
-  ~BernsteinPoly();
   void SetTimeInterval(float time_interval_[]);
-  void SetBernsteinCoeff(float bernstein_coeff_[]);
+  void SetBernsteinCoeff(const BernsteinCoefficients &bernstein_coeff);
   void SetDegree(int degree_);
   int GetDegree() const;
   bool IsSet() {
-    return ((time_interval_[0] < time_interval_[1]) and (bernstein_coeff_ != nullptr)) and
+    return ((time_interval_[0] < time_interval_[1]) and (not bernstein_coeff_.empty())) and
            (degree_ != -1);
   };
-  float *GetTimeInterval() { return time_interval_; };
-  float *GetBernsteinCoefficient() { return this->bernstein_coeff_; };
+  const float *GetTimeInterval() const { return time_interval_; };
+  BernsteinCoefficients GetBernsteinCoefficient() const { return this->bernstein_coeff_; };
   float GetValue(float t) const;
   float GetInitialValue() { return bernstein_coeff_[0]; };
   float GetTerminalValue() { return bernstein_coeff_[degree_]; };

@@ -16,6 +16,7 @@ namespace los_keeper {
 
 struct DebugInfo {
   ObstacleManagerDebugInfo obstacle_manager;
+  TargetManagerDebugInfo target_manager;
 };
 
 struct PlanningProblem {
@@ -47,6 +48,7 @@ private:
   std::vector<ObjectState> object_state_list_;
   std::vector<ObjectState> target_state_list_;
   PlanningResult planning_result_;
+  DebugInfo debug_info_;
 
   struct {
     std::mutex drone_state;
@@ -54,7 +56,8 @@ private:
     std::mutex target_state_list;
     std::mutex point_cloud;
     std::mutex control;
-    std::mutex debug_info;
+    std::mutex debug_obstacle_info;
+    std::mutex debug_target_info;
   } mutex_list_;
 
   std::shared_ptr<ObstacleManager> obstacle_manager_;
@@ -77,7 +80,10 @@ public:
   void SetObjectStateArray(const std::vector<ObjectState> &object_state_list);
   void SetTargetStateArray(const std::vector<ObjectState> &target_state_list);
   std::optional<JerkControlInput> GenerateControlInputFromPlanning(double time);
-  std::optional<DebugInfo> GetDebugInfo();
+  DebugInfo GetDebugInfo();
+  void UpdateDebugInfo();
+  void UpdateTargetDebugInfo();
+  void UpdateObstacleDeubgInfo();
   void OnPlanningTimerCallback();
   void OnToggleActivateServiceCallback();
 };

@@ -19,7 +19,8 @@ TEST_F(ApiTestFixtureBernsteinUtils, CheckSetGetDegree) {
 
 TEST_F(ApiTestFixtureBernsteinUtils, CheckSetGetBernsteinCoefficients) {
   bernstein_poly_.SetDegree(3);
-  float coeff1[4]{0.0f, 1.0f, 2.0f, 3.0f};
+  //  float coeff1[4]{0.0f, 1.0f, 2.0f, 3.0f};
+  BernsteinCoefficients coeff1{0.0f, 1.0f, 2.0f, 3.0f};
   bernstein_poly_.SetBernsteinCoeff(coeff1);
   coeff1[0] = -1.0f;
   float coeff2[4]{0.0f, 1.0f, 2.0f, 3.0f};
@@ -39,7 +40,8 @@ TEST_F(ApiTestFixtureBernsteinUtils, CheckSetGetTimeInterval) {
 }
 
 TEST_F(ApiTestFixtureBernsteinUtils, CheckGetStartEndPoints) {
-  float coeff[4]{3.0f, 2.0f, 1.0f, 0.0f};
+  //  float coeff[4]{3.0f, 2.0f, 1.0f, 0.0f};
+  BernsteinCoefficients coeff{0.0f, 1.0f, 2.0f, 3.0f};
   bernstein_poly_.SetDegree(3);
   bernstein_poly_.SetBernsteinCoeff(coeff);
   EXPECT_EQ(bernstein_poly_.GetInitialValue(), coeff[0]);
@@ -47,8 +49,9 @@ TEST_F(ApiTestFixtureBernsteinUtils, CheckGetStartEndPoints) {
 }
 
 TEST_F(ApiTestFixtureBernsteinUtils, CheckGetBernsteinValue) {
-  float coeff[4]{0.0f, 1.0f, 2.0f, 3.0f};
+  //  float coeff[4]{0.0f, 1.0f, 2.0f, 3.0f};
   float interval[2]{0.0f, 1.0f};
+  BernsteinCoefficients coeff{0.0f, 1.0f, 2.0f, 3.0f};
   int degree = 3;
   bernstein_poly_.SetDegree(degree);
   bernstein_poly_.SetBernsteinCoeff(coeff);
@@ -58,7 +61,8 @@ TEST_F(ApiTestFixtureBernsteinUtils, CheckGetBernsteinValue) {
             0.001f);
 }
 TEST_F(ApiTestFixtureBernsteinUtils, CheckCopyConstructor) {
-  float coeff[4]{0.0f, 1.0f, 2.0f, 3.0f};
+  //  float coeff[4]{0.0f, 1.0f, 2.0f, 3.0f};
+  BernsteinCoefficients coeff{0.0f, 1.0f, 2.0f, 3.0f};
   float interval[2]{0.0f, 1.0f};
   int degree = 3;
   bernstein_poly_.SetDegree(degree);
@@ -78,7 +82,8 @@ TEST_F(ApiTestFixtureBernsteinUtils, CheckAllSet) {
   EXPECT_EQ(bernstein_poly_.IsSet(), false);
   bernstein_poly_.SetDegree(3);
   EXPECT_EQ(bernstein_poly_.IsSet(), false);
-  float coeff[4]{0.0f, 1.0f, 2.0f, 3.0f};
+  //  float coeff[4]{0.0f, 1.0f, 2.0f, 3.0f};
+  BernsteinCoefficients coeff{0.0f, 1.0f, 2.0f, 3.0f};
   bernstein_poly_.SetBernsteinCoeff(coeff);
   EXPECT_EQ(bernstein_poly_.IsSet(), false);
   float time_interval[2]{0.0f, 2.5f};
