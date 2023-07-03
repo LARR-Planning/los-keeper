@@ -131,6 +131,9 @@ struct StatePoly {
   void SetDegree(const int &degree) {
     px.SetDegree(degree), py.SetDegree(degree), pz.SetDegree(degree);
   };
+  void ElevateDegree(const int &up_degree) {
+    px.ElevateDegree(up_degree), py.ElevateDegree(up_degree), pz.ElevateDegree(up_degree);
+  };
   void SetTimeInterval(float time_interval[2]) {
     px.SetTimeInterval(time_interval), py.SetTimeInterval(time_interval),
         pz.SetTimeInterval(time_interval);

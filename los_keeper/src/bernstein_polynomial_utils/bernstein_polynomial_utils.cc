@@ -50,13 +50,11 @@ float BernsteinPoly::GetValue(float t) const {
              (float)pow(time_interval_[1] - time_interval_[0], poly_order);
   return value;
 }
-
-BernsteinPoly BernsteinPoly::ElevateDegree(int m) {
+void BernsteinPoly::ElevateDegree(const int &m) {
   int poly_order = degree_;
   vector<BernsteinCoefficients> mat(poly_order + 1);
   for (int i = 0; i < poly_order + 1; i++)
     mat[i].resize(m + 1);
-
   for (int i = 0; i < poly_order + 1; i++) {
     for (int j = 0; j <= m - poly_order; j++)
       mat[i][i + j] = float(nchoosek(m - poly_order, j)) * float(nchoosek(poly_order, i)) /
@@ -71,8 +69,30 @@ BernsteinPoly BernsteinPoly::ElevateDegree(int m) {
     }
     dataPtr[i] = element;
   }
-  BernsteinPoly result(this->GetTimeInterval(), dataPtr, m);
-  return result;
+  degree_ = m;
+  bernstein_coeff_ = dataPtr;
+}
+
+BernsteinPoly BernsteinPoly::ElevateDegree(int m) const {
+  int poly_order = degree_;
+  vector<BernsteinCoefficients> mat(poly_order + 1);
+  for (int i = 0; i < poly_order + 1; i++)
+    mat[i].resize(m + 1);
+  for (int i = 0; i < poly_order + 1; i++) {
+    for (int j = 0; j <= m - poly_order; j++)
+      mat[i][i + j] = float(nchoosek(m - poly_order, j)) * float(nchoosek(poly_order, i)) /
+                      float(nchoosek(m, i + j));
+  }
+  float element;
+  BernsteinCoefficients dataPtr(m + 1);
+  for (int i = 0; i < m + 1; i++) {
+    element = 0.0f;
+    for (int j = 0; j < poly_order + 1; j++) {
+      element += bernstein_coeff_[j] * mat[j][i];
+    }
+    dataPtr[i] = element;
+  }
+  return BernsteinPoly(this->GetTimeInterval(), dataPtr, m);
 }
 
 BernsteinPoly BernsteinPoly::operator+(const BernsteinPoly &rhs) {

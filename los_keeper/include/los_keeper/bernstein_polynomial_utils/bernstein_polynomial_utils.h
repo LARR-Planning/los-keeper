@@ -44,7 +44,8 @@ public:
   float GetValue(float t) const;
   float GetInitialValue() { return bernstein_coeff_[0]; };
   float GetTerminalValue() { return bernstein_coeff_[degree_]; };
-  BernsteinPoly ElevateDegree(int m); // Change to higher degree (m)
+  BernsteinPoly ElevateDegree(int m) const; // Change to higher degree (m)
+  void ElevateDegree(const int &m);         // Change to higher degree (m)
   BernsteinPoly operator+(const BernsteinPoly &rhs_);
   BernsteinPoly operator-(const BernsteinPoly &rhs_);
   BernsteinPoly operator*(const BernsteinPoly &rhs_);

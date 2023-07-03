@@ -54,48 +54,38 @@ void Wrapper::HandleActivateAction() { state_.is_activated = true; }
 void Wrapper::HandleReplanAction() {
   //    printf("Handle ReplanAction\n");
   PlanningProblem planning_problem;
-  {
+  { // Update Drone State
     std::scoped_lock lock(mutex_list_.drone_state);
     planning_problem.drone_state = drone_state_;
   }
-  {
+  { // Update Obstacle State
     std::scoped_lock lock(mutex_list_.point_cloud, mutex_list_.object_state_list);
     planning_problem.point_cloud = obstacle_manager_->GetPointCloud();
     planning_problem.structured_obstacle_poly_list =
         obstacle_manager_->GetStructuredObstaclePolyList();
   }
-  {
+  { // Update Target State
     std::scoped_lock lock(mutex_list_.target_state_list);
     planning_problem.target_state_list = target_state_list_;
   }
   UpdateObstacleDeubgInfo();
-  //  {
-  //    std::scoped_lock lock(mutex_list_.drone_state, mutex_list_.point_cloud,
-  //                          mutex_list_.target_state_list, mutex_list_.object_state_list);
-  //    planning_problem.drone_state = drone_state_;
-  //    planning_problem.point_cloud = obstacle_manager_->GetPointCloud();
-  //    planning_problem.structured_obstacle_poly_list =
-  //        obstacle_manager_->GetStructuredObstaclePolyList();
-  //    planning_problem.target_state_list = target_state_list_;
-  //  }
-  //  const auto &point_cloud = planning_problem.point_cloud;
-  //  const auto &structured_obstacle_poly_list = planning_problem.structured_obstacle_poly_list;
 
   PlanningResult new_planning_result;
   new_planning_result.seq = planning_result_.seq + 1;
   auto target_prediction_list = target_manager_->PredictTargetList(
       planning_problem.target_state_list, planning_problem.point_cloud,
       planning_problem.structured_obstacle_poly_list);
-  //  auto target_prediction_list = target_manager_->PredictTargetList(
-  //      planning_problem.target_state_list, point_cloud, structured_obstacle_poly_list);
   UpdateTargetDebugInfo();
-  UpdateDebugInfo();
 
   if (!target_prediction_list)
     goto update;
   new_planning_result.last_plan_success_t_sec =
       std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
-  new_planning_result.chasing_trajectory = StatePoly();
+  //  new_planning_result.chasing_trajectory = StatePoly();
+  new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
+      drone_state_, target_prediction_list.value(), planning_problem.point_cloud,
+      planning_problem.structured_obstacle_poly_list);
+  UpdatePlanningDebugInfo();
 
 update : {
   std::unique_lock<std::mutex> lock(mutex_list_.control);
@@ -185,15 +175,15 @@ DebugInfo Wrapper::GetDebugInfo() {
       debug_info.target_manager = debug_info_.target_manager;
     }
   }
+  { // keeper
+    std::unique_lock<std::mutex> lock(mutex_list_.debug_planning_info, std::defer_lock);
+    if (lock.try_lock()) {
+      debug_info.planning = debug_info_.planning;
+    }
+  }
   return debug_info;
 }
 
-void Wrapper::UpdateDebugInfo() {
-  {
-      // obstacle
-  } { // target
-  }
-}
 void Wrapper::UpdateTargetDebugInfo() {
   std::scoped_lock lock(mutex_list_.debug_target_info);
   debug_info_.target_manager = target_manager_->GetDebugInfo();
@@ -201,4 +191,8 @@ void Wrapper::UpdateTargetDebugInfo() {
 void Wrapper::UpdateObstacleDeubgInfo() {
   std::scoped_lock lock(mutex_list_.debug_obstacle_info);
   debug_info_.obstacle_manager = obstacle_manager_->GetDebugInfo();
+}
+void Wrapper::UpdatePlanningDebugInfo() {
+  std::scoped_lock lock(mutex_list_.debug_planning_info);
+  debug_info_.planning = trajectory_planner_->GetDebugInfo();
 }

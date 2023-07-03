@@ -231,3 +231,45 @@ Visualizer::VisualizeSafeTargetPathArray(const PrimitiveListSet &primitive_list,
   }
   return visual_output;
 }
+KeeperRawPathVisualizationMsg
+Visualizer::VisualizeRawKeeperPathArray(const PrimitiveList &primitive_list) {
+  KeeperRawPathVisualizationMsg visual_output;
+  if (parameters_.keeper.raw.publish) {
+    if (not primitive_list.empty()) {
+      visualization_msgs::msg::Marker line_strip;
+      line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
+      line_strip.header.frame_id = parameters_.frame_id;
+      line_strip.color.a = parameters_.keeper.raw.color.a;
+      line_strip.color.r = parameters_.keeper.raw.color.r;
+      line_strip.color.g = parameters_.keeper.raw.color.g;
+      line_strip.color.b = parameters_.keeper.raw.color.b;
+      line_strip.scale.x = parameters_.keeper.raw.line_scale;
+      line_strip.action = visualization_msgs::msg::Marker::MODIFY;
+      line_strip.pose.orientation.w = 1.0;
+      vector<float> time_seq;
+      float seg_t0 = primitive_list[0].px.GetTimeInterval()[0];
+      float seg_tf = primitive_list[0].px.GetTimeInterval()[1];
+      for (int i = 0; i < parameters_.keeper.raw.num_time_sample; i++)
+        time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) /
+                                        (float)(parameters_.keeper.raw.num_time_sample - 1));
+      geometry_msgs::msg::Point temp_point;
+      int id = 0;
+      int num_primitive_vis = int((float)primitive_list.size() * parameters_.keeper.raw.proportion);
+      int index_jump = primitive_list.size() / num_primitive_vis;
+      line_strip.ns = "keeper_primitives";
+      for (int j = 0; j < num_primitive_vis - 1; j++) {
+        line_strip.points.clear();
+        line_strip.id = id;
+        id++;
+        for (int k = 0; k < parameters_.target.raw.num_time_sample; k++) {
+          temp_point.x = primitive_list[index_jump * j].px.GetValue(time_seq[k]);
+          temp_point.y = primitive_list[index_jump * j].py.GetValue(time_seq[k]);
+          temp_point.z = primitive_list[index_jump * j].pz.GetValue(time_seq[k]);
+          line_strip.points.push_back(temp_point);
+        }
+        visual_output.markers.push_back(line_strip);
+      }
+    }
+  }
+  return visual_output;
+}

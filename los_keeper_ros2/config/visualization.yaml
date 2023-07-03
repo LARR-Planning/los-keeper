@@ -40,6 +40,17 @@
           g: 0.0
           b: 0.0
         line_scale: 0.05
+    keeper:
+      raw:
+        publish: true
+        proportion: 0.5
+        num_time_sample: 5
+        color:
+          a: 0.3
+          r: 0.0
+          g: 1.0
+          b: 1.0
+        line_scale: 0.01
 
 
 

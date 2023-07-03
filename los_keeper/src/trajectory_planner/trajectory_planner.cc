@@ -3,7 +3,7 @@
 using namespace los_keeper;
 
 std::optional<StatePoly> TrajectoryPlanner::ComputeChasingTrajectory(
-    const std::vector<StatePoly> &target_prediction_list,
+    const DroneState &drone_state, const std::vector<StatePoly> &target_prediction_list,
     const los_keeper::PclPointCloud &obstacle_points,
     const std::vector<StatePoly> &structured_obstacle_poly_list) {
   return std::nullopt;
@@ -11,14 +11,32 @@ std::optional<StatePoly> TrajectoryPlanner::ComputeChasingTrajectory(
 
 void TrajectoryPlanner::SetTargetState(const PrimitiveList &target_trajectory_list) {
   target_trajectory_list_.clear();
-  target_trajectory_list_ = target_trajectory_list; // TODO: change the order 3 to order 5
+  for (int i = 0; i < target_trajectory_list.size(); i++) {
+    BernsteinPoly px = target_trajectory_list[i].px.ElevateDegree(5);
+    BernsteinPoly py = target_trajectory_list[i].py.ElevateDegree(5);
+    BernsteinPoly pz = target_trajectory_list[i].pz.ElevateDegree(5);
+    StatePoly poly;
+    poly.px = px;
+    poly.py = py;
+    poly.pz = pz;
+    target_trajectory_list_.push_back(poly);
+  }
   num_target_ = (int)target_trajectory_list.size();
 }
 
 void TrajectoryPlanner::SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
                                          const PrimitiveList &structured_obstacle_poly_list) {
   structured_obstacle_poly_list_.clear();
-  structured_obstacle_poly_list_ = structured_obstacle_poly_list;
+  for (int i = 0; i < structured_obstacle_poly_list.size(); i++) {
+    BernsteinPoly ox = structured_obstacle_poly_list[i].px.ElevateDegree(5);
+    BernsteinPoly oy = structured_obstacle_poly_list[i].py.ElevateDegree(5);
+    BernsteinPoly oz = structured_obstacle_poly_list[i].pz.ElevateDegree(5);
+    StatePoly poly;
+    poly.px = ox;
+    poly.py = oy;
+    poly.pz = oz;
+    structured_obstacle_poly_list_.push_back(poly);
+  }
   cloud_.points.clear();
   cloud_.points = cloud.points;
 }
@@ -36,9 +54,18 @@ TrajectoryPlanner::TrajectoryPlanner(const PlanningParameter &param) { param_ = 
 StatePoly TrajectoryPlanner::GetBestKeeperTrajectory() {}
 void TrajectoryPlanner::CheckDistanceFromTargets() {}
 void TrajectoryPlanner::CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
-                                                           IndexList &dist_idx_sub){
-
-};
+                                                           IndexList &dist_idx_sub) {}
+PlanningDebugInfo TrajectoryPlanner::GetDebugInfo() const {
+  PlanningDebugInfo debug_info;
+  if (not primitives_list_.empty()) {
+    debug_info.primitives_list.clear();
+    debug_info.primitives_list = primitives_list_;
+  }
+  return debug_info;
+}
+void TrajectoryPlanner::SetKeeperState(const DroneState &drone_state) {
+  drone_state_ = drone_state;
+}
 
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
   SampleShootingPoints();
@@ -170,8 +197,9 @@ TrajectoryPlanner2D::TrajectoryPlanner2D(const PlanningParameter &param)
     : TrajectoryPlanner(param) {}
 
 optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
-    const vector<StatePoly> &target_prediction_list, const PclPointCloud &obstacle_points,
-    const vector<StatePoly> &structured_obstacle_poly_list) {
+    const DroneState &drone_state, const vector<StatePoly> &target_prediction_list,
+    const PclPointCloud &obstacle_points, const vector<StatePoly> &structured_obstacle_poly_list) {
+  this->SetKeeperState(drone_state);
   this->SetTargetState(target_prediction_list);
   this->SetObstacleState(obstacle_points, structured_obstacle_poly_list);
   bool plan_success = this->PlanKeeperTrajectory();
@@ -379,8 +407,8 @@ TrajectoryPlanner3D::TrajectoryPlanner3D(const PlanningParameter &param)
     : TrajectoryPlanner(param) {}
 
 optional<StatePoly> TrajectoryPlanner3D::ComputeChasingTrajectory(
-    const vector<StatePoly> &target_prediction_list, const PclPointCloud &obstacle_points,
-    const vector<StatePoly> &structured_obstacle_poly_list) {
+    const DroneState &drone_state, const vector<StatePoly> &target_prediction_list,
+    const PclPointCloud &obstacle_points, const vector<StatePoly> &structured_obstacle_poly_list) {
   /**
   this->SetTargetState(target_prediction_list);
   this->SetObstacleState(obstacle_points, structured_obstacle_poly_list);

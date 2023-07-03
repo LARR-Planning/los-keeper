@@ -9,6 +9,13 @@
 #include "los_keeper/type_manager/type_manager.h"
 using namespace std;
 namespace los_keeper {
+struct PlanningDebugInfo {
+  PrimitiveList primitives_list;
+  IndexList close_obstacle_index;
+  IndexList safe_visibility_index;
+  IndexList dynamically_feasible_index;
+  IndexList primitive_best_index;
+};
 class TrajectoryPlanner {
 private:
 protected:
@@ -50,6 +57,7 @@ protected:
   void SetTargetState(const PrimitiveList &target_trajectory_list);
   void SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
                         const PrimitiveList &structured_obstacle_poly_list);
+  void SetKeeperState(const DroneState &drone_state);
   virtual bool PlanKeeperTrajectory() = 0;
   StatePoly GetBestKeeperTrajectory();
 
@@ -57,9 +65,11 @@ public:
   TrajectoryPlanner() = default;
   explicit TrajectoryPlanner(const PlanningParameter &param);
   virtual optional<StatePoly>
-  ComputeChasingTrajectory(const vector<StatePoly> &target_prediction_list,
+  ComputeChasingTrajectory(const DroneState &drone_state,
+                           const vector<StatePoly> &target_prediction_list,
                            const PclPointCloud &obstacle_points,
                            const vector<StatePoly> &structured_obstacle_poly_list) = 0;
+  PlanningDebugInfo GetDebugInfo() const;
 };
 
 class TrajectoryPlanner2D : public TrajectoryPlanner {
@@ -79,7 +89,8 @@ public:
   TrajectoryPlanner2D() = default;
   explicit TrajectoryPlanner2D(const PlanningParameter &param);
   optional<StatePoly>
-  ComputeChasingTrajectory(const vector<StatePoly> &target_prediction_list,
+  ComputeChasingTrajectory(const DroneState &drone_state,
+                           const vector<StatePoly> &target_prediction_list,
                            const PclPointCloud &obstacle_points,
                            const vector<StatePoly> &structured_obstacle_poly_list) override;
 };
@@ -101,7 +112,8 @@ public:
   TrajectoryPlanner3D() = default;
   explicit TrajectoryPlanner3D(const PlanningParameter &param);
   optional<StatePoly>
-  ComputeChasingTrajectory(const vector<StatePoly> &target_prediction_list,
+  ComputeChasingTrajectory(const DroneState &drone_state,
+                           const vector<StatePoly> &target_prediction_list,
                            const PclPointCloud &obstacle_points,
                            const vector<StatePoly> &structured_obstacle_poly_list) override;
 };

@@ -107,6 +107,12 @@ void LosServer::VisualizationTimerCallback() {
         debug_info.target_manager.primitives_list, debug_info.target_manager.primitive_best_index);
     visualization_.target_best_path_vis_publisher->publish(visualization_.target_best_path_vis);
   }
+  { // Keeper raw path
+    //    printf("DEBUG PLANNING PRIMITIVE SIZE: %d \n",debug_info.planning.primitives_list.size());
+    visualization_.keeper_raw_path_vis =
+        visualizer_.VisualizeRawKeeperPathArray(debug_info.planning.primitives_list);
+    visualization_.keeper_raw_path_vis_publisher->publish(visualization_.keeper_raw_path_vis);
+  }
 }
 
 void los_keeper::LosServer::ToggleActivateCallback(
@@ -195,6 +201,8 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
       "~/visualization/target_safe_array_info", rclcpp::QoS(1));
   visualization_.target_raw_path_vis_publisher = create_publisher<TargetRawPathVisualizationMsg>(
       "~/visualization/target_raw_array_info", rclcpp::QoS(1));
+  visualization_.keeper_raw_path_vis_publisher = create_publisher<KeeperRawPathVisualizationMsg>(
+      "~/visualization/keeper_raw_array_info", rclcpp::QoS(1));
 
   input_publisher_ = create_publisher<InputMsg>("~/input", rclcpp::QoS(1));
 
