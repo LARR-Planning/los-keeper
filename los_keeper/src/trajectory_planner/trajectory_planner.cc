@@ -26,18 +26,7 @@ void TrajectoryPlanner::SetTargetState(const PrimitiveList &target_trajectory_li
 
 void TrajectoryPlanner::SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
                                          const PrimitiveList &structured_obstacle_poly_list) {
-  structured_obstacle_poly_list_.clear();
-  for (int i = 0; i < structured_obstacle_poly_list.size(); i++) {
-    BernsteinPoly ox = structured_obstacle_poly_list[i].px.ElevateDegree(5);
-    BernsteinPoly oy = structured_obstacle_poly_list[i].py.ElevateDegree(5);
-    BernsteinPoly oz = structured_obstacle_poly_list[i].pz.ElevateDegree(5);
-    StatePoly poly;
-    poly.px = ox;
-    poly.py = oy;
-    poly.pz = oz;
-    structured_obstacle_poly_list_.push_back(poly);
-  }
-  cloud_.points.clear();
+  structured_obstacle_poly_list_ = structured_obstacle_poly_list;
   cloud_.points = cloud.points;
 }
 
@@ -65,6 +54,13 @@ PlanningDebugInfo TrajectoryPlanner::GetDebugInfo() const {
 }
 void TrajectoryPlanner::SetKeeperState(const DroneState &drone_state) {
   drone_state_ = drone_state;
+}
+bool TrajectoryPlanner::CheckVisibility() {}
+bool CheckVisibilityAgainstStructuredObstacle() {}
+void TrajectoryPlanner::CheckVisibilityAgainstPcl() {}
+void TrajectoryPlanner::CheckVisibilityAgainstStructuredObstacleSubProcess(const int &start_idx,
+                                                                           const int &end_idx,
+                                                                           IndexList &visible_idx) {
 }
 
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
@@ -234,14 +230,16 @@ void TrajectoryPlanner2D::CheckDistanceFromTargetsSubProcess(const int &start_id
   bool flag_store_in;
   bool flag_store_out;
   float value;
+  float target_distance_squared_min = param_.distance.target_min * param_.distance.target_min;
+  float target_distance_squared_max = param_.distance.target_max * param_.distance.target_max;
   for (int idx = start_idx; idx < end_idx; idx++) {
     flag_store_out = true;
     for (int k = 0; k < num_target_; k++) {
       flag_store_in = true;
-      for (int i = 0; i <= 2 * 5; i++) {
+      for (int i = 0; i <= 10; i++) {
         value = 0.0f;
         for (int j = std::max(0, i - 5); j <= std::min(5, i); j++) {
-          value += (float)nchoosek(5, j) * (float)nchoosek(5, i - j) / (float)nchoosek(2 * 5, i) *
+          value += (float)nchoosek(5, j) * (float)nchoosek(5, i - j) / (float)nchoosek(10, i) *
                    (primitives_list_[idx].px.GetBernsteinCoefficient()[j] *
                         primitives_list_[idx].px.GetBernsteinCoefficient()[i - j] -
                     2 * primitives_list_[idx].px.GetBernsteinCoefficient()[j] *
@@ -255,8 +253,8 @@ void TrajectoryPlanner2D::CheckDistanceFromTargetsSubProcess(const int &start_id
                     target_trajectory_list_[k].py.GetBernsteinCoefficient()[j] *
                         target_trajectory_list_[k].py.GetBernsteinCoefficient()[i - j]);
         }
-        if (value - param_.distance.target_min * param_.distance.target_min < 0.0f or
-            value - param_.distance.target_max * param_.distance.target_max > 0.0f) {
+        if (value - target_distance_squared_min < 0.0f or
+            value - target_distance_squared_max > 0.0f) {
           flag_store_in = false;
           break;
         }
@@ -269,6 +267,126 @@ void TrajectoryPlanner2D::CheckDistanceFromTargetsSubProcess(const int &start_id
     if (flag_store_out)
       dist_idx_sub.push_back(idx);
   }
+}
+bool TrajectoryPlanner2D::CheckVisibility() {
+  visible_total_index.clear();
+  bool is_available_keeper_path;
+  if (not cloud_.points.empty())
+    CheckVisibilityAgainstPcl();
+  if (not structured_obstacle_poly_list_.empty())
+    is_available_keeper_path = CheckVisibilityAgainstStructuredObstacle();
+  if (cloud_.points.empty() and structured_obstacle_poly_list_.empty()) // Case I: No Obstacle
+    visible_total_index = good_target_distance_index_list_;
+  else if (cloud_.points.empty() and
+           (not structured_obstacle_poly_list_.empty())) // Case II: Only Ellipsoidal Obstacle
+    visible_total_index = visible_structured_index;
+  else if ((not cloud_.points.empty()) and
+           structured_obstacle_poly_list_.empty()) // Case III: Only Pcl
+    visible_total_index = visible_pcl_index;
+  else if (not cloud_.points.empty() and not structured_obstacle_poly_list_.empty()) {
+    std::vector<bool> is_visible_pcl_temp;
+    std::vector<bool> is_visible_structured_obstacle_temp;
+    for (int j = 0; j < param_.sampling.num_sample; j++) {
+      is_visible_pcl_temp.push_back(false);
+      is_visible_structured_obstacle_temp.push_back(false);
+    }
+    for (int j : visible_structured_index)
+      is_visible_structured_obstacle_temp[j] = true;
+    for (int j : visible_pcl_index)
+      is_visible_pcl_temp[j] = true;
+    for (int j = 0; j < param_.sampling.num_sample; j++) {
+      if (is_visible_structured_obstacle_temp[j] and is_visible_structured_obstacle_temp[j])
+        visible_total_index.push_back(j);
+    }
+  }
+  return is_available_keeper_path;
+}
+bool TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacle() {
+  visible_structured_index.clear();
+  int num_chunk = (int)good_target_distance_index_list_.size() / param_.sampling.num_thread;
+  vector<thread> worker_thread;
+  IndexListSet visible_structured_index_temp(param_.sampling.num_thread);
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread.emplace_back(
+        &TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacleSubProcess, this,
+        num_chunk * (i), num_chunk * (i + 1), std::ref(visible_structured_index_temp[i]));
+  }
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread[i].join();
+  }
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    for (int j = 0; j < visible_structured_index_temp[i].size(); j++)
+      visible_structured_index.push_back(visible_structured_index_temp[i][j]);
+  }
+  if (visible_structured_index.empty())
+    return false;
+  return true;
+}
+void TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacleSubProcess(
+    const int &start_idx, const int &end_idx, IndexList &visible_idx) {
+  TrajectoryPlanner::CheckVisibilityAgainstStructuredObstacleSubProcess(start_idx, end_idx,
+                                                                        visible_idx);
+  bool flag_store_in1 = true; // collision between obstacle and keeper
+  bool flag_store_in2 = true; // LOS from obstacles
+  bool flag_store_out = true;
+  float rx_squared_inverse;
+  float ry_squared_inverse;
+  float value;
+  for (int idx = start_idx; idx < end_idx; idx++) {
+    for (int i = 0; i < structured_obstacle_poly_list_.size(); i++) {
+      flag_store_out = true;
+      rx_squared_inverse = 1 / powf(primitives_list_[good_target_distance_index_list_[idx]].rx +
+                                        structured_obstacle_poly_list_[i].rx,
+                                    2);
+      ry_squared_inverse = 1 / powf(primitives_list_[good_target_distance_index_list_[idx]].ry +
+                                        structured_obstacle_poly_list_[i].ry,
+                                    2);
+      for (int j = 0; j <= 10; j++) {
+        flag_store_in1 = true;
+        value = 0.0f;
+        for (int k = std::max(0, j - 5); k <= std::min(5, j); k++) {
+          value += (float)nchoosek(5, k) * (float)nchoosek(5, j - k) / (float)nchoosek(10, j) *
+                   ((primitives_list_[good_target_distance_index_list_[idx]]
+                             .px.GetBernsteinCoefficient()[k] *
+                         primitives_list_[good_target_distance_index_list_[idx]]
+                             .px.GetBernsteinCoefficient()[j - k] -
+                     primitives_list_[good_target_distance_index_list_[idx]]
+                             .px.GetBernsteinCoefficient()[k] *
+                         structured_obstacle_poly_list_[i].px.GetBernsteinCoefficient()[j - k] -
+                     primitives_list_[good_target_distance_index_list_[idx]]
+                             .px.GetBernsteinCoefficient()[j - k] *
+                         structured_obstacle_poly_list_[i].px.GetBernsteinCoefficient()[k] +
+                     structured_obstacle_poly_list_[i].px.GetBernsteinCoefficient()[k] *
+                         structured_obstacle_poly_list_[i].px.GetBernsteinCoefficient()[j - k]) *
+                        rx_squared_inverse + // x-components
+                    (primitives_list_[good_target_distance_index_list_[idx]]
+                             .py.GetBernsteinCoefficient()[k] *
+                         primitives_list_[good_target_distance_index_list_[idx]]
+                             .py.GetBernsteinCoefficient()[j - k] -
+                     primitives_list_[good_target_distance_index_list_[idx]]
+                             .py.GetBernsteinCoefficient()[k] *
+                         structured_obstacle_poly_list_[i].py.GetBernsteinCoefficient()[j - k] -
+                     primitives_list_[good_target_distance_index_list_[idx]]
+                             .py.GetBernsteinCoefficient()[j - k] *
+                         structured_obstacle_poly_list_[i].py.GetBernsteinCoefficient()[k] +
+                     structured_obstacle_poly_list_[i].py.GetBernsteinCoefficient()[k] *
+                         structured_obstacle_poly_list_[i].py.GetBernsteinCoefficient()[j - k]) *
+                        ry_squared_inverse);
+        }
+        if (value < 1.0f) {
+          flag_store_in1 = false;
+          break;
+        }
+      }
+    }
+    if (not flag_store_in1) {
+      flag_store_out = false;
+      break;
+    }
+  }
+}
+void TrajectoryPlanner2D::CheckVisibilityAgainstPcl() {
+  TrajectoryPlanner::CheckVisibilityAgainstPcl();
 }
 
 bool TrajectoryPlanner3D::PlanKeeperTrajectory() {
@@ -454,14 +572,16 @@ void TrajectoryPlanner3D::CheckDistanceFromTargetsSubProcess(const int &start_id
   bool flag_store_in;
   bool flag_store_out;
   float value;
+  float target_distance_squared_min = param_.distance.target_min * param_.distance.target_min;
+  float target_distance_squared_max = param_.distance.target_max * param_.distance.target_max;
   for (int idx = start_idx; idx < end_idx; idx++) {
     flag_store_out = true;
     for (int k = 0; k < num_target_; k++) {
       flag_store_in = true;
-      for (int i = 0; i <= 2 * 5; i++) {
+      for (int i = 0; i <= 10; i++) {
         value = 0.0f;
         for (int j = std::max(0, i - 5); j <= std::min(5, i); j++) {
-          value += (float)nchoosek(5, j) * (float)nchoosek(5, i - j) / (float)nchoosek(2 * 5, i) *
+          value += (float)nchoosek(5, j) * (float)nchoosek(5, i - j) / (float)nchoosek(10, i) *
                    (primitives_list_[idx].px.GetBernsteinCoefficient()[j] *
                         primitives_list_[idx].px.GetBernsteinCoefficient()[i - j] -
                     2 * primitives_list_[idx].px.GetBernsteinCoefficient()[j] *
@@ -481,8 +601,8 @@ void TrajectoryPlanner3D::CheckDistanceFromTargetsSubProcess(const int &start_id
                     target_trajectory_list_[k].pz.GetBernsteinCoefficient()[j] *
                         target_trajectory_list_[k].pz.GetBernsteinCoefficient()[i - j]);
         }
-        if (value - param_.distance.target_min * param_.distance.target_min < 0.0f or
-            value - param_.distance.target_max * param_.distance.target_max > 0.0f) {
+        if (value - target_distance_squared_min < 0.0f or
+            value - target_distance_squared_max > 0.0f) {
           flag_store_in = false;
           break;
         }
@@ -495,4 +615,66 @@ void TrajectoryPlanner3D::CheckDistanceFromTargetsSubProcess(const int &start_id
     if (flag_store_out)
       dist_idx_sub.push_back(idx);
   }
+}
+bool TrajectoryPlanner3D::CheckVisibility() {
+  visible_total_index.clear();
+  bool is_available_keeper_path;
+  if (not cloud_.points.empty())
+    CheckVisibilityAgainstPcl();
+  if (not structured_obstacle_poly_list_.empty())
+    is_available_keeper_path = CheckVisibilityAgainstStructuredObstacle();
+  if (cloud_.points.empty() and structured_obstacle_poly_list_.empty()) // Case I: No Obstacle
+    visible_total_index = good_target_distance_index_list_;
+  else if (cloud_.points.empty() and
+           not structured_obstacle_poly_list_.empty()) // Case II: Only Ellipsoidal Obstacle
+    visible_total_index = visible_structured_index;
+  else if (not cloud_.points.empty() and
+           structured_obstacle_poly_list_.empty()) // Case III: Only Pcl
+    visible_total_index = visible_pcl_index;
+  else if (not cloud_.points.empty() and not structured_obstacle_poly_list_.empty()) {
+    std::vector<bool> is_visible_pcl_temp;
+    std::vector<bool> is_visible_structured_obstacle_temp;
+    for (int j = 0; j < param_.sampling.num_sample; j++) {
+      is_visible_pcl_temp.push_back(false);
+      is_visible_structured_obstacle_temp.push_back(false);
+    }
+    for (int j : visible_structured_index)
+      is_visible_structured_obstacle_temp[j] = true;
+    for (int j : visible_pcl_index)
+      is_visible_pcl_temp[j] = true;
+    for (int j = 0; j < param_.sampling.num_sample; j++) {
+      if (is_visible_structured_obstacle_temp[j] and is_visible_structured_obstacle_temp[j])
+        visible_total_index.push_back(j);
+    }
+  }
+  return is_available_keeper_path;
+}
+bool TrajectoryPlanner3D::CheckVisibilityAgainstStructuredObstacle() {
+  visible_structured_index.clear();
+  int num_chunk = (int)good_target_distance_index_list_.size() / param_.sampling.num_thread;
+  vector<thread> worker_thread;
+  IndexListSet visible_structured_index_temp(param_.sampling.num_thread);
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread.emplace_back(
+        &TrajectoryPlanner3D::CheckVisibilityAgainstStructuredObstacleSubProcess, this,
+        num_chunk * (i), num_chunk * (i + 1), std::ref(visible_structured_index_temp[i]));
+  }
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread[i].join();
+  }
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    for (int j = 0; j < visible_structured_index_temp[i].size(); j++)
+      visible_structured_index.push_back(visible_structured_index_temp[i][j]);
+  }
+  if (visible_structured_index.empty())
+    return false;
+  return true;
+}
+void TrajectoryPlanner3D::CheckVisibilityAgainstStructuredObstacleSubProcess(
+    const int &start_idx, const int &end_idx, IndexList &visible_idx) {
+  TrajectoryPlanner::CheckVisibilityAgainstStructuredObstacleSubProcess(start_idx, end_idx,
+                                                                        visible_idx);
+}
+void TrajectoryPlanner3D::CheckVisibilityAgainstPcl() {
+  TrajectoryPlanner::CheckVisibilityAgainstPcl();
 }

@@ -464,47 +464,54 @@ void los_keeper::TargetManager2D::CheckStructuredObstacleCollisionSubProcess(
   bool flag_store_in = true;
   bool flag_store_out = true;
   float value;
+  float rx_squared_inverse;
+  float ry_squared_inverse;
   for (int j = start_idx; j < end_idx; j++) {
     for (int k = 0; k < close_obstacle_index_[target_id].size(); k++) {
       flag_store_out = true;
+      rx_squared_inverse =
+          1 / powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rx +
+                       primitives_list_[target_id][j].rx,
+                   2);
+      ry_squared_inverse =
+          1 / powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].ry +
+                       primitives_list_[target_id][j].ry,
+                   2);
+
       for (int l = 0; l <= 2 * 3; l++) {
         flag_store_in = true;
         value = 0.0f;
         for (int m = std::max(0, l - 3); m <= std::min(3, l); m++) {
           value += (float)nchoosek(3, m) * (float)nchoosek(3, l - m) / (float)nchoosek(2 * 3, l) *
-                   (primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                        primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] -
-                    primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .px.GetBernsteinCoefficient()[l - m] -
-                    primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .px.GetBernsteinCoefficient()[m] +
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .px.GetBernsteinCoefficient()[m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .px.GetBernsteinCoefficient()[l - m] + // x-component
-                    primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                        primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] -
-                    primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .py.GetBernsteinCoefficient()[l - m] -
-                    primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .py.GetBernsteinCoefficient()[m] +
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .py.GetBernsteinCoefficient()[m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .py.GetBernsteinCoefficient()[l - m] // y-component
+                   ((primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
+                         primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] -
+                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .px.GetBernsteinCoefficient()[l - m] -
+                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .px.GetBernsteinCoefficient()[m] +
+                     structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .px.GetBernsteinCoefficient()[m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .px.GetBernsteinCoefficient()[l - m]) *
+                        rx_squared_inverse + // x-component
+                    (primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
+                         primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] -
+                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .py.GetBernsteinCoefficient()[l - m] -
+                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .py.GetBernsteinCoefficient()[m] +
+                     structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .py.GetBernsteinCoefficient()[m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .py.GetBernsteinCoefficient()[l - m]) *
+                        ry_squared_inverse // y-component
                    );
         }
-        if (value <
-            powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rx +
-                     primitives_list_[target_id][j].rx,
-                 2) +
-                powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].ry +
-                         primitives_list_[target_id][j].ry,
-                     2)) {
+        if (value < 1.0f) {
           flag_store_in = false;
           break;
         }
@@ -952,62 +959,71 @@ void los_keeper::TargetManager3D::CheckStructuredObstacleCollisionSubProcess(
   bool flag_store_in = true;
   bool flag_store_out = true;
   float value;
+  float rx_squared_inverse;
+  float ry_squared_inverse;
+  float rz_squared_inverse;
   for (int j = start_idx; j < end_idx; j++) {
     for (int k = 0; k < close_obstacle_index_[target_id].size(); k++) {
       flag_store_out = true;
+      rx_squared_inverse =
+          1 / powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rx +
+                       primitives_list_[target_id][j].rx,
+                   2);
+      ry_squared_inverse =
+          1 / powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].ry +
+                       primitives_list_[target_id][j].ry,
+                   2);
+      rz_squared_inverse =
+          1 / powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rz +
+                       primitives_list_[target_id][j].rz,
+                   2);
       for (int l = 0; l <= 2 * 3; l++) {
         flag_store_in = true;
         value = 0.0f;
         for (int m = std::max(0, l - 3); m <= std::min(3, l); m++) {
           value += (float)nchoosek(3, m) * (float)nchoosek(3, l - m) / (float)nchoosek(2 * 3, l) *
-                   (primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                        primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] -
-                    primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .px.GetBernsteinCoefficient()[l - m] -
-                    primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .px.GetBernsteinCoefficient()[m] +
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .px.GetBernsteinCoefficient()[m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .px.GetBernsteinCoefficient()[l - m] + // x-component
-                    primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                        primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] -
-                    primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .py.GetBernsteinCoefficient()[l - m] -
-                    primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .py.GetBernsteinCoefficient()[m] +
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .py.GetBernsteinCoefficient()[m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .py.GetBernsteinCoefficient()[l - m] + // y-component
-                    primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[m] *
-                        primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l - m] -
-                    primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .pz.GetBernsteinCoefficient()[l - m] -
-                    primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l - m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .pz.GetBernsteinCoefficient()[m] +
-                    structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .pz.GetBernsteinCoefficient()[m] *
-                        structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
-                            .pz.GetBernsteinCoefficient()[l - m] // y-component
+                   ((primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
+                         primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] -
+                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .px.GetBernsteinCoefficient()[l - m] -
+                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .px.GetBernsteinCoefficient()[m] +
+                     structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .px.GetBernsteinCoefficient()[m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .px.GetBernsteinCoefficient()[l - m]) *
+                        rx_squared_inverse + // x-component
+                    (primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
+                         primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] -
+                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .py.GetBernsteinCoefficient()[l - m] -
+                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .py.GetBernsteinCoefficient()[m] +
+                     structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .py.GetBernsteinCoefficient()[m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .py.GetBernsteinCoefficient()[l - m]) *
+                        ry_squared_inverse + // y-component
+                    (primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[m] *
+                         primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l - m] -
+                     primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .pz.GetBernsteinCoefficient()[l - m] -
+                     primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l - m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .pz.GetBernsteinCoefficient()[m] +
+                     structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .pz.GetBernsteinCoefficient()[m] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]]
+                             .pz.GetBernsteinCoefficient()[l - m]) *
+                        rz_squared_inverse // y-component
                    );
         }
-        if (value <
-            powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rx +
-                     primitives_list_[target_id][j].rx,
-                 2) +
-                powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].ry +
-                         primitives_list_[target_id][j].ry,
-                     2) +
-                powf(structured_obstacle_poly_list_[close_obstacle_index_[target_id][k]].rz +
-                         primitives_list_[target_id][j].rz,
-                     2)) {
+        if (value < 1.0f) {
           flag_store_in = false;
           break;
         }

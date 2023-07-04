@@ -32,11 +32,13 @@ protected:
   PointList shooting_points_;
   PrimitiveList primitives_list_;
   IndexList good_target_distance_index_list_;
+  IndexList visible_total_index;
+  IndexList visible_structured_index;
+  IndexList visible_pcl_index;
 
   // RefinePcl
   // SampleShootingPoints Done
   // GeneratePrimitives Done
-
   // TargetDistance Done
   // CheckCollision
   // CheckDynamicFeasibility
@@ -53,7 +55,12 @@ protected:
   virtual void CheckDistanceFromTargets();
   virtual void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
                                                   IndexList &dist_idx_sub);
-
+  virtual bool CheckVisibility() = 0;
+  virtual bool CheckVisibilityAgainstStructuredObstacle() = 0;
+  virtual void CheckVisibilityAgainstStructuredObstacleSubProcess(const int &start_idx,
+                                                                  const int &end_idx,
+                                                                  IndexList &visible_idx);
+  virtual void CheckVisibilityAgainstPcl();
   void SetTargetState(const PrimitiveList &target_trajectory_list);
   void SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
                         const PrimitiveList &structured_obstacle_poly_list);
@@ -83,6 +90,11 @@ private:
   void CheckDistanceFromTargets() override;
   void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
                                           IndexList &dist_idx_sub) override;
+  bool CheckVisibility() override;
+  bool CheckVisibilityAgainstStructuredObstacle() override;
+  void CheckVisibilityAgainstStructuredObstacleSubProcess(const int &start_idx, const int &end_idx,
+                                                          IndexList &visible_idx) override;
+  void CheckVisibilityAgainstPcl() override;
   bool PlanKeeperTrajectory() override;
 
 public:
@@ -106,6 +118,11 @@ private:
   void CheckDistanceFromTargets() override;
   void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
                                           IndexList &dist_idx_sub) override;
+  bool CheckVisibility() override;
+  bool CheckVisibilityAgainstStructuredObstacle() override;
+  void CheckVisibilityAgainstStructuredObstacleSubProcess(const int &start_idx, const int &end_idx,
+                                                          IndexList &visible_idx) override;
+  void CheckVisibilityAgainstPcl() override;
   bool PlanKeeperTrajectory() override;
 
 public:
