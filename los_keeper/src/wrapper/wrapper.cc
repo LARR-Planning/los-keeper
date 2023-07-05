@@ -2,11 +2,99 @@
 using namespace los_keeper;
 
 std::optional<JerkControlInput> PlanningResult::GetJerkInputAtTime(double t) const {
-  if (!chasing_trajectory.has_value())
-    return std::nullopt;
   JerkControlInput input;
   input.seq = seq;
   input.t_sec = t;
+  if (!chasing_trajectory.has_value()) {
+    input.jx = 0.0f;
+    input.jy = 0.0f;
+    input.jz = 0.0f;
+    return input;
+  }
+  //  printf("GET JERK TIME AT: %f \n", t);
+  BernsteinCoefficients jx_coeff = {
+      float(60.0 /
+            pow(chasing_trajectory.value().px.GetTimeInterval()[1] -
+                    chasing_trajectory.value().px.GetTimeInterval()[0],
+                3) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[3] -
+                   3.0f * chasing_trajectory.value().px.GetBernsteinCoefficient()[2] +
+                   3.0f * chasing_trajectory.value().px.GetBernsteinCoefficient()[1] -
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[0])),
+      float(60.0 /
+            pow(chasing_trajectory.value().px.GetTimeInterval()[1] -
+                    chasing_trajectory.value().px.GetTimeInterval()[0],
+                3) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[4] -
+                   3.0f * chasing_trajectory.value().px.GetBernsteinCoefficient()[3] +
+                   3.0f * chasing_trajectory.value().px.GetBernsteinCoefficient()[2] -
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[1])),
+      float(60.0 /
+            pow(chasing_trajectory.value().px.GetTimeInterval()[1] -
+                    chasing_trajectory.value().px.GetTimeInterval()[0],
+                3) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[5] -
+                   3.0f * chasing_trajectory.value().px.GetBernsteinCoefficient()[4] +
+                   3.0f * chasing_trajectory.value().px.GetBernsteinCoefficient()[3] -
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[2]))};
+  BernsteinCoefficients jy_coeff = {
+      float(60.0 /
+            pow(chasing_trajectory.value().py.GetTimeInterval()[1] -
+                    chasing_trajectory.value().py.GetTimeInterval()[0],
+                3) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[3] -
+                   3.0f * chasing_trajectory.value().py.GetBernsteinCoefficient()[2] +
+                   3.0f * chasing_trajectory.value().py.GetBernsteinCoefficient()[1] -
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[0])),
+      float(60.0 /
+            pow(chasing_trajectory.value().py.GetTimeInterval()[1] -
+                    chasing_trajectory.value().py.GetTimeInterval()[0],
+                3) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[4] -
+                   3.0f * chasing_trajectory.value().py.GetBernsteinCoefficient()[3] +
+                   3.0f * chasing_trajectory.value().py.GetBernsteinCoefficient()[2] -
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[1])),
+      float(60.0 /
+            pow(chasing_trajectory.value().py.GetTimeInterval()[1] -
+                    chasing_trajectory.value().py.GetTimeInterval()[0],
+                3) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[5] -
+                   3.0f * chasing_trajectory.value().py.GetBernsteinCoefficient()[4] +
+                   3.0f * chasing_trajectory.value().py.GetBernsteinCoefficient()[3] -
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[2]))};
+  BernsteinCoefficients jz_coeff = {
+      float(60.0 /
+            pow(chasing_trajectory.value().pz.GetTimeInterval()[1] -
+                    chasing_trajectory.value().pz.GetTimeInterval()[0],
+                3) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[3] -
+                   3.0f * chasing_trajectory.value().pz.GetBernsteinCoefficient()[2] +
+                   3.0f * chasing_trajectory.value().pz.GetBernsteinCoefficient()[1] -
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[0])),
+      float(60.0 /
+            pow(chasing_trajectory.value().pz.GetTimeInterval()[1] -
+                    chasing_trajectory.value().pz.GetTimeInterval()[0],
+                3) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[4] -
+                   3.0f * chasing_trajectory.value().pz.GetBernsteinCoefficient()[3] +
+                   3.0f * chasing_trajectory.value().pz.GetBernsteinCoefficient()[2] -
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[1])),
+      float(60.0 /
+            pow(chasing_trajectory.value().pz.GetTimeInterval()[1] -
+                    chasing_trajectory.value().pz.GetTimeInterval()[0],
+                3) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[5] -
+                   3.0f * chasing_trajectory.value().pz.GetBernsteinCoefficient()[4] +
+                   3.0f * chasing_trajectory.value().pz.GetBernsteinCoefficient()[3] -
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[2]))};
+  BernsteinPoly jx_poly{chasing_trajectory.value().px.GetTimeInterval(), jx_coeff, 2},
+      jy_poly{chasing_trajectory.value().py.GetTimeInterval(), jy_coeff, 2},
+      jz_poly{chasing_trajectory.value().pz.GetTimeInterval(), jz_coeff, 2};
+  //  printf("JX POLY T0: %f \n",jx_poly.GetTimeInterval()[0]);
+  //  printf("QUERY TIME: %f \n",t);
+  input.jx = jx_poly.GetValue(t);
+  input.jy = jy_poly.GetValue(t);
+  input.jz = jz_poly.GetValue(t);
   return input;
 }
 
@@ -57,7 +145,9 @@ void Wrapper::HandleReplanAction() {
   { // Update Drone State
     std::scoped_lock lock(mutex_list_.drone_state);
     planning_problem.drone_state = drone_state_;
+    //    printf("drone state time: %f \n",drone_state_.t_sec);
   }
+
   { // Update Obstacle State
     std::scoped_lock lock(mutex_list_.point_cloud, mutex_list_.object_state_list);
     planning_problem.point_cloud = obstacle_manager_->GetPointCloud();
@@ -72,25 +162,39 @@ void Wrapper::HandleReplanAction() {
 
   PlanningResult new_planning_result;
   new_planning_result.seq = planning_result_.seq + 1;
+  //  auto check_prediction_start = std::chrono::system_clock::now();
   auto target_prediction_list = target_manager_->PredictTargetList(
       planning_problem.target_state_list, planning_problem.point_cloud,
       planning_problem.structured_obstacle_poly_list);
+  //  auto check_prediction_end = std::chrono::system_clock::now();
+  //  std::chrono::duration<double> elapsed_check_prediction =
+  //  check_prediction_end-check_prediction_start; printf("PREDICTION TIME: %f
+  //  \n",elapsed_check_prediction.count());
   UpdateTargetDebugInfo();
 
-  if (!target_prediction_list)
-    goto update;
-  new_planning_result.last_plan_success_t_sec =
-      std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
-  //  new_planning_result.chasing_trajectory = StatePoly();
-  new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
-      drone_state_, target_prediction_list.value(), planning_problem.point_cloud,
-      planning_problem.structured_obstacle_poly_list);
-  UpdatePlanningDebugInfo();
+  if (target_prediction_list) {
+    auto check_planning_start = std::chrono::system_clock::now();
+    new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
+        drone_state_, target_prediction_list.value(), planning_problem.point_cloud,
+        planning_problem.structured_obstacle_poly_list);
+    auto check_planning_end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_check_planning =
+        check_planning_end - check_planning_start;
+    printf("PLANNING TIME: %f \n", elapsed_check_planning.count());
+    UpdatePlanningDebugInfo();
+  }
 
-update : {
-  std::unique_lock<std::mutex> lock(mutex_list_.control);
-  planning_result_ = new_planning_result;
-}
+  if (new_planning_result.chasing_trajectory) {
+    new_planning_result.last_plan_success_t_sec =
+        std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
+    std::unique_lock<std::mutex> lock(mutex_list_.control);
+    planning_result_ = new_planning_result;
+    //    printf("HIHIHI \n");
+  } else {
+    std::unique_lock<std::mutex> lock(mutex_list_.control);
+    planning_result_.chasing_trajectory = std::nullopt;
+    //    printf("BYEBYEBYE \n");
+  }
 }
 
 void Wrapper::HandleIdleAction() { /*printf("Handle IdleAction\n");*/
@@ -132,7 +236,6 @@ void Wrapper::SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points) {
 void Wrapper::SetDroneState(const DroneState &drone_state) {
   std::unique_lock<std::mutex> lock(mutex_list_.drone_state, std::defer_lock);
   if (lock.try_lock()) {
-    // TODO(@): set whoever need this
     drone_state_ = drone_state;
   }
 }

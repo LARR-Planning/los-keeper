@@ -31,10 +31,12 @@ protected:
 
   PointList shooting_points_;
   PrimitiveList primitives_list_;
+  IndexList close_obstacle_index_;
   IndexList good_target_distance_index_list_;
-  IndexList visible_total_index;
-  IndexList visible_structured_index;
-  IndexList visible_pcl_index;
+  IndexList visible_total_index_;
+  IndexList visible_structured_index_;
+  IndexList visible_pcl_index_;
+  int best_index_{-1};
 
   // RefinePcl
   // SampleShootingPoints Done
@@ -52,6 +54,7 @@ protected:
 
   virtual void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                            PrimitiveList &primitive_list_sub);
+  virtual void CalculateCloseObstacleIndex();
   virtual void CheckDistanceFromTargets();
   virtual void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
                                                   IndexList &dist_idx_sub);
@@ -61,6 +64,7 @@ protected:
                                                                   const int &end_idx,
                                                                   IndexList &visible_idx);
   virtual void CheckVisibilityAgainstPcl();
+  virtual void CalculateBestIndex();
   void SetTargetState(const PrimitiveList &target_trajectory_list);
   void SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
                         const PrimitiveList &structured_obstacle_poly_list);
@@ -87,6 +91,7 @@ private:
   void ComputePrimitives() override;
   void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                    PrimitiveList &primitive_list_sub) override;
+  void CalculateCloseObstacleIndex() override;
   void CheckDistanceFromTargets() override;
   void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
                                           IndexList &dist_idx_sub) override;
@@ -95,6 +100,7 @@ private:
   void CheckVisibilityAgainstStructuredObstacleSubProcess(const int &start_idx, const int &end_idx,
                                                           IndexList &visible_idx) override;
   void CheckVisibilityAgainstPcl() override;
+  void CalculateBestIndex() override;
   bool PlanKeeperTrajectory() override;
 
 public:
@@ -115,6 +121,7 @@ private:
   void ComputePrimitives() override;
   void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                    PrimitiveList &primitive_list_sub) override;
+  void CalculateCloseObstacleIndex() override;
   void CheckDistanceFromTargets() override;
   void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
                                           IndexList &dist_idx_sub) override;
@@ -123,6 +130,7 @@ private:
   void CheckVisibilityAgainstStructuredObstacleSubProcess(const int &start_idx, const int &end_idx,
                                                           IndexList &visible_idx) override;
   void CheckVisibilityAgainstPcl() override;
+  void CalculateBestIndex() override;
   bool PlanKeeperTrajectory() override;
 
 public:

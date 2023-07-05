@@ -19,7 +19,7 @@ int nchoosek(int n, int r) {
   }
 }
 
-BernsteinPoly::BernsteinPoly(const float time_interval[],
+BernsteinPoly::BernsteinPoly(const double time_interval[],
                              const BernsteinCoefficients &bernstein_coeff, const int &degree) {
   time_interval_[0] = time_interval[0];
   time_interval_[1] = time_interval[1];
@@ -27,7 +27,7 @@ BernsteinPoly::BernsteinPoly(const float time_interval[],
   bernstein_coeff_ = bernstein_coeff;
 }
 
-void BernsteinPoly::SetTimeInterval(float time_interval[]) {
+void BernsteinPoly::SetTimeInterval(double time_interval[]) {
   this->time_interval_[0] = time_interval[0];
   this->time_interval_[1] = time_interval[1];
 }
@@ -40,7 +40,7 @@ void BernsteinPoly::SetDegree(int degree) { degree_ = degree; }
 
 int BernsteinPoly::GetDegree() const { return degree_; }
 
-float BernsteinPoly::GetValue(float t) const {
+float BernsteinPoly::GetValue(double t) const {
   int poly_order = this->degree_;
   float value = 0.0f;
   for (int i = 0; i < poly_order + 1; i++)

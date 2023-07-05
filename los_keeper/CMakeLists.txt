@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(los_keeper)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++17")
+set(CMAKE_BUILD_TYPE Release)
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 
@@ -8,7 +9,7 @@ file(GLOB_RECURSE LIBRARY_HDRS "include/los_keeper/*.h")
 file(GLOB_RECURSE LIBRARY_SRCS "src/*.cc")
 file(GLOB TEST_SRCS "test/*.cc")
 
-add_library(${PROJECT_NAME} STATIC ${LIBRARY_SRCS} ${LIBRARY_HDRS} )
+add_library(${PROJECT_NAME} STATIC ${LIBRARY_SRCS} ${LIBRARY_HDRS})
 target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES} pthread)
 target_include_directories(
   ${PROJECT_NAME}

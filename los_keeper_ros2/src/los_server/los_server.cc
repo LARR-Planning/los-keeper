@@ -165,29 +165,30 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
         std::bind(&LosServer::TargetStateArrayCallback, this, std::placeholders::_1), options);
   }
   {
-    //        options.callback_group =
-    //        create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive); state_subscriber_
-    //        = create_subscription<DroneStateMsg>(
-    //            "/drone_state", rclcpp::QoS(1),
-    //            std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1), options);
-    //        options.callback_group =
-    //        create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    //        points_subscriber_ = create_subscription<PointCloudMsg>(
-    //            "/point_cloud", rclcpp::QoS(1),
-    //            std::bind(&LosServer::PointsCallback, this, std::placeholders::_1), options);
-    //        options.callback_group =
-    //        create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    //        structured_obstacle_state_array_subscriber_ =
-    //        create_subscription<ObjectStateArrayMsg>(
-    //            "/obstacle_state_list", rclcpp::QoS(1),
-    //            std::bind(&LosServer::ObjectStateArrayCallback, this, std::placeholders::_1),
-    //            options);
-    //        options.callback_group =
-    //        create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    //        target_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
-    //            "/target_state_list", rclcpp::QoS(1),
-    //            std::bind(&LosServer::TargetStateArrayCallback, this, std::placeholders::_1),
-    //            options);
+    //            options.callback_group =
+    //            create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    //            state_subscriber_ = create_subscription<DroneStateMsg>(
+    //                "/drone_state", rclcpp::QoS(1),
+    //                std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1),
+    //                options);
+    //            options.callback_group =
+    //            create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    //            points_subscriber_ = create_subscription<PointCloudMsg>(
+    //                "/point_cloud", rclcpp::QoS(1),
+    //                std::bind(&LosServer::PointsCallback, this, std::placeholders::_1), options);
+    //            options.callback_group =
+    //            create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    //            structured_obstacle_state_array_subscriber_ =
+    //            create_subscription<ObjectStateArrayMsg>(
+    //                "/obstacle_state_list", rclcpp::QoS(1),
+    //                std::bind(&LosServer::ObjectStateArrayCallback, this, std::placeholders::_1),
+    //                options);
+    //            options.callback_group =
+    //            create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    //            target_state_array_subscriber_ = create_subscription<ObjectStateArrayMsg>(
+    //                "/target_state_list", rclcpp::QoS(1),
+    //                std::bind(&LosServer::TargetStateArrayCallback, this, std::placeholders::_1),
+    //                options);
   }
   visualization_callback_group_ =
       this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -204,9 +205,9 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   visualization_.keeper_raw_path_vis_publisher = create_publisher<KeeperRawPathVisualizationMsg>(
       "~/visualization/keeper_raw_array_info", rclcpp::QoS(1));
 
-  input_publisher_ = create_publisher<InputMsg>("~/input", rclcpp::QoS(1));
+  input_publisher_ = create_publisher<InputMsg>("jerk_control_input", rclcpp::QoS(1));
 
-  control_timer_ = this->create_wall_timer(10ms, std::bind(&LosServer::ControlTimerCallback, this));
+  control_timer_ = this->create_wall_timer(50ms, std::bind(&LosServer::ControlTimerCallback, this));
 
   toggle_activate_server_ = this->create_service<ToggleActivateService>(
       "~/toggle_activate", std::bind(&LosServer::ToggleActivateCallback, this,
@@ -249,6 +250,10 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
     get_parameter<float>("trajectory_planner.horizon.planning", planning_param.horizon.planning);
     get_parameter<float>("trajectory_planner.distance.obstacle_max",
                          planning_param.distance.obstacle_max);
+    get_parameter<float>("trajectory_planner.distance.end_points_min",
+                         planning_param.distance.end_points_min);
+    get_parameter<float>("trajectory_planner.distance.end_points_max",
+                         planning_param.distance.end_points_max);
     get_parameter<float>("trajectory_planner.distance.target_min",
                          planning_param.distance.target_min);
     get_parameter<float>("trajectory_planner.distance.target_max",

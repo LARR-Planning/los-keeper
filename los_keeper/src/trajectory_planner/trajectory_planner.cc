@@ -19,6 +19,9 @@ void TrajectoryPlanner::SetTargetState(const PrimitiveList &target_trajectory_li
     poly.px = px;
     poly.py = py;
     poly.pz = pz;
+    poly.rx = target_trajectory_list[i].rx;
+    poly.ry = target_trajectory_list[i].ry;
+    poly.rz = target_trajectory_list[i].rz;
     target_trajectory_list_.push_back(poly);
   }
   num_target_ = (int)target_trajectory_list.size();
@@ -26,8 +29,23 @@ void TrajectoryPlanner::SetTargetState(const PrimitiveList &target_trajectory_li
 
 void TrajectoryPlanner::SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
                                          const PrimitiveList &structured_obstacle_poly_list) {
-  structured_obstacle_poly_list_ = structured_obstacle_poly_list;
-  cloud_.points = cloud.points;
+  structured_obstacle_poly_list_.clear();
+  for (int i = 0; i < structured_obstacle_poly_list.size(); i++) {
+    BernsteinPoly px = structured_obstacle_poly_list[i].px.ElevateDegree(5);
+    BernsteinPoly py = structured_obstacle_poly_list[i].py.ElevateDegree(5);
+    BernsteinPoly pz = structured_obstacle_poly_list[i].pz.ElevateDegree(5);
+    StatePoly poly;
+    poly.px = px;
+    poly.py = py;
+    poly.pz = pz;
+    poly.rx = structured_obstacle_poly_list[i].rx;
+    poly.ry = structured_obstacle_poly_list[i].ry;
+    poly.rz = structured_obstacle_poly_list[i].rz;
+    structured_obstacle_poly_list_.push_back(poly);
+  }
+  cloud_.points.clear();
+  if (not cloud.points.empty())
+    cloud_.points = cloud.points;
 }
 
 void TrajectoryPlanner::SampleShootingPoints() {}
@@ -40,16 +58,14 @@ void TrajectoryPlanner::ComputePrimitives() {}
 void TrajectoryPlanner::ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
                                                     PrimitiveList &primitive_list_sub) {}
 TrajectoryPlanner::TrajectoryPlanner(const PlanningParameter &param) { param_ = param; }
-StatePoly TrajectoryPlanner::GetBestKeeperTrajectory() {}
+StatePoly TrajectoryPlanner::GetBestKeeperTrajectory() { return primitives_list_[best_index_]; }
 void TrajectoryPlanner::CheckDistanceFromTargets() {}
 void TrajectoryPlanner::CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
                                                            IndexList &dist_idx_sub) {}
 PlanningDebugInfo TrajectoryPlanner::GetDebugInfo() const {
   PlanningDebugInfo debug_info;
-  if (not primitives_list_.empty()) {
-    debug_info.primitives_list.clear();
-    debug_info.primitives_list = primitives_list_;
-  }
+  debug_info.primitives_list = primitives_list_;
+  debug_info.safe_visibility_index = visible_total_index_;
   return debug_info;
 }
 void TrajectoryPlanner::SetKeeperState(const DroneState &drone_state) {
@@ -62,12 +78,26 @@ void TrajectoryPlanner::CheckVisibilityAgainstStructuredObstacleSubProcess(const
                                                                            const int &end_idx,
                                                                            IndexList &visible_idx) {
 }
+void TrajectoryPlanner::CalculateBestIndex() {}
+void TrajectoryPlanner::CalculateCloseObstacleIndex() {}
 
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
   SampleShootingPoints();
   ComputePrimitives();
+  CalculateCloseObstacleIndex();
   CheckDistanceFromTargets();
-  return false;
+  if (good_target_distance_index_list_.empty())
+    return false;
+  else {
+    CheckVisibility();
+    if (visible_total_index_.empty())
+      return false;
+    else {
+      //      printf("SUCCESS\n");
+      CalculateBestIndex();
+      return true;
+    }
+  }
 }
 
 void TrajectoryPlanner2D::SampleShootingPoints() {
@@ -99,7 +129,8 @@ void TrajectoryPlanner2D::SampleShootingPointsSubProcess(const int &target_id,
                          target_trajectory_list_[target_id].pz.GetTerminalValue()};
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_real_distribution<> r_dis(param_.distance.target_min, param_.distance.target_max);
+  std::uniform_real_distribution<> r_dis(param_.distance.end_points_min,
+                                         param_.distance.end_points_max);
   std::uniform_real_distribution<> theta_dis(-M_PI, M_PI);
   double r, theta;
   Point tempPoint{end_point_center.x, end_point_center.y, end_point_center.z};
@@ -137,7 +168,7 @@ void TrajectoryPlanner2D::ComputePrimitivesSubProcess(const int &start_idx, cons
                                                       PrimitiveList &primitive_list_sub) {
   StatePoly primitive_temp;
   primitive_temp.SetDegree(5);
-  float time_interval_temp[2]{0.0, param_.horizon.planning};
+  double time_interval_temp[2]{drone_state_.t_sec, drone_state_.t_sec + param_.horizon.planning};
   primitive_temp.SetTimeInterval(time_interval_temp);
   BernsteinCoefficients bernstein_coeff_temp(6);
   float param_horizon_planning_square = param_.horizon.planning * param_.horizon.planning;
@@ -199,11 +230,24 @@ optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
   this->SetTargetState(target_prediction_list);
   this->SetObstacleState(obstacle_points, structured_obstacle_poly_list);
   bool plan_success = this->PlanKeeperTrajectory();
-  plan_success = false;
-  if (plan_success)
+  if (plan_success) {
+    //    printf("PLAN SUCCESS\n");
     return GetBestKeeperTrajectory();
-  else
+  }    // target trajectories exist
+  else // no target trajectory exists
     return std::nullopt;
+}
+void TrajectoryPlanner2D::CalculateCloseObstacleIndex() {
+  close_obstacle_index_.clear();
+  bool is_close;
+  for (int j = 0; j < structured_obstacle_poly_list_.size(); j++) {
+    is_close =
+        powf(drone_state_.px - structured_obstacle_poly_list_[j].px.GetInitialValue(), 2) +
+            powf(drone_state_.py - structured_obstacle_poly_list_[j].py.GetInitialValue(), 2) <
+        param_.distance.obstacle_max * param_.distance.obstacle_max;
+    if (is_close)
+      close_obstacle_index_.push_back(j);
+  }
 }
 void TrajectoryPlanner2D::CheckDistanceFromTargets() {
   good_target_distance_index_list_.clear();
@@ -269,20 +313,20 @@ void TrajectoryPlanner2D::CheckDistanceFromTargetsSubProcess(const int &start_id
   }
 }
 bool TrajectoryPlanner2D::CheckVisibility() {
-  visible_total_index.clear();
+  visible_total_index_.clear();
   bool is_available_keeper_path;
   if (not cloud_.points.empty())
     CheckVisibilityAgainstPcl();
   if (not structured_obstacle_poly_list_.empty())
     is_available_keeper_path = CheckVisibilityAgainstStructuredObstacle();
   if (cloud_.points.empty() and structured_obstacle_poly_list_.empty()) // Case I: No Obstacle
-    visible_total_index = good_target_distance_index_list_;
+    visible_total_index_ = good_target_distance_index_list_;
   else if (cloud_.points.empty() and
            (not structured_obstacle_poly_list_.empty())) // Case II: Only Ellipsoidal Obstacle
-    visible_total_index = visible_structured_index;
+    visible_total_index_ = visible_structured_index_;
   else if ((not cloud_.points.empty()) and
            structured_obstacle_poly_list_.empty()) // Case III: Only Pcl
-    visible_total_index = visible_pcl_index;
+    visible_total_index_ = visible_pcl_index_;
   else if (not cloud_.points.empty() and not structured_obstacle_poly_list_.empty()) {
     std::vector<bool> is_visible_pcl_temp;
     std::vector<bool> is_visible_structured_obstacle_temp;
@@ -290,19 +334,19 @@ bool TrajectoryPlanner2D::CheckVisibility() {
       is_visible_pcl_temp.push_back(false);
       is_visible_structured_obstacle_temp.push_back(false);
     }
-    for (int j : visible_structured_index)
+    for (int j : visible_structured_index_)
       is_visible_structured_obstacle_temp[j] = true;
-    for (int j : visible_pcl_index)
+    for (int j : visible_pcl_index_)
       is_visible_pcl_temp[j] = true;
     for (int j = 0; j < param_.sampling.num_sample; j++) {
       if (is_visible_structured_obstacle_temp[j] and is_visible_structured_obstacle_temp[j])
-        visible_total_index.push_back(j);
+        visible_total_index_.push_back(j);
     }
   }
   return is_available_keeper_path;
 }
 bool TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacle() {
-  visible_structured_index.clear();
+  visible_structured_index_.clear();
   int num_chunk = (int)good_target_distance_index_list_.size() / param_.sampling.num_thread;
   vector<thread> worker_thread;
   IndexListSet visible_structured_index_temp(param_.sampling.num_thread);
@@ -316,33 +360,41 @@ bool TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacle() {
   }
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     for (int j = 0; j < visible_structured_index_temp[i].size(); j++)
-      visible_structured_index.push_back(visible_structured_index_temp[i][j]);
+      visible_structured_index_.push_back(visible_structured_index_temp[i][j]);
   }
-  if (visible_structured_index.empty())
+  //  printf("VISIBLE INDEX SIZE: %d\n", (int)visible_structured_index_.size());
+  if (visible_structured_index_.empty())
     return false;
   return true;
 }
 void TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacleSubProcess(
     const int &start_idx, const int &end_idx, IndexList &visible_idx) {
-  TrajectoryPlanner::CheckVisibilityAgainstStructuredObstacleSubProcess(start_idx, end_idx,
-                                                                        visible_idx);
-  bool flag_store_in1 = true; // collision between obstacle and keeper
-  bool flag_store_in2 = true; // LOS from obstacles
-  bool flag_store_out = true;
+  bool flag_store_in1 = true;     // collision between obstacle and keeper
+  bool flag_store_in2 = true;     // LOS from obstacles (target)
+  bool flag_store_in2_sub = true; // LOS from obstacles
+  bool flag_store_out = true;     //
+  float rx_enlarged_squared_inverse;
+  float ry_enlarged_squared_inverse;
   float rx_squared_inverse;
   float ry_squared_inverse;
   float value;
   for (int idx = start_idx; idx < end_idx; idx++) {
-    for (int i = 0; i < structured_obstacle_poly_list_.size(); i++) {
-      flag_store_out = true;
-      rx_squared_inverse = 1 / powf(primitives_list_[good_target_distance_index_list_[idx]].rx +
-                                        structured_obstacle_poly_list_[i].rx,
-                                    2);
-      ry_squared_inverse = 1 / powf(primitives_list_[good_target_distance_index_list_[idx]].ry +
-                                        structured_obstacle_poly_list_[i].ry,
-                                    2);
+    flag_store_out = true;
+    for (int i = 0; i < close_obstacle_index_.size(); i++) {
+      rx_enlarged_squared_inverse =
+          1 / powf(primitives_list_[good_target_distance_index_list_[idx]].rx +
+                       structured_obstacle_poly_list_[close_obstacle_index_[i]].rx +
+                       param_.safe_distance.rx,
+                   2);
+      ry_enlarged_squared_inverse =
+          1 / powf(primitives_list_[good_target_distance_index_list_[idx]].ry +
+                       structured_obstacle_poly_list_[close_obstacle_index_[i]].ry +
+                       param_.safe_distance.ry,
+                   2);
+      //      rx_enlarged_squared_inverse = 1 / powf(structured_obstacle_poly_list_[i].rx, 2);
+      //      ry_enlarged_squared_inverse = 1 / powf(structured_obstacle_poly_list_[i].ry, 2);
+      flag_store_in1 = true;
       for (int j = 0; j <= 10; j++) {
-        flag_store_in1 = true;
         value = 0.0f;
         for (int k = std::max(0, j - 5); k <= std::min(5, j); k++) {
           value += (float)nchoosek(5, k) * (float)nchoosek(5, j - k) / (float)nchoosek(10, j) *
@@ -352,45 +404,117 @@ void TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacleSubProcess(
                              .px.GetBernsteinCoefficient()[j - k] -
                      primitives_list_[good_target_distance_index_list_[idx]]
                              .px.GetBernsteinCoefficient()[k] *
-                         structured_obstacle_poly_list_[i].px.GetBernsteinCoefficient()[j - k] -
+                         structured_obstacle_poly_list_[close_obstacle_index_[i]]
+                             .px.GetBernsteinCoefficient()[j - k] -
                      primitives_list_[good_target_distance_index_list_[idx]]
                              .px.GetBernsteinCoefficient()[j - k] *
-                         structured_obstacle_poly_list_[i].px.GetBernsteinCoefficient()[k] +
-                     structured_obstacle_poly_list_[i].px.GetBernsteinCoefficient()[k] *
-                         structured_obstacle_poly_list_[i].px.GetBernsteinCoefficient()[j - k]) *
-                        rx_squared_inverse + // x-components
+                         structured_obstacle_poly_list_[close_obstacle_index_[i]]
+                             .px.GetBernsteinCoefficient()[k] +
+                     structured_obstacle_poly_list_[close_obstacle_index_[i]]
+                             .px.GetBernsteinCoefficient()[k] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[i]]
+                             .px.GetBernsteinCoefficient()[j - k]) *
+                        rx_enlarged_squared_inverse + // x-components
                     (primitives_list_[good_target_distance_index_list_[idx]]
                              .py.GetBernsteinCoefficient()[k] *
                          primitives_list_[good_target_distance_index_list_[idx]]
                              .py.GetBernsteinCoefficient()[j - k] -
                      primitives_list_[good_target_distance_index_list_[idx]]
                              .py.GetBernsteinCoefficient()[k] *
-                         structured_obstacle_poly_list_[i].py.GetBernsteinCoefficient()[j - k] -
+                         structured_obstacle_poly_list_[close_obstacle_index_[i]]
+                             .py.GetBernsteinCoefficient()[j - k] -
                      primitives_list_[good_target_distance_index_list_[idx]]
                              .py.GetBernsteinCoefficient()[j - k] *
-                         structured_obstacle_poly_list_[i].py.GetBernsteinCoefficient()[k] +
-                     structured_obstacle_poly_list_[i].py.GetBernsteinCoefficient()[k] *
-                         structured_obstacle_poly_list_[i].py.GetBernsteinCoefficient()[j - k]) *
-                        ry_squared_inverse);
+                         structured_obstacle_poly_list_[close_obstacle_index_[i]]
+                             .py.GetBernsteinCoefficient()[k] +
+                     structured_obstacle_poly_list_[close_obstacle_index_[i]]
+                             .py.GetBernsteinCoefficient()[k] *
+                         structured_obstacle_poly_list_[close_obstacle_index_[i]]
+                             .py.GetBernsteinCoefficient()[j - k]) *
+                        ry_enlarged_squared_inverse);
         }
         if (value < 1.0f) {
           flag_store_in1 = false;
           break;
         }
       }
+      if (not flag_store_in1) {
+        flag_store_out = false;
+        break;
+      }
     }
-    if (not flag_store_in1) {
-      flag_store_out = false;
-      break;
+    if (not flag_store_out)
+      continue;
+    for (int i = 0; i < num_target_; i++) {
+      flag_store_in2 = true;
+      for (int j = 0; j < close_obstacle_index_.size(); j++) {
+        rx_squared_inverse =
+            1 / powf(structured_obstacle_poly_list_[close_obstacle_index_[j]].rx, 2);
+        ry_squared_inverse =
+            1 / powf(structured_obstacle_poly_list_[close_obstacle_index_[j]].ry, 2);
+        flag_store_in2_sub = true;
+        for (int k = 0; k <= 10; k++) {
+          value = 0.0f;
+          for (int l = std::max(0, k - 5); l <= std::min(5, k); l++) {
+            value += (float)nchoosek(5, l) * (float)nchoosek(5, k - l) / (float)nchoosek(10, k) *
+                     ((primitives_list_[good_target_distance_index_list_[idx]]
+                               .px.GetBernsteinCoefficient()[l] *
+                           target_trajectory_list_[i].px.GetBernsteinCoefficient()[k - l] -
+                       primitives_list_[good_target_distance_index_list_[idx]]
+                               .px.GetBernsteinCoefficient()[l] *
+                           structured_obstacle_poly_list_[close_obstacle_index_[j]]
+                               .px.GetBernsteinCoefficient()[k - l] -
+                       structured_obstacle_poly_list_[close_obstacle_index_[j]]
+                               .px.GetBernsteinCoefficient()[l] *
+                           target_trajectory_list_[i].px.GetBernsteinCoefficient()[k - l] +
+                       structured_obstacle_poly_list_[close_obstacle_index_[j]]
+                               .px.GetBernsteinCoefficient()[l] *
+                           structured_obstacle_poly_list_[close_obstacle_index_[j]]
+                               .px.GetBernsteinCoefficient()[k - l]) *
+                          rx_squared_inverse +
+                      (primitives_list_[good_target_distance_index_list_[idx]]
+                               .py.GetBernsteinCoefficient()[l] *
+                           target_trajectory_list_[i].py.GetBernsteinCoefficient()[k - l] -
+                       primitives_list_[good_target_distance_index_list_[idx]]
+                               .py.GetBernsteinCoefficient()[l] *
+                           structured_obstacle_poly_list_[close_obstacle_index_[j]]
+                               .py.GetBernsteinCoefficient()[k - l] -
+                       structured_obstacle_poly_list_[close_obstacle_index_[j]]
+                               .py.GetBernsteinCoefficient()[l] *
+                           target_trajectory_list_[i].py.GetBernsteinCoefficient()[k - l] +
+                       structured_obstacle_poly_list_[close_obstacle_index_[j]]
+                               .py.GetBernsteinCoefficient()[l] *
+                           structured_obstacle_poly_list_[close_obstacle_index_[j]]
+                               .py.GetBernsteinCoefficient()[k - l]) *
+                          ry_squared_inverse);
+          }
+          if (value < 1.0f) {
+            flag_store_in2_sub = false;
+            break;
+          }
+        }
+        if (not flag_store_in2_sub) {
+          flag_store_in2 = false;
+          break;
+        }
+      }
+      if (not flag_store_in2) {
+        flag_store_out = false;
+        break;
+      }
     }
+    if (flag_store_out)
+      visible_idx.push_back(good_target_distance_index_list_[idx]);
   }
 }
 void TrajectoryPlanner2D::CheckVisibilityAgainstPcl() {
   TrajectoryPlanner::CheckVisibilityAgainstPcl();
 }
+void TrajectoryPlanner2D::CalculateBestIndex() { best_index_ = visible_total_index_[0]; }
 
 bool TrajectoryPlanner3D::PlanKeeperTrajectory() {
   SampleShootingPoints();
+  CalculateCloseObstacleIndex();
   ComputePrimitives();
   CheckDistanceFromTargets();
   return false;
@@ -425,7 +549,8 @@ void TrajectoryPlanner3D::SampleShootingPointsSubProcess(const int &target_id,
                          target_trajectory_list_[target_id].pz.GetTerminalValue()};
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_real_distribution<> r_dis(param_.distance.target_min, param_.distance.target_max);
+  std::uniform_real_distribution<> r_dis(param_.distance.end_points_min,
+                                         param_.distance.end_points_max);
   std::uniform_real_distribution<> azimuth_dis(-M_PI, M_PI);
   std::uniform_real_distribution<> elevation_dis(-M_PI, M_PI);
   double r, theta, phi;
@@ -465,7 +590,7 @@ void TrajectoryPlanner3D::ComputePrimitivesSubProcess(const int &start_idx, cons
                                                       PrimitiveList &primitive_list_sub) {
   StatePoly primitive_temp;
   primitive_temp.SetDegree(5);
-  float time_interval_temp[2]{0.0, param_.horizon.planning};
+  double time_interval_temp[2]{drone_state_.t_sec, drone_state_.t_sec + param_.horizon.planning};
   primitive_temp.SetTimeInterval(time_interval_temp);
   BernsteinCoefficients bernstein_coeff_temp(6);
   float param_horizon_planning_square = param_.horizon.planning * param_.horizon.planning;
@@ -617,20 +742,20 @@ void TrajectoryPlanner3D::CheckDistanceFromTargetsSubProcess(const int &start_id
   }
 }
 bool TrajectoryPlanner3D::CheckVisibility() {
-  visible_total_index.clear();
+  visible_total_index_.clear();
   bool is_available_keeper_path;
   if (not cloud_.points.empty())
     CheckVisibilityAgainstPcl();
   if (not structured_obstacle_poly_list_.empty())
     is_available_keeper_path = CheckVisibilityAgainstStructuredObstacle();
   if (cloud_.points.empty() and structured_obstacle_poly_list_.empty()) // Case I: No Obstacle
-    visible_total_index = good_target_distance_index_list_;
+    visible_total_index_ = good_target_distance_index_list_;
   else if (cloud_.points.empty() and
            not structured_obstacle_poly_list_.empty()) // Case II: Only Ellipsoidal Obstacle
-    visible_total_index = visible_structured_index;
+    visible_total_index_ = visible_structured_index_;
   else if (not cloud_.points.empty() and
            structured_obstacle_poly_list_.empty()) // Case III: Only Pcl
-    visible_total_index = visible_pcl_index;
+    visible_total_index_ = visible_pcl_index_;
   else if (not cloud_.points.empty() and not structured_obstacle_poly_list_.empty()) {
     std::vector<bool> is_visible_pcl_temp;
     std::vector<bool> is_visible_structured_obstacle_temp;
@@ -638,19 +763,19 @@ bool TrajectoryPlanner3D::CheckVisibility() {
       is_visible_pcl_temp.push_back(false);
       is_visible_structured_obstacle_temp.push_back(false);
     }
-    for (int j : visible_structured_index)
+    for (int j : visible_structured_index_)
       is_visible_structured_obstacle_temp[j] = true;
-    for (int j : visible_pcl_index)
+    for (int j : visible_pcl_index_)
       is_visible_pcl_temp[j] = true;
     for (int j = 0; j < param_.sampling.num_sample; j++) {
       if (is_visible_structured_obstacle_temp[j] and is_visible_structured_obstacle_temp[j])
-        visible_total_index.push_back(j);
+        visible_total_index_.push_back(j);
     }
   }
   return is_available_keeper_path;
 }
 bool TrajectoryPlanner3D::CheckVisibilityAgainstStructuredObstacle() {
-  visible_structured_index.clear();
+  visible_structured_index_.clear();
   int num_chunk = (int)good_target_distance_index_list_.size() / param_.sampling.num_thread;
   vector<thread> worker_thread;
   IndexListSet visible_structured_index_temp(param_.sampling.num_thread);
@@ -664,9 +789,9 @@ bool TrajectoryPlanner3D::CheckVisibilityAgainstStructuredObstacle() {
   }
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     for (int j = 0; j < visible_structured_index_temp[i].size(); j++)
-      visible_structured_index.push_back(visible_structured_index_temp[i][j]);
+      visible_structured_index_.push_back(visible_structured_index_temp[i][j]);
   }
-  if (visible_structured_index.empty())
+  if (visible_structured_index_.empty())
     return false;
   return true;
 }
@@ -677,4 +802,18 @@ void TrajectoryPlanner3D::CheckVisibilityAgainstStructuredObstacleSubProcess(
 }
 void TrajectoryPlanner3D::CheckVisibilityAgainstPcl() {
   TrajectoryPlanner::CheckVisibilityAgainstPcl();
+}
+void TrajectoryPlanner3D::CalculateBestIndex() { best_index_ = visible_total_index_[0]; }
+void TrajectoryPlanner3D::CalculateCloseObstacleIndex() {
+  close_obstacle_index_.clear();
+  bool is_close;
+  for (int j = 0; j < structured_obstacle_poly_list_.size(); j++) {
+    is_close =
+        powf(drone_state_.px - structured_obstacle_poly_list_[j].px.GetInitialValue(), 2) +
+            powf(drone_state_.py - structured_obstacle_poly_list_[j].py.GetInitialValue(), 2) +
+            powf(drone_state_.pz - structured_obstacle_poly_list_[j].pz.GetInitialValue(), 2) <
+        param_.distance.obstacle_max * param_.distance.obstacle_max;
+    if (is_close)
+      close_obstacle_index_.push_back(j);
+  }
 }

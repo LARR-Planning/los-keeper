@@ -18,7 +18,7 @@ void ObstacleManager::TranslateStateToPoly() {
   structured_obstacle_poly_list_.clear();
   StatePoly temp_state_poly;
   temp_state_poly.SetDegree(3);
-  float time_interval[2]{0.0f, param_.planning_horizon};
+  double time_interval[2]{0.0f, param_.planning_horizon};
   temp_state_poly.SetTimeInterval(time_interval);
   for (const auto &i : structured_obstacle_state_list_) {
     BernsteinCoefficients temp_coefficient_x{

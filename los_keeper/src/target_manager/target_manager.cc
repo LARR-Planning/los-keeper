@@ -366,10 +366,9 @@ void los_keeper::TargetManager2D::ComputePrimitivesSubProcess(const int &target_
                                                               const int &start_idx,
                                                               const int &end_idx,
                                                               PrimitiveList &primitive_list_sub) {
-
   StatePoly primitive_temp;
   primitive_temp.SetDegree(3);
-  float time_interval_temp[2]{0.0, param_.horizon.prediction};
+  double time_interval_temp[2]{0.0, param_.horizon.prediction};
   primitive_temp.SetTimeInterval(time_interval_temp);
   BernsteinCoefficients bernstein_coeff_temp(4);
 
@@ -862,10 +861,9 @@ void los_keeper::TargetManager3D::ComputePrimitivesSubProcess(const int &target_
                                                               const int &start_idx,
                                                               const int &end_idx,
                                                               PrimitiveList &primitive_list_sub) {
-
   StatePoly primitive_temp;
   primitive_temp.SetDegree(3);
-  float time_interval_temp[2]{0.0, param_.horizon.prediction};
+  double time_interval_temp[2]{0.0, param_.horizon.prediction};
   primitive_temp.SetTimeInterval(time_interval_temp);
   BernsteinCoefficients bernstein_coeff_temp(4);
   for (int j = start_idx; j < end_idx; j++) {

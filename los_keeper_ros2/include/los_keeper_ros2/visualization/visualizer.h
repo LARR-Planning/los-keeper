@@ -60,7 +60,7 @@ struct VisualizationParameters {
         float a{0.3};
         float r{1.0};
         float g{0.0};
-        float b{1.0};
+        float b{0.0};
       } color;
       float line_scale{0.02};
     } best;
