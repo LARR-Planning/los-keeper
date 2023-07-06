@@ -200,8 +200,7 @@ Visualizer::VisualizeSafeTargetPathArray(const PrimitiveListSet &primitive_list,
         int index_jump = (int)safe_indices[i].size() / num_safe_primitive_vis;
         for (int j = 0; j < num_safe_primitive_vis - 1; j++) {
           line_strip.points.clear();
-          line_strip.id = id;
-          id++;
+          line_strip.id = ++id;
           for (int k = 0; k < parameters_.target.safe.num_time_sample; k++) {
             temp_point.x =
                 primitive_list[i][safe_indices[i][index_jump * j]].px.GetValue(time_seq[k]);
@@ -235,6 +234,7 @@ KeeperRawPathVisualizationMsg
 Visualizer::VisualizeRawKeeperPathArray(const PrimitiveList &primitive_list) {
   KeeperRawPathVisualizationMsg visual_output;
   if (parameters_.keeper.raw.publish) {
+    //    printf("PUBLISH KEEPER RAW PUBLISH \n");
     if (not primitive_list.empty()) {
       visualization_msgs::msg::Marker line_strip;
       line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
@@ -246,9 +246,9 @@ Visualizer::VisualizeRawKeeperPathArray(const PrimitiveList &primitive_list) {
       line_strip.scale.x = parameters_.keeper.raw.line_scale;
       line_strip.action = visualization_msgs::msg::Marker::MODIFY;
       line_strip.pose.orientation.w = 1.0;
-      vector<float> time_seq;
-      float seg_t0 = primitive_list[0].px.GetTimeInterval()[0];
-      float seg_tf = primitive_list[0].px.GetTimeInterval()[1];
+      vector<double> time_seq;
+      double seg_t0 = primitive_list[0].px.GetTimeInterval()[0];
+      double seg_tf = primitive_list[0].px.GetTimeInterval()[1];
       for (int i = 0; i < parameters_.keeper.raw.num_time_sample; i++)
         time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) /
                                         (float)(parameters_.keeper.raw.num_time_sample - 1));
@@ -268,6 +268,62 @@ Visualizer::VisualizeRawKeeperPathArray(const PrimitiveList &primitive_list) {
           line_strip.points.push_back(temp_point);
         }
         visual_output.markers.push_back(line_strip);
+      }
+    }
+  }
+  return visual_output;
+}
+KeeperSafePathVisualizationMsg
+Visualizer::VisualizeSafeKeeperPathArray(const PrimitiveList &primitive_list,
+                                         const IndexList &safe_indices) {
+  KeeperSafePathVisualizationMsg visual_output;
+  if (parameters_.keeper.safe.publish) {
+    if (not primitive_list.empty() and not safe_indices.empty()) {
+      static int last_num_id;
+      visualization_msgs::msg::Marker line_strip;
+      line_strip.type = visualization_msgs::msg::Marker::LINE_STRIP;
+      line_strip.header.frame_id = parameters_.frame_id;
+      line_strip.color.a = parameters_.keeper.safe.color.a;
+      line_strip.color.r = parameters_.keeper.safe.color.r;
+      line_strip.color.g = parameters_.keeper.safe.color.g;
+      line_strip.color.b = parameters_.keeper.safe.color.b;
+      line_strip.scale.x = parameters_.keeper.safe.line_scale;
+      line_strip.action = visualization_msgs::msg::Marker::MODIFY;
+      line_strip.pose.orientation.w = 1.0;
+      vector<double> time_seq;
+      double seg_t0 = primitive_list[0].px.GetTimeInterval()[0];
+      double seg_tf = primitive_list[0].px.GetTimeInterval()[1];
+      for (int i = 0; i < parameters_.keeper.safe.num_time_sample; i++)
+        time_seq.push_back(seg_t0 + (float)i * (seg_tf - seg_t0) /
+                                        (float)(parameters_.keeper.raw.num_time_sample - 1));
+      geometry_msgs::msg::Point temp_point;
+      int id = 0;
+      int num_primitive_vis = int((float)safe_indices.size() * parameters_.keeper.raw.proportion);
+      int index_jump = (int)safe_indices.size() / num_primitive_vis;
+      line_strip.ns = "keeper_safe_primitives";
+      for (int j = 0; j < num_primitive_vis - 1; j++) {
+        line_strip.points.clear();
+        line_strip.id = ++id;
+        for (int k = 0; k < parameters_.target.safe.num_time_sample; k++) {
+          temp_point.x = primitive_list[safe_indices[index_jump * j]].px.GetValue(time_seq[k]);
+          temp_point.y = primitive_list[safe_indices[index_jump * j]].py.GetValue(time_seq[k]);
+          temp_point.z = primitive_list[safe_indices[index_jump * j]].pz.GetValue(time_seq[k]);
+          line_strip.points.push_back(temp_point);
+        }
+        visual_output.markers.push_back(line_strip);
+      }
+      if (last_num_id < 0) {
+        last_num_id = line_strip.id;
+      } else {
+        visualization_msgs::msg::Marker erase_marker;
+        erase_marker.action = visualization_msgs::msg::Marker::DELETE;
+        erase_marker.ns = line_strip.ns;
+        erase_marker.header.frame_id = parameters_.frame_id;
+        for (int j = line_strip.id + 1; j <= last_num_id; j++) {
+          erase_marker.id = j;
+          visual_output.markers.push_back(erase_marker);
+        }
+        last_num_id = line_strip.id;
       }
     }
   }

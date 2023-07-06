@@ -39,6 +39,7 @@ using TargetBestPathVisPublisher = rclcpp::Publisher<TargetBestPathVisualization
 using TargetSafePathVisPublisher = rclcpp::Publisher<TargetSafePathVisualizationMsg>::SharedPtr;
 using TargetRawPathVisPublisher = rclcpp::Publisher<TargetSafePathVisualizationMsg>::SharedPtr;
 using KeeperRawPathVisPublisher = rclcpp::Publisher<KeeperRawPathVisualizationMsg>::SharedPtr;
+using KeeperSafePathVisPublisher = rclcpp::Publisher<KeeperSafePathVisualizationMsg>::SharedPtr;
 
 namespace los_keeper {
 
@@ -64,10 +65,11 @@ private:
     ObstaclePathVisualizationMsg obstacle_path_vis; // Obstacle Path Array  Visualization Data
     TargetBestPathVisualizationMsg
         target_best_path_vis; // Target Best Path Array Visualization Data
-    TargetSafePathVisualizationMsg
-        target_safe_path_vis;                          // Target Safe Path Array Visualization Data
-    TargetRawPathVisualizationMsg target_raw_path_vis; // Target Primitive Array Visualization Data
-    KeeperRawPathVisualizationMsg keeper_raw_path_vis;
+    TargetSafePathVisualizationMsg target_safe_path_vis; // Target Safe Path Array Visualization
+    TargetRawPathVisualizationMsg target_raw_path_vis;   // Target Primitive Array Visualization
+    KeeperRawPathVisualizationMsg keeper_raw_path_vis;   // Keeper Primitive Array Visualization
+    KeeperSafePathVisualizationMsg
+        keeper_safe_path_vis; // Keeper Safe Primitive Array Visualization
 
     ObstaclePathVisPublisher
         obstacle_path_vis_publisher; // Obstacle Array Path Visualization Publisher
@@ -79,6 +81,8 @@ private:
         target_raw_path_vis_publisher; // Target Raw Path Visualization Publisher
     KeeperRawPathVisPublisher
         keeper_raw_path_vis_publisher; // Keeper Raw Path Visualization Publisher
+    KeeperSafePathVisPublisher
+        keeper_safe_path_vis_publisher; // Keeper Safe Path Visualization Publisher
 
   } visualization_;
 

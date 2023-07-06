@@ -11,7 +11,6 @@ std::optional<JerkControlInput> PlanningResult::GetJerkInputAtTime(double t) con
     input.jz = 0.0f;
     return input;
   }
-  //  printf("GET JERK TIME AT: %f \n", t);
   BernsteinCoefficients jx_coeff = {
       float(60.0 /
             pow(chasing_trajectory.value().px.GetTimeInterval()[1] -

@@ -253,7 +253,7 @@ bool los_keeper::TargetManager2D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
   primitive_safe_structured_obstacle_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
-    int num_chunk = (int)primitives_list_[i].size() / param_.sampling.num_thread;
+    int num_chunk = primitives_list_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
     IndexListSet primitive_safe_structured_obstacle_index_temp(param_.sampling.num_thread);
     for (int j = 0; j < param_.sampling.num_thread; j++) {
@@ -712,7 +712,7 @@ void los_keeper::TargetManager3D::CalculateCentroid() {
   primitive_best_index_.clear();
   primitive_best_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
-    int num_chunk = (int)primitive_safe_total_index_[i].size() / param_.sampling.num_thread;
+    int num_chunk = primitive_safe_total_index_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
     vector<std::pair<int, float>> min_dist_pair_temp(param_.sampling.num_thread);
     for (int j = 0; j < param_.sampling.num_thread; j++) {
@@ -742,7 +742,7 @@ bool los_keeper::TargetManager3D::CheckStructuredObstacleCollision() {
   primitive_safe_structured_obstacle_index_.clear();
   primitive_safe_structured_obstacle_index_.resize(num_target_);
   for (int i = 0; i < num_target_; i++) {
-    int num_chunk = (int)primitives_list_[i].size() / param_.sampling.num_thread;
+    int num_chunk = primitives_list_[i].size() / param_.sampling.num_thread;
     vector<thread> worker_thread;
     IndexListSet primitive_safe_structured_obstacle_index_temp(param_.sampling.num_thread);
     for (int j = 0; j < param_.sampling.num_thread; j++) {

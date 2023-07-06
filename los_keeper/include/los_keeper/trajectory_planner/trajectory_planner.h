@@ -65,6 +65,8 @@ protected:
                                                                   IndexList &visible_idx);
   virtual void CheckVisibilityAgainstPcl();
   virtual void CalculateBestIndex();
+  virtual void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
+                                            pair<int, float> &min_jerk_pair);
   void SetTargetState(const PrimitiveList &target_trajectory_list);
   void SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
                         const PrimitiveList &structured_obstacle_poly_list);
@@ -101,6 +103,8 @@ private:
                                                           IndexList &visible_idx) override;
   void CheckVisibilityAgainstPcl() override;
   void CalculateBestIndex() override;
+  void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
+                                    pair<int, float> &min_jerk_pair) override;
   bool PlanKeeperTrajectory() override;
 
 public:
@@ -131,6 +135,8 @@ private:
                                                           IndexList &visible_idx) override;
   void CheckVisibilityAgainstPcl() override;
   void CalculateBestIndex() override;
+  void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
+                                    pair<int, float> &min_jerk_pair) override;
   bool PlanKeeperTrajectory() override;
 
 public:

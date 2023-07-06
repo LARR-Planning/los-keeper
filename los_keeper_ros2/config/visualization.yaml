@@ -46,11 +46,21 @@
         proportion: 0.5
         num_time_sample: 5
         color:
-          a: 0.3
+          a: 0.1
           r: 0.0
           g: 1.0
           b: 1.0
         line_scale: 0.01
+      safe:
+        publish: true
+        proportion: 0.5
+        num_time_sample: 5
+        color:
+          a: 0.5
+          r: 0.5
+          g: 0.5
+          b: 1.0
+        line_scale: 0.02
 
 
 

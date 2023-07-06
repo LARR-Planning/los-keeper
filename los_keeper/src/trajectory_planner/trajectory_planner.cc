@@ -80,6 +80,8 @@ void TrajectoryPlanner::CheckVisibilityAgainstStructuredObstacleSubProcess(const
 }
 void TrajectoryPlanner::CalculateBestIndex() {}
 void TrajectoryPlanner::CalculateCloseObstacleIndex() {}
+void TrajectoryPlanner::CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
+                                                     pair<int, float> &min_jerk_pair) {}
 
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
   SampleShootingPoints();
@@ -93,7 +95,6 @@ bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
     if (visible_total_index_.empty())
       return false;
     else {
-      //      printf("SUCCESS\n");
       CalculateBestIndex();
       return true;
     }
@@ -510,7 +511,109 @@ void TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacleSubProcess(
 void TrajectoryPlanner2D::CheckVisibilityAgainstPcl() {
   TrajectoryPlanner::CheckVisibilityAgainstPcl();
 }
-void TrajectoryPlanner2D::CalculateBestIndex() { best_index_ = visible_total_index_[0]; }
+void TrajectoryPlanner2D::CalculateBestIndex() {
+  best_index_ = visible_total_index_[0];
+  //  best_index_ = 0;
+  //  int num_chunk = visible_total_index_.size() / param_.sampling.num_thread;
+  //  printf("CHUNK SIZE: %d \n",num_chunk);
+  //  printf("TOTAL INDEX SIZE: %d\n",(int)visible_total_index_.size());
+  //  vector<thread> worker_thread(param_.sampling.num_thread);
+  //  vector<pair<int, float>> min_jerk_pair_temp(param_.sampling.num_thread);
+  //  printf("THREAD SIZE: %d \n",(int)min_jerk_pair_temp.size());
+  //  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  //    worker_thread.emplace_back(&TrajectoryPlanner2D::CalculateBestIndexSubProcess, this,
+  //                               num_chunk * (i), num_chunk * (i + 1),
+  //                               std::ref(min_jerk_pair_temp[i]));
+  //  }
+  //  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  //    worker_thread[i].join();
+  //  }
+  //  float min_jerk_temp = 99999999999.0f;
+  //  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  //    if (min_jerk_temp > min_jerk_pair_temp[i].second) {
+  //      min_jerk_temp = min_jerk_pair_temp[i].second;
+  //      best_index_ = visible_total_index_[min_jerk_pair_temp[i].first];
+  //    }
+  //  }
+}
+void TrajectoryPlanner2D::CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
+                                                       pair<int, float> &min_jerk_pair) {
+  int chunk_size = end_idx - start_idx;
+  float jerk_integral_list[chunk_size];
+  float jerk_coeff_x[3]{0.0f, 0.0f, 0.0f};
+  float jerk_coeff_y[3]{0.0f, 0.0f, 0.0f};
+  for (int i = start_idx; i < end_idx; i++) {
+    jerk_coeff_x[0] =
+        float(60.0 /
+              pow(primitives_list_[visible_total_index_[i]].px.GetTimeInterval()[1] -
+                      primitives_list_[visible_total_index_[i]].px.GetTimeInterval()[0],
+                  3) *
+              (primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[3] -
+               3.0 * primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[2] +
+               3.0 * primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[1] -
+               primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[0]));
+    jerk_coeff_x[1] =
+        float(60.0 /
+              pow(primitives_list_[visible_total_index_[i]].px.GetTimeInterval()[1] -
+                      primitives_list_[visible_total_index_[i]].px.GetTimeInterval()[0],
+                  3) *
+              (primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[4] -
+               3.0 * primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[3] +
+               3.0 * primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[2] -
+               primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[1]));
+    jerk_coeff_x[2] =
+        float(60.0 /
+              pow(primitives_list_[visible_total_index_[i]].px.GetTimeInterval()[1] -
+                      primitives_list_[visible_total_index_[i]].px.GetTimeInterval()[0],
+                  3) *
+              (primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[5] -
+               3.0 * primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[4] +
+               3.0 * primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[3] -
+               primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[2]));
+    jerk_coeff_y[0] =
+        float(60.0 /
+              pow(primitives_list_[visible_total_index_[i]].py.GetTimeInterval()[1] -
+                      primitives_list_[visible_total_index_[i]].py.GetTimeInterval()[0],
+                  3) *
+              (primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[3] -
+               3.0 * primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[2] +
+               3.0 * primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[1] -
+               primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[0]));
+    jerk_coeff_y[1] =
+        float(60.0 /
+              pow(primitives_list_[visible_total_index_[i]].py.GetTimeInterval()[1] -
+                      primitives_list_[visible_total_index_[i]].py.GetTimeInterval()[0],
+                  3) *
+              (primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[4] -
+               3.0 * primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[3] +
+               3.0 * primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[2] -
+               primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[1]));
+    jerk_coeff_y[2] =
+        float(60.0 /
+              pow(primitives_list_[visible_total_index_[i]].py.GetTimeInterval()[1] -
+                      primitives_list_[visible_total_index_[i]].py.GetTimeInterval()[0],
+                  3) *
+              (primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[5] -
+               3.0 * primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[4] +
+               3.0 * primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[3] -
+               primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[2]));
+    jerk_integral_list[i - start_idx] =
+        jerk_coeff_x[0] * jerk_coeff_x[0] + jerk_coeff_x[0] * jerk_coeff_x[1] +
+        0.33333333f * jerk_coeff_x[0] * jerk_coeff_x[2] +
+        0.6666667f * jerk_coeff_x[1] * jerk_coeff_x[1] + jerk_coeff_x[1] * jerk_coeff_x[2] +
+        jerk_coeff_x[2] * jerk_coeff_x[2] + jerk_coeff_y[0] * jerk_coeff_y[0] +
+        jerk_coeff_y[0] * jerk_coeff_y[1] + 0.33333333f * jerk_coeff_y[0] * jerk_coeff_y[2] +
+        0.6666667f * jerk_coeff_y[1] * jerk_coeff_y[1] + jerk_coeff_y[1] * jerk_coeff_y[2] +
+        jerk_coeff_y[2] * jerk_coeff_y[2];
+  }
+  min_jerk_pair.second = 99999999999.0f;
+  for (int i = start_idx; i < end_idx; i++) {
+    if (min_jerk_pair.second > jerk_integral_list[i - start_idx]) {
+      min_jerk_pair.second = jerk_integral_list[i - start_idx];
+      min_jerk_pair.first = i;
+    }
+  }
+}
 
 bool TrajectoryPlanner3D::PlanKeeperTrajectory() {
   SampleShootingPoints();
@@ -776,7 +879,7 @@ bool TrajectoryPlanner3D::CheckVisibility() {
 }
 bool TrajectoryPlanner3D::CheckVisibilityAgainstStructuredObstacle() {
   visible_structured_index_.clear();
-  int num_chunk = (int)good_target_distance_index_list_.size() / param_.sampling.num_thread;
+  int num_chunk = good_target_distance_index_list_.size() / param_.sampling.num_thread;
   vector<thread> worker_thread;
   IndexListSet visible_structured_index_temp(param_.sampling.num_thread);
   for (int i = 0; i < param_.sampling.num_thread; i++) {
@@ -803,7 +906,27 @@ void TrajectoryPlanner3D::CheckVisibilityAgainstStructuredObstacleSubProcess(
 void TrajectoryPlanner3D::CheckVisibilityAgainstPcl() {
   TrajectoryPlanner::CheckVisibilityAgainstPcl();
 }
-void TrajectoryPlanner3D::CalculateBestIndex() { best_index_ = visible_total_index_[0]; }
+void TrajectoryPlanner3D::CalculateBestIndex() {
+  best_index_ = -1;
+  int num_chunk = visible_total_index_.size() / param_.sampling.num_thread;
+  vector<thread> worker_thread(param_.sampling.num_thread);
+  vector<pair<int, float>> min_jerk_pair_temp(param_.sampling.num_thread);
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread.emplace_back(&TrajectoryPlanner3D::CalculateBestIndexSubProcess, this,
+                               num_chunk * (i), num_chunk * (i + 1),
+                               std::ref(min_jerk_pair_temp[i]));
+  }
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread[i].join();
+  }
+  float min_jerk_temp = 999999.0f;
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    if (min_jerk_temp > min_jerk_pair_temp[i].second) {
+      min_jerk_temp = min_jerk_pair_temp[i].second;
+      best_index_ = min_jerk_pair_temp[i].first;
+    }
+  }
+}
 void TrajectoryPlanner3D::CalculateCloseObstacleIndex() {
   close_obstacle_index_.clear();
   bool is_close;
@@ -817,3 +940,5 @@ void TrajectoryPlanner3D::CalculateCloseObstacleIndex() {
       close_obstacle_index_.push_back(j);
   }
 }
+void TrajectoryPlanner3D::CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
+                                                       pair<int, float> &min_jerk_pair) {}

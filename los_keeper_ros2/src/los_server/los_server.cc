@@ -108,10 +108,14 @@ void LosServer::VisualizationTimerCallback() {
     visualization_.target_best_path_vis_publisher->publish(visualization_.target_best_path_vis);
   }
   { // Keeper raw path
-    //    printf("DEBUG PLANNING PRIMITIVE SIZE: %d \n",debug_info.planning.primitives_list.size());
     visualization_.keeper_raw_path_vis =
         visualizer_.VisualizeRawKeeperPathArray(debug_info.planning.primitives_list);
     visualization_.keeper_raw_path_vis_publisher->publish(visualization_.keeper_raw_path_vis);
+  }
+  { // Keeper safe path
+    visualization_.keeper_safe_path_vis = visualizer_.VisualizeSafeKeeperPathArray(
+        debug_info.planning.primitives_list, debug_info.planning.safe_visibility_index);
+    visualization_.keeper_safe_path_vis_publisher->publish(visualization_.keeper_safe_path_vis);
   }
 }
 
@@ -204,10 +208,12 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
       "~/visualization/target_raw_array_info", rclcpp::QoS(1));
   visualization_.keeper_raw_path_vis_publisher = create_publisher<KeeperRawPathVisualizationMsg>(
       "~/visualization/keeper_raw_array_info", rclcpp::QoS(1));
+  visualization_.keeper_safe_path_vis_publisher = create_publisher<KeeperSafePathVisualizationMsg>(
+      "~/visualization/keeper_safe_array_info", rclcpp::QoS(1));
 
   input_publisher_ = create_publisher<InputMsg>("jerk_control_input", rclcpp::QoS(1));
 
-  control_timer_ = this->create_wall_timer(50ms, std::bind(&LosServer::ControlTimerCallback, this));
+  control_timer_ = this->create_wall_timer(20ms, std::bind(&LosServer::ControlTimerCallback, this));
 
   toggle_activate_server_ = this->create_service<ToggleActivateService>(
       "~/toggle_activate", std::bind(&LosServer::ToggleActivateCallback, this,
@@ -313,6 +319,24 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
     get_parameter<float>("target.best.color.g", parameters_vis.target.best.color.g);
     get_parameter<float>("target.best.color.b", parameters_vis.target.best.color.b);
     get_parameter<float>("target.best.line_scale", parameters_vis.target.best.line_scale);
+
+    get_parameter<bool>("keeper.raw.publish", parameters_vis.keeper.raw.publish);
+    get_parameter<float>("keeper.raw.proportion", parameters_vis.keeper.raw.proportion);
+    get_parameter<int>("keeper.raw.num_time_sample", parameters_vis.keeper.raw.num_time_sample);
+    get_parameter<float>("keeper.raw.color.a", parameters_vis.keeper.raw.color.a);
+    get_parameter<float>("keeper.raw.color.r", parameters_vis.keeper.raw.color.r);
+    get_parameter<float>("keeper.raw.color.g", parameters_vis.keeper.raw.color.g);
+    get_parameter<float>("keeper.raw.color.b", parameters_vis.keeper.raw.color.b);
+    get_parameter<float>("keeper.raw.line_scale", parameters_vis.keeper.raw.line_scale);
+
+    get_parameter<bool>("keeper.safe.publish", parameters_vis.keeper.safe.publish);
+    get_parameter<float>("keeper.safe.proportion", parameters_vis.keeper.safe.proportion);
+    get_parameter<int>("keeper.safe.num_time_sample", parameters_vis.keeper.safe.num_time_sample);
+    get_parameter<float>("keeper.safe.color.a", parameters_vis.keeper.safe.color.a);
+    get_parameter<float>("keeper.safe.color.r", parameters_vis.keeper.safe.color.r);
+    get_parameter<float>("keeper.safe.color.g", parameters_vis.keeper.safe.color.g);
+    get_parameter<float>("keeper.safe.color.b", parameters_vis.keeper.safe.color.b);
+    get_parameter<float>("keeper.safe.line_scale", parameters_vis.keeper.safe.line_scale);
   }
   visualizer_.UpdateParam(parameters_vis);
   planning_timer_ =

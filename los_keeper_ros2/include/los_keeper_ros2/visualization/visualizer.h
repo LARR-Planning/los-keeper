@@ -13,6 +13,7 @@ using TargetBestPathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 using TargetSafePathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 using TargetRawPathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 using KeeperRawPathVisualizationMsg = visualization_msgs::msg::MarkerArray;
+using KeeperSafePathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 using KeeperDyanmicallyFeasiblePathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 
 namespace los_keeper {
@@ -71,13 +72,25 @@ struct VisualizationParameters {
       float proportion{0.5};
       int num_time_sample{5};
       struct {
-        float a{0.3};
+        float a{0.1};
         float r{0.0};
         float g{1.0};
         float b{1.0};
       } color;
       float line_scale{0.01};
     } raw;
+    struct {
+      bool publish{true};
+      float proportion{0.5};
+      int num_time_sample{5};
+      struct {
+        float a{0.5};
+        float r{0.5};
+        float g{0.5};
+        float b{1.0};
+      } color;
+      float line_scale{0.01};
+    } safe;
   } keeper;
   string frame_id{"map"};
 };
@@ -100,6 +113,8 @@ public:
                                const IndexListSet &safe_indices);
   TargetRawPathVisualizationMsg VisualizeRawTargetPathArray(const PrimitiveListSet &primitive_list);
   KeeperRawPathVisualizationMsg VisualizeRawKeeperPathArray(const PrimitiveList &primitive_list);
+  KeeperSafePathVisualizationMsg VisualizeSafeKeeperPathArray(const PrimitiveList &primitive_list,
+                                                              const IndexList &safe_indices);
 };
 
 } // namespace los_keeper
