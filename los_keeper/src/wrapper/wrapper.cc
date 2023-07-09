@@ -9,7 +9,8 @@ std::optional<JerkControlInput> PlanningResult::GetJerkInputAtTime(double t) con
     input.jx = 0.0f;
     input.jy = 0.0f;
     input.jz = 0.0f;
-    return input;
+    //    return input;
+    return nullopt;
   }
   BernsteinCoefficients jx_coeff = {
       float(60.0 /
@@ -139,7 +140,7 @@ void Wrapper::UpdateState(store::State &state) {
 void Wrapper::HandleStopAction() { state_.is_activated = false; }
 void Wrapper::HandleActivateAction() { state_.is_activated = true; }
 void Wrapper::HandleReplanAction() {
-  //    printf("Handle ReplanAction\n");
+  //      printf("Handle ReplanAction\n");
   PlanningProblem planning_problem;
   { // Update Drone State
     std::scoped_lock lock(mutex_list_.drone_state);
@@ -186,11 +187,13 @@ void Wrapper::HandleReplanAction() {
   }
 
   if (new_planning_result.chasing_trajectory) {
+    //    printf("PLANNING SUCCESS\n");
     new_planning_result.last_plan_success_t_sec =
         std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
     std::unique_lock<std::mutex> lock(mutex_list_.control);
     planning_result_ = new_planning_result;
   } else {
+    //    printf("PLANNING FAILURE\n");
     std::unique_lock<std::mutex> lock(mutex_list_.control);
     planning_result_.chasing_trajectory = std::nullopt;
   }
