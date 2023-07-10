@@ -46,7 +46,7 @@ TEST_F(ApiTestFixtureObstacle, CheckCollisionBetweenTrajectoryAndObstacles) {
   obstacle_param.planning_horizon = 1.0f;
   obstace_manager = new ObstacleManager(obstacle_param);
   StatePoly trajectory;
-  float time_interval[2]{0.0, obstacle_param.planning_horizon};
+  double time_interval[2]{0.0, obstacle_param.planning_horizon};
   trajectory.SetTimeInterval(time_interval);
   trajectory.SetDegree(3);
   BernsteinCoefficients bernstein_coeff_x{0.0, 1.0, 2.0, 3.0};

@@ -13,7 +13,7 @@ typedef pcl::PointCloud<PclPoint> PclPointCloud;
 
 struct PlanningParameter {
   struct {
-    int num_sample{500};
+    int num_sample{400};
     int num_thread{4};
     bool is_lite{false};
   } sampling;
@@ -22,8 +22,10 @@ struct PlanningParameter {
   } horizon;
   struct {
     float obstacle_max{4.0f};
-    float target_min{2.0f};
-    float target_max{5.0f};
+    float end_points_min{0.3f};
+    float end_points_max{0.6f};
+    float target_min{0.5f};
+    float target_max{3.0f};
   } distance;
   struct {
     float vel_max{2.0f};
@@ -131,11 +133,14 @@ struct StatePoly {
   void SetDegree(const int &degree) {
     px.SetDegree(degree), py.SetDegree(degree), pz.SetDegree(degree);
   };
-  void SetTimeInterval(float time_interval[2]) {
+  void ElevateDegree(const int &up_degree) {
+    px.ElevateDegree(up_degree), py.ElevateDegree(up_degree), pz.ElevateDegree(up_degree);
+  };
+  void SetTimeInterval(double time_interval[2]) {
     px.SetTimeInterval(time_interval), py.SetTimeInterval(time_interval),
         pz.SetTimeInterval(time_interval);
   };
-  Point GetPointAtTime(float time) const {
+  Point GetPointAtTime(double time) const {
     return Point{px.GetValue(time), py.GetValue(time), pz.GetValue(time)};
   };
 };
