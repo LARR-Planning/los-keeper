@@ -4,7 +4,7 @@ from launch_ros.actions import Node
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 parameters = [os.path.join(current_directory, os.pardir, 'config', 'parameters_3d.yaml')]
-
+parameters_vis = [os.path.join(current_directory, os.pardir, 'config', 'visualization_3d.yaml')]
 
 def generate_launch_description():
     return LaunchDescription([
@@ -14,7 +14,7 @@ def generate_launch_description():
             executable='los_server_node',
             name='los_server_node',
             output='screen',
-            parameters=parameters,
+            parameters=[parameters, parameters_vis],
             emulate_tty=True,
             remappings=[("~/state", "/drone_state"),
                         ("~/points", "/point_cloud"),

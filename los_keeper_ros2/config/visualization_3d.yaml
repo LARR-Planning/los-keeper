@@ -1,0 +1,66 @@
+/**:
+  ros__parameters:
+    frame_id: map
+    obstacle:
+      publish: true
+      num_time_sample: 3
+      color:
+        a: 1.0
+        r: 0.0
+        g: 0.0
+        b: 0.0
+      line_scale: 0.01
+    target:
+      raw:
+        publish: true
+        proportion: 0.7
+        num_time_sample: 5
+        color:
+          a: 0.3
+          r: 0.7
+          g: 0.7
+          b: 0.0
+        line_scale: 0.01
+      safe:
+        publish: true
+        proportion: 0.7
+        num_time_sample: 5
+        color:
+          a: 0.3
+          r: 1.0
+          g: 0.0
+          b: 1.0
+        line_scale: 0.02
+      best:
+        publish: true
+        num_time_sample: 5
+        color:
+          a: 1.0
+          r: 1.0
+          g: 0.0
+          b: 0.0
+        line_scale: 0.05
+    keeper:
+      raw:
+        publish: true
+        proportion: 0.7
+        num_time_sample: 5
+        color:
+          a: 0.1
+          r: 0.0
+          g: 1.0
+          b: 1.0
+        line_scale: 0.01
+      safe:
+        publish: true
+        proportion: 0.5
+        num_time_sample: 5
+        color:
+          a: 0.5
+          r: 0.5
+          g: 0.5
+          b: 1.0
+        line_scale: 0.02
+
+
+
