@@ -583,7 +583,6 @@ bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
   if (is_safe_traj_exist)
     CalculateCentroid();
   return is_safe_traj_exist;
-  return true;
 }
 
 void los_keeper::TargetManager3D::SampleEndPoints() {
@@ -721,7 +720,7 @@ void los_keeper::TargetManager3D::CalculateCentroid() {
     for (int j = 0; j < param_.sampling.num_thread; j++) {
       worker_thread[j].join();
     }
-    float min_dist_temp = 99999999999999.0f;
+    float min_dist_temp = 999999.0f;
     for (int j = 0; j < param_.sampling.num_thread; j++) {
       if (min_dist_temp > min_dist_pair_temp[j].second) {
         min_dist_temp = min_dist_pair_temp[j].second;
@@ -1070,7 +1069,7 @@ void los_keeper::TargetManager3D::CalculateCentroidSubProcess(const int &target_
                    .pz.GetTerminalValue());
     }
   }
-  min_dist.second = 99999999999.0f;
+  min_dist.second = 999999.0f;
   for (int i = 0; i < chunk_size; i++) {
     if (min_dist.second > distance_sum_list[i]) {
       min_dist.second = distance_sum_list[i];

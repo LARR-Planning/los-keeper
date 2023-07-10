@@ -171,7 +171,7 @@ void Wrapper::HandleReplanAction() {
   //  check_prediction_end-check_prediction_start; printf("PREDICTION TIME: %f
   //  \n",elapsed_check_prediction.count());
   UpdateTargetDebugInfo();
-
+  //
   if (target_prediction_list) {
     //    auto check_planning_start = std::chrono::system_clock::now();
     new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
@@ -187,13 +187,13 @@ void Wrapper::HandleReplanAction() {
   }
 
   if (new_planning_result.chasing_trajectory) {
-    //    printf("PLANNING SUCCESS\n");
+    //        printf("PLANNING SUCCESS\n");
     new_planning_result.last_plan_success_t_sec =
         std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
     std::unique_lock<std::mutex> lock(mutex_list_.control);
     planning_result_ = new_planning_result;
   } else {
-    //    printf("PLANNING FAILURE\n");
+    printf("PLANNING FAILURE\n");
     std::unique_lock<std::mutex> lock(mutex_list_.control);
     planning_result_.chasing_trajectory = std::nullopt;
   }
