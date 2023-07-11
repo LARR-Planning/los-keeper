@@ -79,6 +79,13 @@ void LosServer::ControlTimerCallback() {
   auto control_input = wrapper_ptr_->GenerateControlInputFromPlanning(t.seconds());
   if (control_input.has_value()) {
     input_publisher_->publish(ConvertToInputMsg(control_input.value()));
+  } else {
+    JerkControlInput jerk_intput_at_fail;
+    jerk_intput_at_fail.t_sec = t.seconds();
+    jerk_intput_at_fail.jx = 0.0f;
+    jerk_intput_at_fail.jy = 0.0f;
+    jerk_intput_at_fail.jz = 0.0f;
+    input_publisher_->publish(ConvertToInputMsg(jerk_intput_at_fail));
   }
 }
 

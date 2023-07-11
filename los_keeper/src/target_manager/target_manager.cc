@@ -66,15 +66,11 @@ PrimitiveList los_keeper::TargetManager::GetTargetPredictionResult() {
 }
 los_keeper::TargetManagerDebugInfo los_keeper::TargetManager::GetDebugInfo() const {
   TargetManagerDebugInfo debug_info;
-  debug_info.has_structured_obstacle = not structured_obstacle_poly_list_.empty();
-  debug_info.has_structured_obstacle = not cloud_.points.empty();
   debug_info.num_target = num_target_;
-
-  if (not primitives_list_.empty() and not primitive_safe_total_index_.empty() and
-      not primitive_best_index_.empty()) {
-    debug_info.primitives_list.clear();
-    debug_info.primitive_safe_total_index.clear();
-    debug_info.primitive_best_index.clear();
+  debug_info.success_flag = not primitives_list_.empty() and
+                            not primitive_safe_total_index_.empty() and
+                            not primitive_best_index_.empty();
+  if (debug_info.success_flag) {
     debug_info.primitives_list = primitives_list_;
     debug_info.primitive_safe_total_index = primitive_safe_total_index_;
     debug_info.primitive_best_index = primitive_best_index_;

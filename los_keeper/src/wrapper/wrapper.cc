@@ -261,7 +261,6 @@ std::optional<JerkControlInput> Wrapper::GenerateControlInputFromPlanning(double
   std::optional<JerkControlInput> control_input;
   {
     std::unique_lock<std::mutex> lock(mutex_list_.control);
-    // TODO(Lee): compute jerk from planning result
     control_input = planning_result_.GetJerkInputAtTime(time);
   }
   return control_input;
