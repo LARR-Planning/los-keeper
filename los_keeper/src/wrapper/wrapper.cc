@@ -159,31 +159,19 @@ void Wrapper::HandleReplanAction() {
     planning_problem.target_state_list = target_state_list_;
   }
   UpdateObstacleDeubgInfo();
-
   PlanningResult new_planning_result;
   new_planning_result.seq = planning_result_.seq + 1;
-  //  auto check_prediction_start = std::chrono::system_clock::now();
   auto target_prediction_list = target_manager_->PredictTargetList(
       planning_problem.target_state_list, planning_problem.point_cloud,
       planning_problem.structured_obstacle_poly_list);
-  //  auto check_prediction_end = std::chrono::system_clock::now();
-  //  std::chrono::duration<double> elapsed_check_prediction =
-  //  check_prediction_end-check_prediction_start; printf("PREDICTION TIME: %f
-  //  \n",elapsed_check_prediction.count());
   UpdateTargetDebugInfo();
-  //
   if (target_prediction_list) {
-    //    auto check_planning_start = std::chrono::system_clock::now();
     new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
         drone_state_, target_prediction_list.value(), planning_problem.point_cloud,
         planning_problem.structured_obstacle_poly_list);
-    //    auto check_planning_end = std::chrono::system_clock::now();
-    //    std::chrono::duration<double> elapsed_check_planning =
-    //        check_planning_end - check_planning_start;
-    //    printf("PLANNING TIME: %f \n", elapsed_check_planning.count());
     UpdatePlanningDebugInfo();
   } else {
-    printf("NO TARGET PREDICTION \n");
+    //    printf("NO TARGET PREDICTION \n");
   }
 
   if (new_planning_result.chasing_trajectory) {
@@ -193,7 +181,7 @@ void Wrapper::HandleReplanAction() {
     std::unique_lock<std::mutex> lock(mutex_list_.control);
     planning_result_ = new_planning_result;
   } else {
-    printf("PLANNING FAILURE\n");
+    //    printf("PLANNING FAILURE\n");
     std::unique_lock<std::mutex> lock(mutex_list_.control);
     planning_result_.chasing_trajectory = std::nullopt;
   }

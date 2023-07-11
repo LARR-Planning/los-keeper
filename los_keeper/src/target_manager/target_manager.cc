@@ -70,31 +70,40 @@ los_keeper::TargetManagerDebugInfo los_keeper::TargetManager::GetDebugInfo() con
   debug_info.success_flag = not primitives_list_.empty() and
                             not primitive_safe_total_index_.empty() and
                             not primitive_best_index_.empty();
+  debug_info.prediction_time = prediction_time_;
   if (debug_info.success_flag) {
     debug_info.primitives_list = primitives_list_;
     debug_info.primitive_safe_total_index = primitive_safe_total_index_;
     debug_info.primitive_best_index = primitive_best_index_;
+  } else {
+    debug_info.primitives_list = primitives_list_;
   }
   return debug_info;
 }
 
 bool los_keeper::TargetManager2D::PredictTargetTrajectory() {
-
+  bool prediction_success;
+  auto check_prediction_start = std::chrono::system_clock::now();
+  auto check_prediction_end = check_prediction_start;
+  std::chrono::duration<double> elapsed_check_prediction{};
   SampleEndPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();
   bool is_safe_traj_exist = CheckCollision();
-  if (is_safe_traj_exist) {
-    CalculateCentroid();
+  if (not is_safe_traj_exist) {
+    prediction_success = false;
+    goto end_process;
   } else {
-    primitives_list_.clear();
-    primitive_best_index_.clear();
-    primitive_safe_total_index_.clear();
-    primitive_safe_pcl_index_.clear();
-    primitive_safe_structured_obstacle_index_.clear();
+    CalculateCentroid();
+    prediction_success = true;
+    goto end_process;
   }
-
-  return is_safe_traj_exist;
+end_process : {
+  check_prediction_end = std::chrono::system_clock::now();
+  elapsed_check_prediction = check_prediction_end - check_prediction_start;
+  prediction_time_ = elapsed_check_prediction.count();
+  return prediction_success;
+};
 }
 
 void los_keeper::TargetManager2D::SampleEndPoints() {
@@ -572,13 +581,28 @@ los_keeper::TargetManager2D::TargetManager2D(const los_keeper::PredictionParamet
     : TargetManager(param) {}
 
 bool los_keeper::TargetManager3D::PredictTargetTrajectory() {
+  bool prediction_success;
+  auto check_prediction_start = std::chrono::system_clock::now();
+  auto check_prediction_end = check_prediction_start;
+  std::chrono::duration<double> elapsed_check_prediction{};
   SampleEndPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();
   bool is_safe_traj_exist = CheckCollision();
-  if (is_safe_traj_exist)
+  if (not is_safe_traj_exist) {
+    prediction_success = false;
+    goto end_process;
+  } else {
     CalculateCentroid();
-  return is_safe_traj_exist;
+    prediction_success = true;
+    goto end_process;
+  }
+end_process : {
+  check_prediction_end = std::chrono::system_clock::now();
+  elapsed_check_prediction = check_prediction_end - check_prediction_start;
+  prediction_time_ = elapsed_check_prediction.count();
+  return prediction_success;
+};
 }
 
 void los_keeper::TargetManager3D::SampleEndPoints() {

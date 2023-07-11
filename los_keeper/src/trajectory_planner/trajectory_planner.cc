@@ -64,8 +64,13 @@ void TrajectoryPlanner::CheckDistanceFromTargetsSubProcess(const int &start_idx,
                                                            IndexList &dist_idx_sub) {}
 PlanningDebugInfo TrajectoryPlanner::GetDebugInfo() const {
   PlanningDebugInfo debug_info;
-  debug_info.primitives_list = primitives_list_;
-  debug_info.safe_visibility_index = visible_total_index_;
+  debug_info.success_flag = not primitives_list_.empty() and not visible_total_index_.empty();
+  debug_info.planning_time = planning_time_;
+  if (debug_info.success_flag) {
+    debug_info.primitives_list = primitives_list_;
+    debug_info.safe_visibility_index = visible_total_index_;
+  } else
+    debug_info.primitives_list = primitives_list_;
   return debug_info;
 }
 void TrajectoryPlanner::SetKeeperState(const DroneState &drone_state) {
@@ -84,21 +89,34 @@ void TrajectoryPlanner::CalculateBestIndexSubProcess(const int &start_idx, const
                                                      pair<int, float> &min_jerk_pair) {}
 
 bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
+  bool plan_success;
+  auto check_planning_start = std::chrono::system_clock::now();
+  auto check_planning_end = check_planning_start = check_planning_start;
+  std::chrono::duration<double> elapsed_check_planning{};
   SampleShootingPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();
   CheckDistanceFromTargets();
-  if (good_target_distance_index_list_.empty())
-    return false;
-  else {
+  if (good_target_distance_index_list_.empty()) {
+    plan_success = false;
+    goto end_process;
+  } else {
     CheckVisibility();
     if (visible_total_index_.empty()) {
-      return false;
+      plan_success = false;
+      goto end_process;
     } else {
       CalculateBestIndex();
-      return true;
+      plan_success = true;
+      goto end_process;
     }
   }
+end_process : {
+  check_planning_end = std::chrono::system_clock::now();
+  elapsed_check_planning = check_planning_end - check_planning_start;
+  planning_time_ = elapsed_check_planning.count();
+  return plan_success;
+};
 }
 
 void TrajectoryPlanner2D::SampleShootingPoints() {
@@ -107,13 +125,11 @@ void TrajectoryPlanner2D::SampleShootingPoints() {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread / num_target_;
     vector<thread> worker_thread;
     vector<vector<Point>> shooting_point_temp(param_.sampling.num_thread);
-    for (int j = 0; j < param_.sampling.num_thread; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++)
       worker_thread.emplace_back(&TrajectoryPlanner2D::SampleShootingPointsSubProcess, this, i,
                                  num_chunk, std::ref(shooting_point_temp[j]));
-    }
-    for (int j = 0; j < param_.sampling.num_thread; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++)
       worker_thread[j].join();
-    }
     for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < shooting_point_temp[j].size(); k++) {
         shooting_points_.push_back(shooting_point_temp[j][k]);
@@ -150,14 +166,12 @@ void TrajectoryPlanner2D::ComputePrimitives() {
   int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
   vector<thread> worker_thread;
   PrimitiveListSet primitive_list_temp(param_.sampling.num_thread);
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread.emplace_back(&TrajectoryPlanner2D::ComputePrimitivesSubProcess, this,
                                num_chunk * (i), num_chunk * (i + 1),
                                std::ref(primitive_list_temp[i]));
-  }
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread[i].join();
-  }
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     for (int j = 0; j < primitive_list_temp[i].size(); j++) {
       primitives_list_.push_back(primitive_list_temp[i][j]);
@@ -255,14 +269,12 @@ void TrajectoryPlanner2D::CheckDistanceFromTargets() {
   int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
   vector<thread> worker_thread;
   IndexListSet good_target_distance_index_list_temp(param_.sampling.num_thread);
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread.emplace_back(&TrajectoryPlanner2D::CheckDistanceFromTargetsSubProcess, this,
                                num_chunk * (i), num_chunk * (i + 1),
                                std::ref(good_target_distance_index_list_temp[i]));
-  }
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread[i].join();
-  }
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     for (int j = 0; j < good_target_distance_index_list_temp[i].size(); j++) {
       good_target_distance_index_list_.push_back(good_target_distance_index_list_temp[i][j]);
@@ -351,19 +363,16 @@ bool TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacle() {
   int num_chunk = (int)good_target_distance_index_list_.size() / param_.sampling.num_thread;
   vector<thread> worker_thread;
   IndexListSet visible_structured_index_temp(param_.sampling.num_thread);
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread.emplace_back(
         &TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacleSubProcess, this,
         num_chunk * (i), num_chunk * (i + 1), std::ref(visible_structured_index_temp[i]));
-  }
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread[i].join();
-  }
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     for (int j = 0; j < visible_structured_index_temp[i].size(); j++)
       visible_structured_index_.push_back(visible_structured_index_temp[i][j]);
-  }
-  //  printf("VISIBLE INDEX SIZE: %d\n", (int)visible_structured_index_.size());
+
   if (visible_structured_index_.empty())
     return false;
   return true;
@@ -513,14 +522,12 @@ void TrajectoryPlanner2D::CalculateBestIndex() {
   int num_chunk = visible_total_index_.size() / param_.sampling.num_thread;
   vector<thread> worker_thread;
   vector<pair<int, float>> min_jerk_pair_temp(param_.sampling.num_thread);
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread.emplace_back(&TrajectoryPlanner2D::CalculateBestIndexSubProcess, this,
                                num_chunk * (i), num_chunk * (i + 1),
                                std::ref(min_jerk_pair_temp[i]));
-  }
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread[i].join();
-  }
   float min_jerk_temp = 9999.0f;
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     if (min_jerk_temp > min_jerk_pair_temp[i].second) {
@@ -621,23 +628,34 @@ void TrajectoryPlanner2D::CalculateBestIndexSubProcess(const int &start_idx, con
 }
 
 bool TrajectoryPlanner3D::PlanKeeperTrajectory() {
+  bool plan_success;
+  auto check_planning_start = std::chrono::system_clock::now();
+  auto check_planning_end = check_planning_start = check_planning_start;
+  std::chrono::duration<double> elapsed_check_planning{};
   SampleShootingPoints();
   ComputePrimitives();
   CalculateCloseObstacleIndex();
   CheckDistanceFromTargets();
   if (good_target_distance_index_list_.empty()) {
-    printf("NO GOOD TARGET DISTANCE INDICES \n");
-    return false;
+    plan_success = false;
+    goto end_process;
   } else {
     CheckVisibility();
     if (visible_total_index_.empty()) {
-      return false;
+      plan_success = false;
+      goto end_process;
     } else {
       CalculateBestIndex();
-      return true;
+      plan_success = true;
+      goto end_process;
     }
   }
-  return false;
+end_process : {
+  check_planning_end = std::chrono::system_clock::now();
+  elapsed_check_planning = check_planning_end - check_planning_start;
+  planning_time_ = elapsed_check_planning.count();
+  return plan_success;
+};
 }
 
 void TrajectoryPlanner3D::SampleShootingPoints() {
@@ -646,13 +664,11 @@ void TrajectoryPlanner3D::SampleShootingPoints() {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread / num_target_;
     vector<thread> worker_thread;
     PointListSet shooting_point_temp(param_.sampling.num_thread);
-    for (int j = 0; j < param_.sampling.num_thread; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++)
       worker_thread.emplace_back(&TrajectoryPlanner3D::SampleShootingPointsSubProcess, this, i,
                                  num_chunk, std::ref(shooting_point_temp[j]));
-    }
-    for (int j = 0; j < param_.sampling.num_thread; j++) {
+    for (int j = 0; j < param_.sampling.num_thread; j++)
       worker_thread[j].join();
-    }
     for (int j = 0; j < param_.sampling.num_thread; j++) {
       for (int k = 0; k < shooting_point_temp[j].size(); k++) {
         shooting_points_.push_back(shooting_point_temp[j][k]);
@@ -691,14 +707,12 @@ void TrajectoryPlanner3D::ComputePrimitives() {
   int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
   vector<thread> worker_thread;
   PrimitiveListSet primitive_list_temp(param_.sampling.num_thread);
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread.emplace_back(&TrajectoryPlanner3D::ComputePrimitivesSubProcess, this,
                                num_chunk * (i), num_chunk * (i + 1),
                                std::ref(primitive_list_temp[i]));
-  }
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread[i].join();
-  }
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     for (int j = 0; j < primitive_list_temp[i].size(); j++) {
       primitives_list_.push_back(primitive_list_temp[i][j]);
@@ -786,14 +800,12 @@ void TrajectoryPlanner3D::CheckDistanceFromTargets() {
   int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
   vector<thread> worker_thread;
   IndexListSet good_target_distance_index_list_temp(param_.sampling.num_thread);
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread.emplace_back(&TrajectoryPlanner3D::CheckDistanceFromTargetsSubProcess, this,
                                num_chunk * (i), num_chunk * (i + 1),
                                std::ref(good_target_distance_index_list_temp[i]));
-  }
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread[i].join();
-  }
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     for (int j = 0; j < good_target_distance_index_list_temp[i].size(); j++) {
       good_target_distance_index_list_.push_back(good_target_distance_index_list_temp[i][j]);
@@ -893,14 +905,12 @@ bool TrajectoryPlanner3D::CheckVisibilityAgainstStructuredObstacle() {
   int num_chunk = good_target_distance_index_list_.size() / param_.sampling.num_thread;
   vector<thread> worker_thread;
   IndexListSet visible_structured_index_temp(param_.sampling.num_thread);
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread.emplace_back(
         &TrajectoryPlanner3D::CheckVisibilityAgainstStructuredObstacleSubProcess, this,
         num_chunk * (i), num_chunk * (i + 1), std::ref(visible_structured_index_temp[i]));
-  }
-  for (int i = 0; i < param_.sampling.num_thread; i++) {
+  for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread[i].join();
-  }
   for (int i = 0; i < param_.sampling.num_thread; i++) {
     for (int j = 0; j < visible_structured_index_temp[i].size(); j++)
       visible_structured_index_.push_back(visible_structured_index_temp[i][j]);
