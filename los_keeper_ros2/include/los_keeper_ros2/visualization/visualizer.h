@@ -15,6 +15,7 @@ using TargetRawPathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 using KeeperRawPathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 using KeeperSafePathVisualizationMsg = visualization_msgs::msg::MarkerArray;
 using KeeperDyanmicallyFeasiblePathVisualizationMsg = visualization_msgs::msg::MarkerArray;
+using FailVisualizationMsg = visualization_msgs::msg::MarkerArray;
 
 namespace los_keeper {
 struct VisualizationParameters {
@@ -92,6 +93,24 @@ struct VisualizationParameters {
       float line_scale{0.01};
     } safe;
   } keeper;
+  struct {
+    struct {
+      struct {
+        float a{0.1};
+        float r{1.0};
+        float g{0.0};
+        float b{0.0};
+      } color;
+    } prediction;
+    struct {
+      struct {
+        float a{0.1};
+        float r{0.0};
+        float g{0.5};
+        float b{0.5};
+      } color;
+    } planning;
+  } fail_flag;
   string frame_id{"map"};
 };
 
@@ -115,6 +134,8 @@ public:
   KeeperRawPathVisualizationMsg VisualizeRawKeeperPathArray(const PrimitiveList &primitive_list);
   KeeperSafePathVisualizationMsg VisualizeSafeKeeperPathArray(const PrimitiveList &primitive_list,
                                                               const IndexList &safe_indices);
+  FailVisualizationMsg VisualizeFailFlagList(const bool &success_flag_prediction,
+                                             const bool &success_flag_planning);
 };
 
 } // namespace los_keeper

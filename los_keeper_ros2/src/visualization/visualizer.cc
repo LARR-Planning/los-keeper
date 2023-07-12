@@ -329,3 +329,66 @@ Visualizer::VisualizeSafeKeeperPathArray(const PrimitiveList &primitive_list,
   }
   return visual_output;
 }
+FailVisualizationMsg Visualizer::VisualizeFailFlagList(const bool &success_flag_prediction,
+                                                       const bool &success_flag_planning) {
+  FailVisualizationMsg visual_output;
+  static int last_num_id = 0;
+  int num_id = 0;
+  if (not success_flag_planning) {
+    visualization_msgs::msg::Marker fail_marker;
+    fail_marker.type = visualization_msgs::msg::Marker::CUBE;
+    fail_marker.header.frame_id = parameters_.frame_id;
+    fail_marker.color.a = parameters_.fail_flag.planning.color.a;
+    fail_marker.color.r = parameters_.fail_flag.planning.color.r;
+    fail_marker.color.g = parameters_.fail_flag.planning.color.g;
+    fail_marker.color.b = parameters_.fail_flag.planning.color.b;
+    fail_marker.scale.x = 100.0;
+    fail_marker.scale.y = 100.0;
+    fail_marker.scale.z = 100.0;
+    fail_marker.action = visualization_msgs::msg::Marker::ADD;
+    fail_marker.pose.position.x = 0.0;
+    fail_marker.pose.position.y = 0.0;
+    fail_marker.pose.position.z = 0.0;
+    fail_marker.pose.orientation.w = 1.0;
+    fail_marker.pose.orientation.x = 0.0;
+    fail_marker.pose.orientation.y = 0.0;
+    fail_marker.pose.orientation.z = 0.0;
+    fail_marker.ns = "fail_flag";
+    fail_marker.id = num_id++;
+    visual_output.markers.push_back(fail_marker);
+  }
+  if (not success_flag_prediction) {
+    printf("FAIL PREDICTION \n");
+    visualization_msgs::msg::Marker fail_marker;
+    fail_marker.type = visualization_msgs::msg::Marker::CUBE;
+    fail_marker.header.frame_id = parameters_.frame_id;
+    fail_marker.color.a = parameters_.fail_flag.prediction.color.a;
+    fail_marker.color.r = parameters_.fail_flag.prediction.color.r;
+    fail_marker.color.g = parameters_.fail_flag.prediction.color.g;
+    fail_marker.color.b = parameters_.fail_flag.prediction.color.b;
+    fail_marker.scale.x = 100.0;
+    fail_marker.scale.y = 100.0;
+    fail_marker.scale.z = 100.0;
+    fail_marker.action = visualization_msgs::msg::Marker::ADD;
+    fail_marker.pose.position.x = 0.0;
+    fail_marker.pose.position.y = 0.0;
+    fail_marker.pose.position.z = 0.0;
+    fail_marker.pose.orientation.w = 1.0;
+    fail_marker.pose.orientation.x = 0.0;
+    fail_marker.pose.orientation.y = 0.0;
+    fail_marker.pose.orientation.z = 0.0;
+    fail_marker.ns = "fail_flag";
+    fail_marker.id = num_id++;
+    visual_output.markers.push_back(fail_marker);
+  }
+  visualization_msgs::msg::Marker erase_marker;
+  erase_marker.action = visualization_msgs::msg::Marker::DELETE;
+  erase_marker.ns = "fail_flag";
+  erase_marker.header.frame_id = parameters_.frame_id;
+  for (int i = num_id; i < last_num_id; i++) {
+    erase_marker.id = i;
+    visual_output.markers.push_back(erase_marker);
+  }
+  last_num_id = num_id;
+  return visual_output;
+}

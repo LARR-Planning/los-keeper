@@ -37,8 +37,8 @@
         vel_max: 2.0
         acc_max: 5.0
       safe_distance:
-        rx: 0.01
-        ry: 0.01
+        rx: 0.05
+        ry: 0.05
         rz: 0.00
       virtual_pcl_bbox:
         width: 5.0
