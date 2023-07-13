@@ -14,6 +14,7 @@ using namespace std;
 namespace los_keeper {
 struct TargetManagerDebugInfo {
   int num_target{-1};
+  uint seq{0};
   bool success_flag{false};
   double prediction_time{0.0};
   PointListSet end_points;

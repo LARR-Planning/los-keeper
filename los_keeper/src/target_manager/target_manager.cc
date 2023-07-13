@@ -66,7 +66,9 @@ PrimitiveList los_keeper::TargetManager::GetTargetPredictionResult() {
 }
 los_keeper::TargetManagerDebugInfo los_keeper::TargetManager::GetDebugInfo() const {
   TargetManagerDebugInfo debug_info;
+  static uint seq = 0;
   debug_info.num_target = num_target_;
+  debug_info.seq = ++seq;
   debug_info.success_flag = not primitives_list_.empty() and
                             not primitive_safe_total_index_.empty() and
                             not primitive_best_index_.empty();
