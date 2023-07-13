@@ -61,6 +61,18 @@
           g: 0.5
           b: 1.0
         line_scale: 0.02
-
+    fail_flag:
+      prediction:
+        color:
+          a: 0.7
+          r: 1.0
+          g: 0.7
+          b: 0.7
+      planning:
+        color:
+          a: 0.7
+          r: 0.0
+          g: 0.5
+          b: 0.5
 
 

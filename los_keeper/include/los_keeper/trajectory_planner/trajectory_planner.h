@@ -11,14 +11,18 @@ using namespace std;
 namespace los_keeper {
 struct PlanningDebugInfo {
   PrimitiveList primitives_list;
+  PointListSet end_points;
   IndexList close_obstacle_index;
   IndexList safe_visibility_index;
   IndexList dynamically_feasible_index;
   IndexList primitive_best_index;
+  bool success_flag{false};
+  double planning_time{0.0};
 };
 class TrajectoryPlanner {
 private:
 protected:
+  double planning_time_{0.0};
   // INGREDIENT
   vector<StatePoly> structured_obstacle_poly_list_;
   pcl::PointCloud<pcl::PointXYZ> cloud_;

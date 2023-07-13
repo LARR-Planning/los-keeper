@@ -14,26 +14,24 @@ using namespace std;
 namespace los_keeper {
 struct TargetManagerDebugInfo {
   int num_target{-1};
-  bool has_structured_obstacle{false};
-  bool has_unstructured_obstacle{false};
-  //  PointListSet end_points{};
+  uint seq{0};
+  bool success_flag{false};
+  double prediction_time{0.0};
+  PointListSet end_points;
   PrimitiveListSet primitives_list;
-  //  IndexListSet close_obstacle_index{};
-  //  IndexListSet primitive_safe_pcl_index{};
-  //  IndexListSet primitive_safe_structured_obstacle_index{};
   IndexListSet primitive_safe_total_index;
   IndexList primitive_best_index;
 };
 class TargetManager {
 private:
 protected:
+  double prediction_time_{0.0};
   // INGREDIENT
   vector<StatePoly> structured_obstacle_poly_list_;
   pcl::PointCloud<pcl::PointXYZ> cloud_;
   vector<ObjectState> target_state_list_;
   int num_target_{};
   PredictionParameter param_;
-
   PointListSet end_points_;               // Sampled End Points from Dynamics Model //CLEAR:
   PrimitiveListSet primitives_list_;      // Raw primitives from //CLEAR: OK
   IndexListSet close_obstacle_index_;     // CLEAR: OK
