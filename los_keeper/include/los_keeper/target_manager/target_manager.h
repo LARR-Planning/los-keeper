@@ -27,9 +27,9 @@ private:
 protected:
   double prediction_time_{0.0};
   // INGREDIENT
-  vector<StatePoly> structured_obstacle_poly_list_;
-  pcl::PointCloud<pcl::PointXYZ> cloud_;
-  vector<ObjectState> target_state_list_;
+  //  vector<StatePoly> structured_obstacle_poly_list_;
+  //  pcl::PointCloud<pcl::PointXYZ> cloud_;
+  //  vector<ObjectState> target_state_list_;
   int num_target_{};
   PredictionParameter param_;
   PointListSet end_points_;               // Sampled End Points from Dynamics Model //CLEAR:
@@ -41,29 +41,34 @@ protected:
   IndexList primitive_best_index_;                        // CLEAR: OK
 
   // FUNCTION
-  virtual bool PredictTargetTrajectory() = 0; // Return true if at least one possible target
-                                              // trajectory exists
-  virtual void SampleEndPoints();
+  //  virtual bool PredictTargetTrajectory() = 0; // Return true if at least one possible target
+  // trajectory exists
+  virtual void SampleEndPoints(const vector<ObjectState> &target_state_list);
   virtual void SampleEndPointsSubProcess(const int &target_id, const int &chunk_size,
+                                         const vector<ObjectState> &target_state_list,
                                          PointList &endpoint_sub);
-  virtual void ComputePrimitives();
+  virtual void ComputePrimitives(const vector<ObjectState> &target_state_list);
   virtual void ComputePrimitivesSubProcess(const int &target_id, const int &start_idx,
-                                           const int &end_idx, PrimitiveList &primitive_list_sub);
-  virtual void CalculateCloseObstacleIndex(); // Return true if at least one non-colliding
-                                              // target trajectory exists
-  virtual bool CheckCollision() = 0;
-  virtual void CheckPclCollision();
-  virtual bool CheckStructuredObstacleCollision() = 0;
-  virtual void CheckStructuredObstacleCollisionSubProcess(const int &target_id,
-                                                          const int &start_idx, const int &end_idx,
-                                                          IndexList &safe_structured_index_sub);
+                                           const int &end_idx,
+                                           const vector<ObjectState> &target_state_list,
+                                           PrimitiveList &primitive_list_sub);
+  virtual void CalculateCloseObstacleIndex(
+      const vector<ObjectState> &target_state_list,
+      const vector<StatePoly>
+          &structured_obstacle_poly_list); // Return true if at least one non-colliding
+                                           // target trajectory exists
+  virtual bool CheckCollision(const los_keeper::PclPointCloud &point_cloud,
+                              const vector<StatePoly> &structured_obstacle_poly_list) = 0;
+  virtual void CheckPclCollision(const los_keeper::PclPointCloud &point_cloud);
+  virtual bool
+  CheckStructuredObstacleCollision(const vector<StatePoly> &structured_obstacle_poly_list) = 0;
+  virtual void CheckStructuredObstacleCollisionSubProcess(
+      const int &target_id, const int &start_idx, const int &end_idx,
+      const vector<StatePoly> &structured_obstacle_poly_list, IndexList &safe_structured_index_sub);
   virtual void CalculateCentroid();
   virtual void CalculateCentroidSubProcess(const int &target_id, const int &start_idx,
                                            const int &end_idx, pair<int, float> &min_dist);
   PrimitiveList GetTargetPredictionResult();
-  void SetTargetState(const vector<ObjectState> &target_state_list);
-  void SetObstacleState(pcl::PointCloud<pcl::PointXYZ> cloud,
-                        const PrimitiveList &structured_obstacle_poly_list);
 
 public:
   TargetManager();
@@ -80,30 +85,35 @@ class TargetManager2D : public los_keeper::TargetManager {
   FRIEND_TEST(ApiTestFixtureTargetManager2D, CheckWhenNoObstacles2D);
 
 private:
-  vector<LinearConstraint2D> GenLinearConstraint();
+  vector<LinearConstraint2D> GenLinearConstraint(const los_keeper::PclPointCloud &point_cloud);
   vec_E<Polyhedron2D> polys;
-  void SampleEndPoints() override;
+  void SampleEndPoints(const vector<ObjectState> &target_state_list) override;
   void SampleEndPointsSubProcess(const int &target_id, const int &chunk_size,
+                                 const vector<ObjectState> &target_state_list,
                                  PointList &endpoint_sub) override;
-  void ComputePrimitives() override;
+  void ComputePrimitives(const vector<ObjectState> &target_state_list) override;
   void ComputePrimitivesSubProcess(const int &target_id, const int &start_idx, const int &end_idx,
+                                   const vector<ObjectState> &target_state_list,
                                    PrimitiveList &primitive_list_sub) override;
-  void CalculateCloseObstacleIndex() override;
-  bool CheckCollision() override;
-  void CheckPclCollision() override;
+  void CalculateCloseObstacleIndex(const vector<ObjectState> &target_state_list,
+                                   const vector<StatePoly> &structured_obstacle_poly_list) override;
+  bool CheckCollision(const los_keeper::PclPointCloud &point_cloud,
+                      const vector<StatePoly> &structured_obstacle_poly_list) override;
+  void CheckPclCollision(const los_keeper::PclPointCloud &point_cloud) override;
   void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint2D &constraints,
                                    const int &start_idx, const int &end_idx,
                                    IndexList &safe_pcl_index_sub);
-  bool CheckStructuredObstacleCollision() override;
-  void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx,
-                                                  const int &end_idx,
-                                                  IndexList &safe_structured_index_sub) override;
+  bool
+  CheckStructuredObstacleCollision(const vector<StatePoly> &structured_obstacle_poly_list) override;
+  void
+  CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx,
+                                             const int &end_idx,
+                                             const vector<StatePoly> &structured_obstacle_poly_list,
+                                             IndexList &safe_structured_index_sub) override;
   void CalculateCentroid() override;
   void CalculateCentroidSubProcess(const int &target_id, const int &start_idx, const int &end_idx,
                                    pair<int, float> &min_dist) override;
-
   void CalculateSafePclIndex(const vector<LinearConstraint2D> &safe_corridor_list);
-  bool PredictTargetTrajectory() override;
 
 public:
   TargetManager2D() = default;
@@ -119,29 +129,35 @@ class TargetManager3D : public los_keeper::TargetManager {
   FRIEND_TEST(ApiTestFixtureTargetManager3D, CheckWhenNoObstacles3D);
 
 private:
-  vector<LinearConstraint3D> GenLinearConstraint();
+  vector<LinearConstraint3D> GenLinearConstraint(const los_keeper::PclPointCloud &point_cloud);
   vec_E<Polyhedron3D> polys;
-  void SampleEndPoints() override;
+  void SampleEndPoints(const vector<ObjectState> &target_state_list) override;
   void SampleEndPointsSubProcess(const int &target_id, const int &chunk_size,
+                                 const vector<ObjectState> &target_state_list,
                                  PointList &endpoint_sub) override;
-  void ComputePrimitives() override;
+  void ComputePrimitives(const vector<ObjectState> &target_state_list) override;
   void ComputePrimitivesSubProcess(const int &target_id, const int &start_idx, const int &end_idx,
+                                   const vector<ObjectState> &target_state_list,
                                    PrimitiveList &primitive_list_sub) override;
-  void CalculateCloseObstacleIndex() override;
-  bool CheckCollision() override;
-  void CheckPclCollision() override;
+  void CalculateCloseObstacleIndex(const vector<ObjectState> &target_state_list,
+                                   const vector<StatePoly> &structured_obstacle_poly_list) override;
+  bool CheckCollision(const los_keeper::PclPointCloud &point_cloud,
+                      const vector<StatePoly> &structured_obstacle_poly_list) override;
+  void CheckPclCollision(const los_keeper::PclPointCloud &point_cloud) override;
   void CheckPclCollisionSubProcess(const int &target_id, const LinearConstraint3D &constraints,
                                    const int &start_idx, const int &end_idx,
                                    IndexList &safe_pcl_index_sub);
-  bool CheckStructuredObstacleCollision() override;
-  void CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx,
-                                                  const int &end_idx,
-                                                  IndexList &safe_structured_index_sub) override;
+  bool
+  CheckStructuredObstacleCollision(const vector<StatePoly> &structured_obstacle_poly_list) override;
+  void
+  CheckStructuredObstacleCollisionSubProcess(const int &target_id, const int &start_idx,
+                                             const int &end_idx,
+                                             const vector<StatePoly> &structured_obstacle_poly_list,
+                                             IndexList &safe_structured_index_sub) override;
   void CalculateCentroid() override;
   void CalculateCentroidSubProcess(const int &target_id, const int &start_idx, const int &end_idx,
                                    pair<int, float> &min_dist) override;
   void CalculateSafePclIndex(const vector<LinearConstraint3D> &safe_corridor_list);
-  bool PredictTargetTrajectory() override;
 
 public:
   TargetManager3D() = default;
