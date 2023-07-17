@@ -9,48 +9,48 @@ std::optional<StatePoly> TrajectoryPlanner::ComputeChasingTrajectory(
   return std::nullopt;
 }
 
-void TrajectoryPlanner::SetTargetState(const PrimitiveList &target_trajectory_list) {
-  target_trajectory_list_.clear();
-  for (int i = 0; i < target_trajectory_list.size(); i++) {
-    BernsteinPoly px = target_trajectory_list[i].px.ElevateDegree(5);
-    BernsteinPoly py = target_trajectory_list[i].py.ElevateDegree(5);
-    BernsteinPoly pz = target_trajectory_list[i].pz.ElevateDegree(5);
+PrimitiveList
+TrajectoryPlanner::TranslateTargetPrediction(const PrimitiveList &target_trajectory_list) {
+  PrimitiveList translated_result;
+  num_target_ = (int)translated_result.size();
+  for (const auto &target : target_trajectory_list) {
+    BernsteinPoly px = target.px.ElevateDegree(5);
+    BernsteinPoly py = target.py.ElevateDegree(5);
+    BernsteinPoly pz = target.pz.ElevateDegree(5);
     StatePoly poly;
     poly.px = px;
     poly.py = py;
     poly.pz = pz;
-    poly.rx = target_trajectory_list[i].rx;
-    poly.ry = target_trajectory_list[i].ry;
-    poly.rz = target_trajectory_list[i].rz;
-    target_trajectory_list_.push_back(poly);
+    poly.rx = target.rx;
+    poly.ry = target.ry;
+    poly.rz = target.rz;
+    translated_result.push_back(poly);
   }
-  num_target_ = (int)target_trajectory_list.size();
+  return translated_result;
 }
-
-void TrajectoryPlanner::SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
-                                         const PrimitiveList &structured_obstacle_poly_list) {
-  structured_obstacle_poly_list_.clear();
-  for (int i = 0; i < structured_obstacle_poly_list.size(); i++) {
-    BernsteinPoly px = structured_obstacle_poly_list[i].px.ElevateDegree(5);
-    BernsteinPoly py = structured_obstacle_poly_list[i].py.ElevateDegree(5);
-    BernsteinPoly pz = structured_obstacle_poly_list[i].pz.ElevateDegree(5);
+PrimitiveList TrajectoryPlanner::TranslateStructuredObstaclePrediction(
+    const PrimitiveList &structured_obstacle_trajectory_list) {
+  PrimitiveList translated_result;
+  for (const auto &obstacle : structured_obstacle_trajectory_list) {
+    BernsteinPoly px = obstacle.px.ElevateDegree(5);
+    BernsteinPoly py = obstacle.py.ElevateDegree(5);
+    BernsteinPoly pz = obstacle.pz.ElevateDegree(5);
     StatePoly poly;
     poly.px = px;
     poly.py = py;
     poly.pz = pz;
-    poly.rx = structured_obstacle_poly_list[i].rx;
-    poly.ry = structured_obstacle_poly_list[i].ry;
-    poly.rz = structured_obstacle_poly_list[i].rz;
-    structured_obstacle_poly_list_.push_back(poly);
+    poly.rx = obstacle.rx;
+    poly.ry = obstacle.ry;
+    poly.rz = obstacle.rz;
+    translated_result.push_back(poly);
   }
-  cloud_.points.clear();
-  if (not cloud.points.empty())
-    cloud_.points = cloud.points;
+  return translated_result;
 }
 
-void TrajectoryPlanner::SampleShootingPoints() {}
+void TrajectoryPlanner::SampleShootingPoints(const PrimitiveList &target_prediction_list) {}
 
-void TrajectoryPlanner::SampleShootingPointsSubProcess(const int &target_id, const int &chunk_size,
+void TrajectoryPlanner::SampleShootingPointsSubProcess(const PrimitiveList &target_prediction_list,
+                                                       const int &target_id, const int &chunk_size,
                                                        PointList &shooting_points_sub) {}
 
 void TrajectoryPlanner::ComputePrimitives() {}
@@ -73,9 +73,9 @@ PlanningDebugInfo TrajectoryPlanner::GetDebugInfo() const {
     debug_info.primitives_list = primitives_list_;
   return debug_info;
 }
-void TrajectoryPlanner::SetKeeperState(const DroneState &drone_state) {
-  drone_state_ = drone_state;
-}
+// void TrajectoryPlanner::SetKeeperState(const DroneState &drone_state) {
+//   drone_state_ = drone_state;
+// }
 bool TrajectoryPlanner::CheckVisibility() {}
 bool CheckVisibilityAgainstStructuredObstacle() {}
 void TrajectoryPlanner::CheckVisibilityAgainstPcl() {}
@@ -119,15 +119,16 @@ end_process : {
 };
 }
 
-void TrajectoryPlanner2D::SampleShootingPoints() {
+void TrajectoryPlanner2D::SampleShootingPoints(const PrimitiveList &target_prediction_list) {
   shooting_points_.clear();
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread / num_target_;
     vector<thread> worker_thread;
     vector<vector<Point>> shooting_point_temp(param_.sampling.num_thread);
     for (int j = 0; j < param_.sampling.num_thread; j++)
-      worker_thread.emplace_back(&TrajectoryPlanner2D::SampleShootingPointsSubProcess, this, i,
-                                 num_chunk, std::ref(shooting_point_temp[j]));
+      worker_thread.emplace_back(&TrajectoryPlanner2D::SampleShootingPointsSubProcess, this,
+                                 target_prediction_list, i, num_chunk,
+                                 std::ref(shooting_point_temp[j]));
     for (int j = 0; j < param_.sampling.num_thread; j++)
       worker_thread[j].join();
     for (int j = 0; j < param_.sampling.num_thread; j++) {
@@ -138,12 +139,12 @@ void TrajectoryPlanner2D::SampleShootingPoints() {
   }
 }
 
-void TrajectoryPlanner2D::SampleShootingPointsSubProcess(const int &target_id,
-                                                         const int &chunk_size,
-                                                         PointList &shooting_points_sub) {
-  Point end_point_center{target_trajectory_list_[target_id].px.GetTerminalValue(),
-                         target_trajectory_list_[target_id].py.GetTerminalValue(),
-                         target_trajectory_list_[target_id].pz.GetTerminalValue()};
+void TrajectoryPlanner2D::SampleShootingPointsSubProcess(
+    const PrimitiveList &target_prediction_list, const int &target_id, const int &chunk_size,
+    PointList &shooting_points_sub) {
+  Point end_point_center{target_prediction_list[target_id].px.GetTerminalValue(),
+                         target_prediction_list[target_id].py.GetTerminalValue(),
+                         target_prediction_list[target_id].pz.GetTerminalValue()};
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_real_distribution<> r_dis(param_.distance.end_points_min,
@@ -241,14 +242,37 @@ TrajectoryPlanner2D::TrajectoryPlanner2D(const PlanningParameter &param)
 optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
     const DroneState &drone_state, const vector<StatePoly> &target_prediction_list,
     const PclPointCloud &obstacle_points, const vector<StatePoly> &structured_obstacle_poly_list) {
-  this->SetKeeperState(drone_state);
-  this->SetTargetState(target_prediction_list);
-  this->SetObstacleState(obstacle_points, structured_obstacle_poly_list);
-  bool plan_success = this->PlanKeeperTrajectory();
-  if (plan_success) {
-    //    printf("PLAN SUCCESS\n");
+  bool plan_success;
+  auto check_planning_start = std::chrono::system_clock::now();
+  auto check_planning_end = check_planning_start;
+  std::chrono::duration<double> elapsed_check_planning{};
+  PrimitiveList structured_obstacle_prediction_result =
+      TranslateStructuredObstaclePrediction(structured_obstacle_poly_list);
+  PrimitiveList target_prediction_result = TranslateTargetPrediction(target_prediction_list);
+  SampleShootingPoints(target_prediction_result);
+  ComputePrimitives(drone_state);
+  CalculateCloseObstacleIndex(drone_state, structured_obstacle_prediction_result);
+  CheckDistanceFromTargets(target_prediction_result);
+  if (good_target_distance_index_list_.empty()) {
+    plan_success = false;
+    goto end_process;
+  }
+  CheckVisibility(target_prediction_result, obstacle_points, structured_obstacle_prediction_result);
+  if (visible_total_index_.empty()) {
+    plan_success = false;
+    goto end_process;
+  }
+  CalculateBestIndex();
+  plan_success = true;
+  goto end_process;
+
+end_process : {
+  check_planning_end = std::chrono::system_clock::now();
+  elapsed_check_planning = check_planning_end - check_planning_start;
+  planning_time_ = elapsed_check_planning.count();
+};
+  if (plan_success) // target trajectories exist
     return GetBestKeeperTrajectory();
-  }    // target trajectories exist
   else // no target trajectory exists
     return std::nullopt;
 }
@@ -658,15 +682,16 @@ end_process : {
 };
 }
 
-void TrajectoryPlanner3D::SampleShootingPoints() {
+void TrajectoryPlanner3D::SampleShootingPoints(const PrimitiveList &target_prediction_list) {
   shooting_points_.clear();
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread / num_target_;
     vector<thread> worker_thread;
     PointListSet shooting_point_temp(param_.sampling.num_thread);
     for (int j = 0; j < param_.sampling.num_thread; j++)
-      worker_thread.emplace_back(&TrajectoryPlanner3D::SampleShootingPointsSubProcess, this, i,
-                                 num_chunk, std::ref(shooting_point_temp[j]));
+      worker_thread.emplace_back(&TrajectoryPlanner3D::SampleShootingPointsSubProcess, this,
+                                 target_prediction_list, i, num_chunk,
+                                 std::ref(shooting_point_temp[j]));
     for (int j = 0; j < param_.sampling.num_thread; j++)
       worker_thread[j].join();
     for (int j = 0; j < param_.sampling.num_thread; j++) {
@@ -677,12 +702,12 @@ void TrajectoryPlanner3D::SampleShootingPoints() {
   }
 }
 
-void TrajectoryPlanner3D::SampleShootingPointsSubProcess(const int &target_id,
-                                                         const int &chunk_size,
-                                                         PointList &shooting_points_sub) {
-  Point end_point_center{target_trajectory_list_[target_id].px.GetTerminalValue(),
-                         target_trajectory_list_[target_id].py.GetTerminalValue(),
-                         target_trajectory_list_[target_id].pz.GetTerminalValue()};
+void TrajectoryPlanner3D::SampleShootingPointsSubProcess(
+    const PrimitiveList &target_prediction_list, const int &target_id, const int &chunk_size,
+    PointList &shooting_points_sub) {
+  Point end_point_center{target_prediction_list[target_id].px.GetTerminalValue(),
+                         target_prediction_list[target_id].py.GetTerminalValue(),
+                         target_prediction_list[target_id].pz.GetTerminalValue()};
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_real_distribution<> r_dis(param_.distance.end_points_min,

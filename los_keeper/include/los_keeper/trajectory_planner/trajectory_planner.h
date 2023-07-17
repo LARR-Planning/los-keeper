@@ -24,11 +24,11 @@ private:
 protected:
   double planning_time_{0.0};
   // INGREDIENT
-  vector<StatePoly> structured_obstacle_poly_list_;
-  pcl::PointCloud<pcl::PointXYZ> cloud_;
-  PrimitiveList target_trajectory_list_;
+  //  vector<StatePoly> structured_obstacle_poly_list_;
+  //  pcl::PointCloud<pcl::PointXYZ> cloud_;
+  //  PrimitiveList target_trajectory_list_;
   int num_target_;
-  DroneState drone_state_;
+  //  DroneState drone_state_;
 
   // PARAMETER
   PlanningParameter param_;
@@ -51,8 +51,9 @@ protected:
   // CheckFovLimit
   // CalculateBestIndex
 
-  virtual void SampleShootingPoints();
-  virtual void SampleShootingPointsSubProcess(const int &target_id, const int &chunk_size,
+  virtual void SampleShootingPoints(const PrimitiveList &target_prediction_list);
+  virtual void SampleShootingPointsSubProcess(const PrimitiveList &target_prediction_list,
+                                              const int &target_id, const int &chunk_size,
                                               PointList &shooting_points_sub);
   virtual void ComputePrimitives();
 
@@ -71,11 +72,17 @@ protected:
   virtual void CalculateBestIndex();
   virtual void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                             pair<int, float> &min_jerk_pair);
-  void SetTargetState(const PrimitiveList &target_trajectory_list);
-  void SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
-                        const PrimitiveList &structured_obstacle_poly_list);
-  void SetKeeperState(const DroneState &drone_state);
-  virtual bool PlanKeeperTrajectory() = 0;
+  //  void SetTargetState(const PrimitiveList &target_trajectory_list);
+  PrimitiveList TranslateTargetPrediction(const PrimitiveList &target_trajectory_list);
+  PrimitiveList
+  TranslateStructuredObstaclePrediction(const PrimitiveList &structured_obstacle_trajectory_list);
+  //  void SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
+  //                        const PrimitiveList &structured_obstacle_poly_list);
+  //  void SetKeeperState(const DroneState &drone_state);
+  virtual bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
+                                    const DroneState &drone_state,
+                                    const los_keeper::PclPointCloud &cloud,
+                                    const PrimitiveList &structured_obstacle_trajectory_list) = 0;
   StatePoly GetBestKeeperTrajectory();
 
 public:
@@ -91,8 +98,9 @@ public:
 
 class TrajectoryPlanner2D : public TrajectoryPlanner {
 private:
-  void SampleShootingPoints() override;
-  void SampleShootingPointsSubProcess(const int &target_id, const int &chunk_size,
+  void SampleShootingPoints(const PrimitiveList &target_prediction_list) override;
+  void SampleShootingPointsSubProcess(const PrimitiveList &target_prediction_list,
+                                      const int &target_id, const int &chunk_size,
                                       PointList &shooting_points_sub) override;
   void ComputePrimitives() override;
   void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
@@ -109,7 +117,9 @@ private:
   void CalculateBestIndex() override;
   void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                     pair<int, float> &min_jerk_pair) override;
-  bool PlanKeeperTrajectory() override;
+  bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
+                            const DroneState &drone_state, const los_keeper::PclPointCloud &cloud,
+                            const PrimitiveList &structured_obstacle_trajectory_list) override;
 
 public:
   TrajectoryPlanner2D() = default;
@@ -123,8 +133,9 @@ public:
 
 class TrajectoryPlanner3D : public TrajectoryPlanner {
 private:
-  void SampleShootingPoints() override;
-  void SampleShootingPointsSubProcess(const int &target_id, const int &chunk_size,
+  void SampleShootingPoints(const PrimitiveList &target_prediction_list) override;
+  void SampleShootingPointsSubProcess(const PrimitiveList &target_prediction_list,
+                                      const int &target_id, const int &chunk_size,
                                       PointList &shooting_points_sub) override;
   void ComputePrimitives() override;
   void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
@@ -141,7 +152,9 @@ private:
   void CalculateBestIndex() override;
   void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                     pair<int, float> &min_jerk_pair) override;
-  bool PlanKeeperTrajectory() override;
+  bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
+                            const DroneState &drone_state, const los_keeper::PclPointCloud &cloud,
+                            const PrimitiveList &structured_obstacle_trajectory_list) override;
 
 public:
   TrajectoryPlanner3D() = default;
