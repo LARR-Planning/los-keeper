@@ -4,9 +4,12 @@
 #ifndef HEADER_BERNSTEIN_POLYNOMIAL_UTILS
 #define HEADER_BERNSTEIN_POLYNOMIAL_UTILS
 int factorial(int num);
-int nchoosek(int n, int r);
+int nchoosek(int n, int k);
+int nchooser(int n, int r);
+#include "los_keeper/math_utils/combination.h"
 #include "gtest/gtest.h"
 #include <cmath>
+
 using namespace std;
 using BernsteinCoefficients = vector<float>;
 class BernsteinPoly {
