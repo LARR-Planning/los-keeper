@@ -75,7 +75,6 @@ PlanningDebugInfo TrajectoryPlanner::GetDebugInfo() const {
     debug_info.primitives_list = primitives_list_;
   return debug_info;
 }
-
 bool TrajectoryPlanner::CheckVisibility(const PrimitiveList &target_trajectory_list,
                                         const los_keeper::PclPointCloud &cloud,
                                         const PrimitiveList &structured_obstacle_poly_list) {}
@@ -90,37 +89,6 @@ void TrajectoryPlanner::CalculateCloseObstacleIndex(
     const DroneState &drone_state, const PrimitiveList &structured_obstacle_trajectory_list) {}
 void TrajectoryPlanner::CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                                      pair<int, float> &min_jerk_pair) {}
-
-// bool TrajectoryPlanner2D::PlanKeeperTrajectory() {
-//   bool plan_success;
-//   auto check_planning_start = std::chrono::system_clock::now();
-//   auto check_planning_end = check_planning_start = check_planning_start;
-//   std::chrono::duration<double> elapsed_check_planning{};
-//   SampleShootingPoints();
-//   ComputePrimitives();
-//   CalculateCloseObstacleIndex();
-//   CheckDistanceFromTargets();
-//   if (good_target_distance_index_list_.empty()) {
-//     plan_success = false;
-//     goto end_process;
-//   } else {
-//     CheckVisibility();
-//     if (visible_total_index_.empty()) {
-//       plan_success = false;
-//       goto end_process;
-//     } else {
-//       CalculateBestIndex();
-//       plan_success = true;
-//       goto end_process;
-//     }
-//   }
-// end_process : {
-//   check_planning_end = std::chrono::system_clock::now();
-//   elapsed_check_planning = check_planning_end - check_planning_start;
-//   planning_time_ = elapsed_check_planning.count();
-//   return plan_success;
-// };
-// }
 
 void TrajectoryPlanner2D::SampleShootingPoints(const PrimitiveList &target_prediction_list) {
   shooting_points_.clear();
@@ -660,37 +628,6 @@ void TrajectoryPlanner2D::CalculateBestIndexSubProcess(const int &start_idx, con
     }
   }
 }
-//
-// bool TrajectoryPlanner3D::PlanKeeperTrajectory() {
-//  bool plan_success;
-//  auto check_planning_start = std::chrono::system_clock::now();
-//  auto check_planning_end = check_planning_start = check_planning_start;
-//  std::chrono::duration<double> elapsed_check_planning{};
-//  SampleShootingPoints();
-//  ComputePrimitives();
-//  CalculateCloseObstacleIndex();
-//  CheckDistanceFromTargets();
-//  if (good_target_distance_index_list_.empty()) {
-//    plan_success = false;
-//    goto end_process;
-//  } else {
-//    CheckVisibility();
-//    if (visible_total_index_.empty()) {
-//      plan_success = false;
-//      goto end_process;
-//    } else {
-//      CalculateBestIndex();
-//      plan_success = true;
-//      goto end_process;
-//    }
-//  }
-// end_process : {
-//  check_planning_end = std::chrono::system_clock::now();
-//  elapsed_check_planning = check_planning_end - check_planning_start;
-//  planning_time_ = elapsed_check_planning.count();
-//  return plan_success;
-//};
-//}
 
 void TrajectoryPlanner3D::SampleShootingPoints(const PrimitiveList &target_prediction_list) {
   shooting_points_.clear();

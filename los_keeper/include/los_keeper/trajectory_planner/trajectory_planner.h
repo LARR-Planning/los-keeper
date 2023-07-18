@@ -78,14 +78,6 @@ protected:
   PrimitiveList TranslateTargetPrediction(const PrimitiveList &target_trajectory_list);
   PrimitiveList
   TranslateStructuredObstaclePrediction(const PrimitiveList &structured_obstacle_trajectory_list);
-  //  void SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
-  //                        const PrimitiveList &structured_obstacle_poly_list);
-  //  void SetKeeperState(const DroneState &drone_state);
-  //  virtual bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
-  //                                    const DroneState &drone_state,
-  //                                    const los_keeper::PclPointCloud &cloud,
-  //                                    const PrimitiveList &structured_obstacle_trajectory_list) =
-  //                                    0;
   StatePoly GetBestKeeperTrajectory();
 
 public:
@@ -129,10 +121,6 @@ private:
   void CalculateBestIndex() override;
   void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                     pair<int, float> &min_jerk_pair) override;
-  //  bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
-  //                            const DroneState &drone_state, const los_keeper::PclPointCloud
-  //                            &cloud, const PrimitiveList &structured_obstacle_trajectory_list)
-  //                            override;
 
 public:
   TrajectoryPlanner2D() = default;
@@ -174,10 +162,6 @@ private:
   void CalculateBestIndex() override;
   void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                     pair<int, float> &min_jerk_pair) override;
-  //  bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
-  //                            const DroneState &drone_state, const los_keeper::PclPointCloud
-  //                            &cloud, const PrimitiveList &structured_obstacle_trajectory_list)
-  //                            override;
 
 public:
   TrajectoryPlanner3D() = default;
