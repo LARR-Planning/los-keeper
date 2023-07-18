@@ -23,13 +23,7 @@ class TrajectoryPlanner {
 private:
 protected:
   double planning_time_{0.0};
-  // INGREDIENT
-  //  vector<StatePoly> structured_obstacle_poly_list_;
-  //  pcl::PointCloud<pcl::PointXYZ> cloud_;
-  //  PrimitiveList target_trajectory_list_;
   int num_target_;
-  //  DroneState drone_state_;
-
   // PARAMETER
   PlanningParameter param_;
 
@@ -55,19 +49,27 @@ protected:
   virtual void SampleShootingPointsSubProcess(const PrimitiveList &target_prediction_list,
                                               const int &target_id, const int &chunk_size,
                                               PointList &shooting_points_sub);
-  virtual void ComputePrimitives();
+  virtual void ComputePrimitives(const DroneState &drone_state);
 
   virtual void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
+                                           const DroneState &drone_state,
                                            PrimitiveList &primitive_list_sub);
-  virtual void CalculateCloseObstacleIndex();
-  virtual void CheckDistanceFromTargets();
+  virtual void
+  CalculateCloseObstacleIndex(const DroneState &drone_state,
+                              const PrimitiveList &structured_obstacle_trajectory_list);
+  virtual void CheckDistanceFromTargets(const PrimitiveList &target_trajectory_list);
   virtual void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
+                                                  const PrimitiveList &target_trajectory_list,
                                                   IndexList &dist_idx_sub);
-  virtual bool CheckVisibility() = 0;
-  virtual bool CheckVisibilityAgainstStructuredObstacle() = 0;
-  virtual void CheckVisibilityAgainstStructuredObstacleSubProcess(const int &start_idx,
-                                                                  const int &end_idx,
-                                                                  IndexList &visible_idx);
+  virtual bool CheckVisibility(const PrimitiveList &target_trajectory_list,
+                               const los_keeper::PclPointCloud &cloud,
+                               const PrimitiveList &structured_obstacle_poly_list) = 0;
+  virtual bool
+  CheckVisibilityAgainstStructuredObstacle(const PrimitiveList &structured_obstacle_poly_list,
+                                           const PrimitiveList &target_prediction_list) = 0;
+  virtual void CheckVisibilityAgainstStructuredObstacleSubProcess(
+      const int &start_idx, const int &end_idx, const PrimitiveList &structured_obstacle_poly_list,
+      const PrimitiveList &target_prediction_list, IndexList &visible_idx);
   virtual void CheckVisibilityAgainstPcl();
   virtual void CalculateBestIndex();
   virtual void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
@@ -79,10 +81,11 @@ protected:
   //  void SetObstacleState(const pcl::PointCloud<pcl::PointXYZ> &cloud,
   //                        const PrimitiveList &structured_obstacle_poly_list);
   //  void SetKeeperState(const DroneState &drone_state);
-  virtual bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
-                                    const DroneState &drone_state,
-                                    const los_keeper::PclPointCloud &cloud,
-                                    const PrimitiveList &structured_obstacle_trajectory_list) = 0;
+  //  virtual bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
+  //                                    const DroneState &drone_state,
+  //                                    const los_keeper::PclPointCloud &cloud,
+  //                                    const PrimitiveList &structured_obstacle_trajectory_list) =
+  //                                    0;
   StatePoly GetBestKeeperTrajectory();
 
 public:
@@ -102,24 +105,34 @@ private:
   void SampleShootingPointsSubProcess(const PrimitiveList &target_prediction_list,
                                       const int &target_id, const int &chunk_size,
                                       PointList &shooting_points_sub) override;
-  void ComputePrimitives() override;
+  void ComputePrimitives(const DroneState &drone_state) override;
   void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
+                                   const DroneState &drone_state,
                                    PrimitiveList &primitive_list_sub) override;
-  void CalculateCloseObstacleIndex() override;
-  void CheckDistanceFromTargets() override;
+  void
+  CalculateCloseObstacleIndex(const DroneState &drone_state,
+                              const PrimitiveList &structured_obstacle_trajectory_list) override;
+  void CheckDistanceFromTargets(const PrimitiveList &target_trajectory_list) override;
   void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
+                                          const PrimitiveList &target_trajectory_list,
                                           IndexList &dist_idx_sub) override;
-  bool CheckVisibility() override;
-  bool CheckVisibilityAgainstStructuredObstacle() override;
-  void CheckVisibilityAgainstStructuredObstacleSubProcess(const int &start_idx, const int &end_idx,
-                                                          IndexList &visible_idx) override;
+  bool CheckVisibility(const PrimitiveList &target_trajectory_list,
+                       const los_keeper::PclPointCloud &cloud,
+                       const PrimitiveList &structured_obstacle_poly_list) override;
+  bool
+  CheckVisibilityAgainstStructuredObstacle(const PrimitiveList &structured_obstacle_poly_list,
+                                           const PrimitiveList &target_prediction_list) override;
+  void CheckVisibilityAgainstStructuredObstacleSubProcess(
+      const int &start_idx, const int &end_idx, const PrimitiveList &structured_obstacle_poly_list,
+      const PrimitiveList &target_prediction_list, IndexList &visible_idx) override;
   void CheckVisibilityAgainstPcl() override;
   void CalculateBestIndex() override;
   void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                     pair<int, float> &min_jerk_pair) override;
-  bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
-                            const DroneState &drone_state, const los_keeper::PclPointCloud &cloud,
-                            const PrimitiveList &structured_obstacle_trajectory_list) override;
+  //  bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
+  //                            const DroneState &drone_state, const los_keeper::PclPointCloud
+  //                            &cloud, const PrimitiveList &structured_obstacle_trajectory_list)
+  //                            override;
 
 public:
   TrajectoryPlanner2D() = default;
@@ -137,24 +150,34 @@ private:
   void SampleShootingPointsSubProcess(const PrimitiveList &target_prediction_list,
                                       const int &target_id, const int &chunk_size,
                                       PointList &shooting_points_sub) override;
-  void ComputePrimitives() override;
+  void ComputePrimitives(const DroneState &drone_state) override;
   void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
+                                   const DroneState &drone_state,
                                    PrimitiveList &primitive_list_sub) override;
-  void CalculateCloseObstacleIndex() override;
-  void CheckDistanceFromTargets() override;
+  void
+  CalculateCloseObstacleIndex(const DroneState &drone_state,
+                              const PrimitiveList &structured_obstacle_trajectory_list) override;
+  void CheckDistanceFromTargets(const PrimitiveList &target_trajectory_list) override;
   void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
+                                          const PrimitiveList &target_trajectory_list,
                                           IndexList &dist_idx_sub) override;
-  bool CheckVisibility() override;
-  bool CheckVisibilityAgainstStructuredObstacle() override;
-  void CheckVisibilityAgainstStructuredObstacleSubProcess(const int &start_idx, const int &end_idx,
-                                                          IndexList &visible_idx) override;
+  bool CheckVisibility(const PrimitiveList &target_trajectory_list,
+                       const los_keeper::PclPointCloud &cloud,
+                       const PrimitiveList &structured_obstacle_poly_list) override;
+  bool
+  CheckVisibilityAgainstStructuredObstacle(const PrimitiveList &structured_obstacle_poly_list,
+                                           const PrimitiveList &target_prediction_list) override;
+  void CheckVisibilityAgainstStructuredObstacleSubProcess(
+      const int &start_idx, const int &end_idx, const PrimitiveList &structured_obstacle_poly_list,
+      const PrimitiveList &target_prediction_list, IndexList &visible_idx) override;
   void CheckVisibilityAgainstPcl() override;
   void CalculateBestIndex() override;
   void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                     pair<int, float> &min_jerk_pair) override;
-  bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
-                            const DroneState &drone_state, const los_keeper::PclPointCloud &cloud,
-                            const PrimitiveList &structured_obstacle_trajectory_list) override;
+  //  bool PlanKeeperTrajectory(const PrimitiveList &target_trajectory_list,
+  //                            const DroneState &drone_state, const los_keeper::PclPointCloud
+  //                            &cloud, const PrimitiveList &structured_obstacle_trajectory_list)
+  //                            override;
 
 public:
   TrajectoryPlanner3D() = default;

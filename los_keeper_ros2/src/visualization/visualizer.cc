@@ -127,7 +127,6 @@ Visualizer::VisualizeSafeTargetPathArray(const PrimitiveListSet &primitive_list,
   TargetBestPathVisualizationMsg visual_output;
   if (not parameters_.target.safe.publish)
     return visual_output;
-
   bool is_primitive_generated_big = not primitive_list.empty();
   bool is_primitive_generated = true;
   if (is_primitive_generated_big) {

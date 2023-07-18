@@ -22,7 +22,7 @@
         height: 3.0
     trajectory_planner:
       sampling:
-        num_sample: 250
+        num_sample: 300
         num_thread: 5
         is_lite: false
       horizon:
