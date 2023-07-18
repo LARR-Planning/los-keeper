@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(los_keeper)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++17")
 set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_CXX_STANDARD 17)
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 

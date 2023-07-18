@@ -15,14 +15,13 @@ protected:
 TEST_F(ApiTestFixtureTargetManager2D, CheckWhenNoObstacles2D) {
   target_manager_2d_.param_.distance.obstacle_max = 1.0f;
   target_manager_2d_.param_.dynamic_limits.vel_max = 1.0f;
-  target_manager_2d_.param_.dynamic_limits.acc_max = 1.0f;
+  target_manager_2d_.param_.dynamic_limits.acc_max = 0.1f;
   target_manager_2d_.param_.virtual_pcl_bbox.height = 1.0f;
   target_manager_2d_.param_.virtual_pcl_bbox.width = 1.0f;
   target_manager_2d_.param_.horizon.prediction = 1.0f;
-  target_manager_2d_.param_.sampling.num_sample = 2000;
+  target_manager_2d_.param_.sampling.num_sample = 500;
   target_manager_2d_.param_.sampling.num_thread = 4;
   target_manager_2d_.param_.sampling.is_lite = false;
-
   ObjectState target_1;
   ObjectState target_2;
   target_1.id = 0;
@@ -50,7 +49,7 @@ TEST_F(ApiTestFixtureTargetManager2D, CheckWhenNoObstacles2D) {
   target_state_list.push_back(target_2);
   vector<StatePoly> empty_obs;
   los_keeper::PclPointCloud empty_pcl;
-  //  target_manager_2d_.SetTargetState(target_state_list);
+  target_manager_2d_.num_target_ = target_state_list.size();
   target_manager_2d_.SampleEndPoints(target_state_list);
   EXPECT_EQ(target_manager_2d_.end_points_[0].size(),
             target_manager_2d_.param_.sampling.num_sample);
@@ -140,6 +139,7 @@ TEST_F(ApiTestFixtureTargetManager3D, CheckWhenNoObstacles3D) {
   target_state_list.push_back(target_2);
   vector<StatePoly> empty_obs;
   los_keeper::PclPointCloud empty_pcl;
+  target_manager_3d_.num_target_ = target_state_list.size();
   target_manager_3d_.SampleEndPoints(target_state_list);
   EXPECT_EQ(target_manager_3d_.end_points_[0].size(),
             target_manager_3d_.param_.sampling.num_sample);
