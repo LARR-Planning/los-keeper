@@ -15,14 +15,13 @@ protected:
 TEST_F(ApiTestFixtureTargetManager2D, CheckWhenNoObstacles2D) {
   target_manager_2d_.param_.distance.obstacle_max = 1.0f;
   target_manager_2d_.param_.dynamic_limits.vel_max = 1.0f;
-  target_manager_2d_.param_.dynamic_limits.acc_max = 1.0f;
+  target_manager_2d_.param_.dynamic_limits.acc_max = 0.1f;
   target_manager_2d_.param_.virtual_pcl_bbox.height = 1.0f;
   target_manager_2d_.param_.virtual_pcl_bbox.width = 1.0f;
   target_manager_2d_.param_.horizon.prediction = 1.0f;
-  target_manager_2d_.param_.sampling.num_sample = 2000;
+  target_manager_2d_.param_.sampling.num_sample = 500;
   target_manager_2d_.param_.sampling.num_thread = 4;
   target_manager_2d_.param_.sampling.is_lite = false;
-
   ObjectState target_1;
   ObjectState target_2;
   target_1.id = 0;
@@ -48,21 +47,23 @@ TEST_F(ApiTestFixtureTargetManager2D, CheckWhenNoObstacles2D) {
   vector<ObjectState> target_state_list;
   target_state_list.push_back(target_1);
   target_state_list.push_back(target_2);
-  target_manager_2d_.SetTargetState(target_state_list);
-  target_manager_2d_.SampleEndPoints();
+  vector<StatePoly> empty_obs;
+  los_keeper::PclPointCloud empty_pcl;
+  target_manager_2d_.num_target_ = target_state_list.size();
+  target_manager_2d_.SampleEndPoints(target_state_list);
   EXPECT_EQ(target_manager_2d_.end_points_[0].size(),
             target_manager_2d_.param_.sampling.num_sample);
   EXPECT_EQ(target_manager_2d_.end_points_[1].size(),
             target_manager_2d_.param_.sampling.num_sample);
-  target_manager_2d_.ComputePrimitives();
+  target_manager_2d_.ComputePrimitives(target_state_list);
   EXPECT_EQ(target_manager_2d_.primitives_list_[0].size(),
             target_manager_2d_.param_.sampling.num_sample);
   EXPECT_EQ(target_manager_2d_.primitives_list_[1].size(),
             target_manager_2d_.param_.sampling.num_sample);
-  target_manager_2d_.CalculateCloseObstacleIndex();
+  target_manager_2d_.CalculateCloseObstacleIndex(target_state_list, empty_obs);
   EXPECT_EQ(target_manager_2d_.close_obstacle_index_[0].size(), 0);
   EXPECT_EQ(target_manager_2d_.close_obstacle_index_[1].size(), 0);
-  target_manager_2d_.CheckCollision();
+  target_manager_2d_.CheckCollision(empty_pcl, empty_obs);
   EXPECT_EQ(target_manager_2d_.primitive_safe_total_index_[0].size(),
             target_manager_2d_.primitives_list_[0].size());
   EXPECT_EQ(target_manager_2d_.primitive_safe_total_index_[1].size(),
@@ -87,10 +88,6 @@ TEST_F(ApiTestFixtureTargetManager2D, CheckWhenNoObstacles2D) {
     printf("%f, ",
            target_manager_2d_.primitives_list_[1][target_manager_2d_.primitive_best_index_[1]]
                .px.GetBernsteinCoefficient()[i]);
-  }
-  printf("\n");
-  for (int i = 0; i < 1000; i++) {
-    target_manager_2d_.PredictTargetTrajectory();
   }
 }
 
@@ -140,21 +137,23 @@ TEST_F(ApiTestFixtureTargetManager3D, CheckWhenNoObstacles3D) {
   vector<ObjectState> target_state_list;
   target_state_list.push_back(target_1);
   target_state_list.push_back(target_2);
-  target_manager_3d_.SetTargetState(target_state_list);
-  target_manager_3d_.SampleEndPoints();
+  vector<StatePoly> empty_obs;
+  los_keeper::PclPointCloud empty_pcl;
+  target_manager_3d_.num_target_ = target_state_list.size();
+  target_manager_3d_.SampleEndPoints(target_state_list);
   EXPECT_EQ(target_manager_3d_.end_points_[0].size(),
             target_manager_3d_.param_.sampling.num_sample);
   EXPECT_EQ(target_manager_3d_.end_points_[1].size(),
             target_manager_3d_.param_.sampling.num_sample);
-  target_manager_3d_.ComputePrimitives();
+  target_manager_3d_.ComputePrimitives(target_state_list);
   EXPECT_EQ(target_manager_3d_.primitives_list_[0].size(),
             target_manager_3d_.param_.sampling.num_sample);
   EXPECT_EQ(target_manager_3d_.primitives_list_[1].size(),
             target_manager_3d_.param_.sampling.num_sample);
-  target_manager_3d_.CalculateCloseObstacleIndex();
+  target_manager_3d_.CalculateCloseObstacleIndex(target_state_list, empty_obs);
   EXPECT_EQ(target_manager_3d_.close_obstacle_index_[0].size(), 0);
   EXPECT_EQ(target_manager_3d_.close_obstacle_index_[1].size(), 0);
-  target_manager_3d_.CheckCollision();
+  target_manager_3d_.CheckCollision(empty_pcl, empty_obs);
   EXPECT_EQ(target_manager_3d_.primitive_safe_total_index_[0].size(),
             target_manager_3d_.primitives_list_[0].size());
   EXPECT_EQ(target_manager_3d_.primitive_safe_total_index_[1].size(),

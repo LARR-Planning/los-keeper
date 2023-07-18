@@ -42,8 +42,8 @@ public:
   const double *GetTimeInterval() const { return time_interval_; };
   BernsteinCoefficients GetBernsteinCoefficient() const { return this->bernstein_coeff_; };
   float GetValue(double t) const;
-  float GetInitialValue() { return bernstein_coeff_[0]; };
-  float GetTerminalValue() { return bernstein_coeff_[degree_]; };
+  float GetInitialValue() const { return bernstein_coeff_[0]; };
+  float GetTerminalValue() const { return bernstein_coeff_[degree_]; };
   BernsteinPoly ElevateDegree(int m) const; // Change to higher degree (m)
   void ElevateDegree(const int &m);         // Change to higher degree (m)
   BernsteinPoly operator+(const BernsteinPoly &rhs_);
