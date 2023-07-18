@@ -4,19 +4,26 @@ int factorial(int num) {
     return 1;
   return num * factorial(num - 1);
 }
-int nchoosek(int n, int r) {
+int nchoosek(int n, int k) {
   long long int number = 1;
-  if (n - r > r) {
-    for (int i = n; i > n - r; i--) {
+  if (n - k > k) {
+    for (int i = n; i > n - k; i--) {
       number = number * i;
     }
-    return (int)(number / factorial(r));
+    return (int)(number / factorial(k));
   } else {
-    for (int i = n; i > r; i--) {
+    for (int i = n; i > k; i--) {
       number = number * i;
     }
-    return (int)(number / factorial(n - r));
+    return (int)(number / factorial(n - k));
   }
+}
+int nchooser(int n, int r) {
+  if (n < 0 or r < 0)
+    return 0;
+  if (n == r)
+    return 1;
+  return n_choose_r[n][r];
 }
 
 BernsteinPoly::BernsteinPoly(const double time_interval[],
