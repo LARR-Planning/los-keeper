@@ -89,6 +89,7 @@ void TrajectoryPlanner::CalculateCloseObstacleIndex(
     const DroneState &drone_state, const PrimitiveList &structured_obstacle_trajectory_list) {}
 void TrajectoryPlanner::CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                                      pair<int, float> &min_jerk_pair) {}
+void TrajectoryPlanner::CheckDynamicLimits() {}
 
 void TrajectoryPlanner2D::SampleShootingPoints(const PrimitiveList &target_prediction_list) {
   shooting_points_.clear();
@@ -628,6 +629,7 @@ void TrajectoryPlanner2D::CalculateBestIndexSubProcess(const int &start_idx, con
     }
   }
 }
+void TrajectoryPlanner2D::CheckDynamicLimits() { TrajectoryPlanner::CheckDynamicLimits(); }
 
 void TrajectoryPlanner3D::SampleShootingPoints(const PrimitiveList &target_prediction_list) {
   shooting_points_.clear();
@@ -1259,3 +1261,4 @@ void TrajectoryPlanner3D::CalculateBestIndexSubProcess(const int &start_idx, con
     }
   }
 }
+void TrajectoryPlanner3D::CheckDynamicLimits() { TrajectoryPlanner::CheckDynamicLimits(); }

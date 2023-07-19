@@ -71,6 +71,7 @@ protected:
       const int &start_idx, const int &end_idx, const PrimitiveList &structured_obstacle_poly_list,
       const PrimitiveList &target_prediction_list, IndexList &visible_idx);
   virtual void CheckVisibilityAgainstPcl();
+  virtual void CheckDynamicLimits();
   virtual void CalculateBestIndex();
   virtual void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                             pair<int, float> &min_jerk_pair);
@@ -118,6 +119,7 @@ private:
       const int &start_idx, const int &end_idx, const PrimitiveList &structured_obstacle_poly_list,
       const PrimitiveList &target_prediction_list, IndexList &visible_idx) override;
   void CheckVisibilityAgainstPcl() override;
+  void CheckDynamicLimits() override;
   void CalculateBestIndex() override;
   void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                     pair<int, float> &min_jerk_pair) override;
@@ -159,6 +161,7 @@ private:
       const int &start_idx, const int &end_idx, const PrimitiveList &structured_obstacle_poly_list,
       const PrimitiveList &target_prediction_list, IndexList &visible_idx) override;
   void CheckVisibilityAgainstPcl() override;
+  void CheckDynamicLimits() override;
   void CalculateBestIndex() override;
   void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                     pair<int, float> &min_jerk_pair) override;
