@@ -90,6 +90,12 @@ void TrajectoryPlanner::CalculateCloseObstacleIndex(
 void TrajectoryPlanner::CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                                      pair<int, float> &min_jerk_pair) {}
 void TrajectoryPlanner::CheckDynamicLimits() {}
+void TrajectoryPlanner::CheckDynamicLimitsSubProcess(const int &start_idx, const int &end_idx,
+                                                     IndexList &good_dynamic_index) {}
+void TrajectoryPlanner::CheckViewAngleRate(const PrimitiveList &target_prediction_list) {}
+void TrajectoryPlanner::CheckViewAngleRateSubProcess(const int &start_idx, const int &end_idx,
+                                                     const PrimitiveList &target_prediction_list,
+                                                     IndexList &smooth_angle_rate_idx) {}
 
 void TrajectoryPlanner2D::SampleShootingPoints(const PrimitiveList &target_prediction_list) {
   shooting_points_.clear();
@@ -225,14 +231,30 @@ optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
   CalculateCloseObstacleIndex(drone_state, structured_obstacle_prediction_result);
   CheckDistanceFromTargets(target_prediction_result);
   if (good_target_distance_index_list_.empty()) {
+    printf("NOT GOOD TARGET DISTANCE \n");
     plan_success = false;
     goto end_process;
   }
   CheckVisibility(target_prediction_result, obstacle_points, structured_obstacle_prediction_result);
   if (visible_total_index_.empty()) {
+    printf("NOT GOOD VISIBILITY \n");
     plan_success = false;
     goto end_process;
   }
+  CheckDynamicLimits();
+  if (dynamically_feasible_index_.empty()) {
+    printf("NOT GOOD DYNAMICAL LIMITS \n");
+    plan_success = false;
+    goto end_process;
+  }
+  //  printf("DYNAMIC FEASIBLE INDEX SIZE: %d",dynamically_feasible_index_.size());
+  CheckViewAngleRate(target_prediction_result);
+  if (smooth_view_angle_index_.empty()) {
+    printf("NOT GOOD YAW RATE \n");
+    plan_success = false;
+    goto end_process;
+  }
+  //  printf("YAW RATE FEASIBLE INDEX SIZE: %d",smooth_view_angle_index_.size());
   CalculateBestIndex();
   plan_success = true;
   goto end_process;
@@ -522,7 +544,7 @@ void TrajectoryPlanner2D::CheckVisibilityAgainstPcl() {
   TrajectoryPlanner::CheckVisibilityAgainstPcl();
 }
 void TrajectoryPlanner2D::CalculateBestIndex() {
-  int num_chunk = visible_total_index_.size() / param_.sampling.num_thread;
+  int num_chunk = smooth_view_angle_index_.size() / param_.sampling.num_thread;
   vector<thread> worker_thread;
   vector<pair<int, float>> min_jerk_pair_temp(param_.sampling.num_thread);
   for (int i = 0; i < param_.sampling.num_thread; i++)
@@ -548,70 +570,76 @@ void TrajectoryPlanner2D::CalculateBestIndexSubProcess(const int &start_idx, con
   for (int i = 0; i < chunk_size; i++) {
     jerk_coeff_x[0] = float(
         60.0 /
-        pow(primitives_list_[visible_total_index_[i + start_idx]].px.GetTimeInterval()[1] -
-                primitives_list_[visible_total_index_[i + start_idx]].px.GetTimeInterval()[0],
+        pow(primitives_list_[smooth_view_angle_index_[i + start_idx]].px.GetTimeInterval()[1] -
+                primitives_list_[smooth_view_angle_index_[i + start_idx]].px.GetTimeInterval()[0],
             3) *
-        (primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[3] -
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[2] +
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[1] -
-         primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[0]));
+        (primitives_list_[smooth_view_angle_index_[i + start_idx]].px.GetBernsteinCoefficient()[3] -
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .px.GetBernsteinCoefficient()[2] +
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .px.GetBernsteinCoefficient()[1] -
+         primitives_list_[smooth_view_angle_index_[i + start_idx]]
+             .px.GetBernsteinCoefficient()[0]));
     jerk_coeff_x[1] = float(
         60.0 /
-        pow(primitives_list_[visible_total_index_[i + start_idx]].px.GetTimeInterval()[1] -
-                primitives_list_[visible_total_index_[i + start_idx]].px.GetTimeInterval()[0],
+        pow(primitives_list_[smooth_view_angle_index_[i + start_idx]].px.GetTimeInterval()[1] -
+                primitives_list_[smooth_view_angle_index_[i + start_idx]].px.GetTimeInterval()[0],
             3) *
-        (primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[4] -
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[3] +
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[2] -
-         primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[1]));
+        (primitives_list_[smooth_view_angle_index_[i + start_idx]].px.GetBernsteinCoefficient()[4] -
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .px.GetBernsteinCoefficient()[3] +
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .px.GetBernsteinCoefficient()[2] -
+         primitives_list_[smooth_view_angle_index_[i + start_idx]]
+             .px.GetBernsteinCoefficient()[1]));
     jerk_coeff_x[2] = float(
         60.0 /
-        pow(primitives_list_[visible_total_index_[i + start_idx]].px.GetTimeInterval()[1] -
-                primitives_list_[visible_total_index_[i + start_idx]].px.GetTimeInterval()[0],
+        pow(primitives_list_[smooth_view_angle_index_[i + start_idx]].px.GetTimeInterval()[1] -
+                primitives_list_[smooth_view_angle_index_[i + start_idx]].px.GetTimeInterval()[0],
             3) *
-        (primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[5] -
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[4] +
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[3] -
-         primitives_list_[visible_total_index_[i + start_idx]].px.GetBernsteinCoefficient()[2]));
+        (primitives_list_[smooth_view_angle_index_[i + start_idx]].px.GetBernsteinCoefficient()[5] -
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .px.GetBernsteinCoefficient()[4] +
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .px.GetBernsteinCoefficient()[3] -
+         primitives_list_[smooth_view_angle_index_[i + start_idx]]
+             .px.GetBernsteinCoefficient()[2]));
     jerk_coeff_y[0] = float(
         60.0 /
-        pow(primitives_list_[visible_total_index_[i + start_idx]].py.GetTimeInterval()[1] -
-                primitives_list_[visible_total_index_[i + start_idx]].py.GetTimeInterval()[0],
+        pow(primitives_list_[smooth_view_angle_index_[i + start_idx]].py.GetTimeInterval()[1] -
+                primitives_list_[smooth_view_angle_index_[i + start_idx]].py.GetTimeInterval()[0],
             3) *
-        (primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[3] -
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[2] +
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[1] -
-         primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[0]));
+        (primitives_list_[smooth_view_angle_index_[i + start_idx]].py.GetBernsteinCoefficient()[3] -
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .py.GetBernsteinCoefficient()[2] +
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .py.GetBernsteinCoefficient()[1] -
+         primitives_list_[smooth_view_angle_index_[i + start_idx]]
+             .py.GetBernsteinCoefficient()[0]));
     jerk_coeff_y[1] = float(
         60.0 /
-        pow(primitives_list_[visible_total_index_[i + start_idx]].py.GetTimeInterval()[1] -
-                primitives_list_[visible_total_index_[i + start_idx]].py.GetTimeInterval()[0],
+        pow(primitives_list_[smooth_view_angle_index_[i + start_idx]].py.GetTimeInterval()[1] -
+                primitives_list_[smooth_view_angle_index_[i + start_idx]].py.GetTimeInterval()[0],
             3) *
-        (primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[4] -
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[3] +
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[2] -
-         primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[1]));
+        (primitives_list_[smooth_view_angle_index_[i + start_idx]].py.GetBernsteinCoefficient()[4] -
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .py.GetBernsteinCoefficient()[3] +
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .py.GetBernsteinCoefficient()[2] -
+         primitives_list_[smooth_view_angle_index_[i + start_idx]]
+             .py.GetBernsteinCoefficient()[1]));
     jerk_coeff_y[2] = float(
         60.0 /
-        pow(primitives_list_[visible_total_index_[i + start_idx]].py.GetTimeInterval()[1] -
-                primitives_list_[visible_total_index_[i + start_idx]].py.GetTimeInterval()[0],
+        pow(primitives_list_[smooth_view_angle_index_[i + start_idx]].py.GetTimeInterval()[1] -
+                primitives_list_[smooth_view_angle_index_[i + start_idx]].py.GetTimeInterval()[0],
             3) *
-        (primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[5] -
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[4] +
-         3.0 *
-             primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[3] -
-         primitives_list_[visible_total_index_[i + start_idx]].py.GetBernsteinCoefficient()[2]));
+        (primitives_list_[smooth_view_angle_index_[i + start_idx]].py.GetBernsteinCoefficient()[5] -
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .py.GetBernsteinCoefficient()[4] +
+         3.0 * primitives_list_[smooth_view_angle_index_[i + start_idx]]
+                   .py.GetBernsteinCoefficient()[3] -
+         primitives_list_[smooth_view_angle_index_[i + start_idx]]
+             .py.GetBernsteinCoefficient()[2]));
     jerk_integral_list[i - start_idx] =
         jerk_coeff_x[0] * jerk_coeff_x[0] + jerk_coeff_x[0] * jerk_coeff_x[1] +
         0.33333333f * jerk_coeff_x[0] * jerk_coeff_x[2] +
@@ -625,11 +653,316 @@ void TrajectoryPlanner2D::CalculateBestIndexSubProcess(const int &start_idx, con
   for (int i = 0; i < chunk_size; i++) {
     if (min_jerk_pair.second > jerk_integral_list[i]) {
       min_jerk_pair.second = jerk_integral_list[i];
-      min_jerk_pair.first = visible_total_index_[i + start_idx];
+      min_jerk_pair.first = smooth_view_angle_index_[i + start_idx];
     }
   }
 }
-void TrajectoryPlanner2D::CheckDynamicLimits() { TrajectoryPlanner::CheckDynamicLimits(); }
+void TrajectoryPlanner2D::CheckDynamicLimits() {
+  dynamically_feasible_index_.clear();
+  int num_chunk = visible_total_index_.size() / param_.sampling.num_thread;
+  vector<thread> worker_thread;
+  IndexListSet dynamic_feasible_index_temp(param_.sampling.num_thread);
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread.emplace_back(&TrajectoryPlanner2D::CheckDynamicLimitsSubProcess, this,
+                               num_chunk * (i), num_chunk * (i + 1),
+                               std::ref(dynamic_feasible_index_temp[i]));
+  }
+  for (int i = 0; i < param_.sampling.num_thread; i++)
+    worker_thread[i].join();
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    for (int j = 0; j < dynamic_feasible_index_temp[i].size(); j++) {
+      dynamically_feasible_index_.push_back(dynamic_feasible_index_temp[i][j]);
+    }
+  }
+}
+void TrajectoryPlanner2D::CheckDynamicLimitsSubProcess(const int &start_idx, const int &end_idx,
+                                                       IndexList &good_dynamic_index) {
+  //  printf("AAAAAAAAAAA\n");
+  bool flag_store = true;
+  float T_inv = 1.0f / param_.horizon.planning;
+  float T_inv_squared = T_inv * T_inv;
+  for (int i = start_idx; i < end_idx; i++) {
+    flag_store = true;
+    // Velocity Limit Check
+    for (int j = 0; j < 5; j++) {
+      if (5 * T_inv *
+                  (primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j + 1] -
+                   primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j]) >
+              param_.dynamic_limits.vel_max or
+          5 * T_inv *
+                  (primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j + 1] -
+                   primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j]) <
+              -param_.dynamic_limits.vel_max) {
+        flag_store = false;
+        break;
+      }
+      if (5 * T_inv *
+                  (primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j + 1] -
+                   primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j]) >
+              param_.dynamic_limits.vel_max or
+          5 * T_inv *
+                  (primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j + 1] -
+                   primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j]) <
+              -param_.dynamic_limits.vel_max) {
+        flag_store = false;
+        break;
+      }
+    }
+    if (not flag_store)
+      continue;
+    // Acceleration Limit Check
+    for (int j = 0; j < 4; j++) {
+      if (20 * T_inv_squared *
+                  (primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j + 2] -
+                   2 * primitives_list_[visible_total_index_[i]]
+                           .px.GetBernsteinCoefficient()[j + 1] +
+                   primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j]) >
+              param_.dynamic_limits.acc_max or
+          20 * T_inv_squared *
+                  (primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j + 2] -
+                   2 * primitives_list_[visible_total_index_[i]]
+                           .px.GetBernsteinCoefficient()[j + 1] +
+                   primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j]) <
+              -param_.dynamic_limits.acc_max) {
+        flag_store = false;
+        break;
+      }
+      if (20 * T_inv_squared *
+                  (primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j + 2] -
+                   2 * primitives_list_[visible_total_index_[i]]
+                           .py.GetBernsteinCoefficient()[j + 1] +
+                   primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j]) >
+              param_.dynamic_limits.acc_max or
+          20 * T_inv_squared *
+                  (primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j + 2] -
+                   2 * primitives_list_[visible_total_index_[i]]
+                           .py.GetBernsteinCoefficient()[j + 1] +
+                   primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j]) <
+              -param_.dynamic_limits.acc_max) {
+        flag_store = false;
+        break;
+      }
+    }
+    if (flag_store)
+      good_dynamic_index.push_back(visible_total_index_[i]);
+  }
+}
+void TrajectoryPlanner2D::CheckViewAngleRate(const PrimitiveList &target_prediction_list) {
+  smooth_view_angle_index_.clear();
+  int num_chunk = dynamically_feasible_index_.size() / param_.sampling.num_thread;
+  vector<thread> worker_thread;
+  IndexListSet smooth_view_angle_index_temp(param_.sampling.num_thread);
+  for (int i = 0; i < param_.sampling.num_thread; i++)
+    worker_thread.emplace_back(&TrajectoryPlanner2D::CheckViewAngleRateSubProcess, this,
+                               num_chunk * (i), num_chunk * (i + 1), target_prediction_list,
+                               std::ref(smooth_view_angle_index_temp[i]));
+  for (int i = 0; i < param_.sampling.num_thread; i++)
+    worker_thread[i].join();
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    for (int j = 0; j < smooth_view_angle_index_temp[i].size(); j++)
+      smooth_view_angle_index_.push_back(smooth_view_angle_index_temp[i][j]);
+  }
+}
+void TrajectoryPlanner2D::CheckViewAngleRateSubProcess(const int &start_idx, const int &end_idx,
+                                                       const PrimitiveList &target_prediction_list,
+                                                       IndexList &smooth_angle_rate_idx) {
+  bool flag_store_in = true;
+  bool flag_store_out = true;
+  float qpx_dot[6];
+  float qpy_dot[6];
+  float qpx[6];
+  float qpy[6];
+  float numerator, denominator;
+  for (int i = start_idx; i < end_idx; i++) {
+    flag_store_out = true;
+    for (int j = 0; j < target_prediction_list.size(); j++) {
+      qpx_dot[0] =
+          5.0f / param_.horizon.planning *
+          (target_prediction_list[j].px.GetBernsteinCoefficient()[1] -
+           target_prediction_list[j].px.GetBernsteinCoefficient()[0] -
+           primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[1] +
+           primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[0]);
+      qpx_dot[1] =
+          1.0f / param_.horizon.planning *
+          ((target_prediction_list[j].px.GetBernsteinCoefficient()[1] -
+            target_prediction_list[j].px.GetBernsteinCoefficient()[0] -
+            primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[1] +
+            primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[0]) +
+           4 * (target_prediction_list[j].px.GetBernsteinCoefficient()[2] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[1] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[2] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[1]));
+      qpx_dot[2] =
+          1.0f / param_.horizon.planning *
+          (2 * (target_prediction_list[j].px.GetBernsteinCoefficient()[2] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[1] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[2] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[1]) +
+           3 * (target_prediction_list[j].px.GetBernsteinCoefficient()[3] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[2] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[3] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[2]));
+      qpx_dot[3] =
+          1.0f / param_.horizon.planning *
+          (3 * (target_prediction_list[j].px.GetBernsteinCoefficient()[3] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[2] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[3] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[2]) +
+           2 * (target_prediction_list[j].px.GetBernsteinCoefficient()[4] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[3] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[4] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[3]));
+      qpx_dot[4] =
+          1.0f / param_.horizon.planning *
+          (4 * (target_prediction_list[j].px.GetBernsteinCoefficient()[4] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[3] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[4] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[3]) +
+           (target_prediction_list[j].px.GetBernsteinCoefficient()[5] -
+            target_prediction_list[j].px.GetBernsteinCoefficient()[4] -
+            primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[5] +
+            primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[4]));
+      qpx_dot[5] =
+          5.0f / param_.horizon.planning *
+          (target_prediction_list[j].px.GetBernsteinCoefficient()[5] -
+           target_prediction_list[j].px.GetBernsteinCoefficient()[4] -
+           primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[5] +
+           primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[4]);
+      qpx_dot[0] =
+          5.0f / param_.horizon.planning *
+          (target_prediction_list[j].px.GetBernsteinCoefficient()[1] -
+           target_prediction_list[j].px.GetBernsteinCoefficient()[0] -
+           primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[1] +
+           primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[0]);
+      qpx_dot[1] =
+          1.0f / param_.horizon.planning *
+          ((target_prediction_list[j].px.GetBernsteinCoefficient()[1] -
+            target_prediction_list[j].px.GetBernsteinCoefficient()[0] -
+            primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[1] +
+            primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[0]) +
+           4 * (target_prediction_list[j].px.GetBernsteinCoefficient()[2] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[1] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[2] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[1]));
+      qpx_dot[2] =
+          1.0f / param_.horizon.planning *
+          (2 * (target_prediction_list[j].px.GetBernsteinCoefficient()[2] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[1] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[2] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[1]) +
+           3 * (target_prediction_list[j].px.GetBernsteinCoefficient()[3] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[2] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[3] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[2]));
+      qpx_dot[3] =
+          1.0f / param_.horizon.planning *
+          (3 * (target_prediction_list[j].px.GetBernsteinCoefficient()[3] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[2] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[3] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[2]) +
+           2 * (target_prediction_list[j].px.GetBernsteinCoefficient()[4] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[3] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[4] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[3]));
+      qpx_dot[4] =
+          1.0f / param_.horizon.planning *
+          (4 * (target_prediction_list[j].px.GetBernsteinCoefficient()[4] -
+                target_prediction_list[j].px.GetBernsteinCoefficient()[3] -
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[4] +
+                primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[3]) +
+           (target_prediction_list[j].px.GetBernsteinCoefficient()[5] -
+            target_prediction_list[j].px.GetBernsteinCoefficient()[4] -
+            primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[5] +
+            primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[4]));
+      qpx_dot[5] =
+          5.0f / param_.horizon.planning *
+          (target_prediction_list[j].px.GetBernsteinCoefficient()[5] -
+           target_prediction_list[j].px.GetBernsteinCoefficient()[4] -
+           primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[5] +
+           primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[4]);
+      qpy_dot[0] =
+          5.0f / param_.horizon.planning *
+          (target_prediction_list[j].py.GetBernsteinCoefficient()[1] -
+           target_prediction_list[j].py.GetBernsteinCoefficient()[0] -
+           primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[1] +
+           primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[0]);
+      qpy_dot[1] =
+          1.0f / param_.horizon.planning *
+          ((target_prediction_list[j].py.GetBernsteinCoefficient()[1] -
+            target_prediction_list[j].py.GetBernsteinCoefficient()[0] -
+            primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[1] +
+            primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[0]) +
+           4 * (target_prediction_list[j].py.GetBernsteinCoefficient()[2] -
+                target_prediction_list[j].py.GetBernsteinCoefficient()[1] -
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[2] +
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[1]));
+      qpy_dot[2] =
+          1.0f / param_.horizon.planning *
+          (2 * (target_prediction_list[j].py.GetBernsteinCoefficient()[2] -
+                target_prediction_list[j].py.GetBernsteinCoefficient()[1] -
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[2] +
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[1]) +
+           3 * (target_prediction_list[j].py.GetBernsteinCoefficient()[3] -
+                target_prediction_list[j].py.GetBernsteinCoefficient()[2] -
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[3] +
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[2]));
+      qpy_dot[3] =
+          1.0f / param_.horizon.planning *
+          (3 * (target_prediction_list[j].py.GetBernsteinCoefficient()[3] -
+                target_prediction_list[j].py.GetBernsteinCoefficient()[2] -
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[3] +
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[2]) +
+           2 * (target_prediction_list[j].py.GetBernsteinCoefficient()[4] -
+                target_prediction_list[j].py.GetBernsteinCoefficient()[3] -
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[4] +
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[3]));
+      qpy_dot[4] =
+          1.0f / param_.horizon.planning *
+          (4 * (target_prediction_list[j].py.GetBernsteinCoefficient()[4] -
+                target_prediction_list[j].py.GetBernsteinCoefficient()[3] -
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[4] +
+                primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[3]) +
+           (target_prediction_list[j].py.GetBernsteinCoefficient()[5] -
+            target_prediction_list[j].py.GetBernsteinCoefficient()[4] -
+            primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[5] +
+            primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[4]));
+      qpy_dot[5] =
+          5.0f / param_.horizon.planning *
+          (target_prediction_list[j].py.GetBernsteinCoefficient()[5] -
+           target_prediction_list[j].py.GetBernsteinCoefficient()[4] -
+           primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[5] +
+           primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[4]);
+      for (int k = 0; k < 6; k++) {
+        qpx[k] = target_prediction_list[j].px.GetBernsteinCoefficient()[k] -
+                 primitives_list_[dynamically_feasible_index_[i]].px.GetBernsteinCoefficient()[k];
+        qpy[k] = target_prediction_list[j].py.GetBernsteinCoefficient()[k] -
+                 primitives_list_[dynamically_feasible_index_[i]].py.GetBernsteinCoefficient()[k];
+      }
+      for (int k = 0; k <= 10; k++) {
+        numerator = 0.0f, denominator = 0.0f;
+        for (int l = std::max(0, k - 5); l <= std::min(5, k); l++) {
+          numerator += (float)nchoosek(5, l) * (float)nchoosek(5, k - l) / (float)nchoosek(10, k) *
+                       (qpy_dot[l] * qpx[k - l] - qpx_dot[l] * qpy[k - l]);
+        }
+        for (int l = std::max(0, k - 5); l <= std::min(5, k); l++) {
+          denominator += (float)nchoosek(5, l) * (float)nchoosek(5, k - l) /
+                         (float)nchoosek(10, k) * (qpx[l] * qpx[k - l] + qpy[l] * qpy[k - l]);
+        }
+        if (numerator > denominator * param_.dynamic_limits.yaw_rate_max or
+            numerator < -denominator * param_.dynamic_limits.yaw_rate_max) {
+          flag_store_in = false;
+          break;
+        }
+      }
+      if (not flag_store_in) {
+        flag_store_out = false;
+        break;
+      }
+    }
+    if (flag_store_out)
+      smooth_angle_rate_idx.push_back(dynamically_feasible_index_[start_idx]);
+  }
+}
 
 void TrajectoryPlanner3D::SampleShootingPoints(const PrimitiveList &target_prediction_list) {
   shooting_points_.clear();
@@ -775,6 +1108,16 @@ optional<StatePoly> TrajectoryPlanner3D::ComputeChasingTrajectory(
   }
   CheckVisibility(target_prediction_result, obstacle_points, structured_obstacle_prediction_result);
   if (visible_total_index_.empty()) {
+    plan_success = false;
+    goto end_process;
+  }
+  CheckDynamicLimits();
+  if (dynamically_feasible_index_.empty()) {
+    plan_success = false;
+    goto end_process;
+  }
+  CheckViewAngleRate(target_prediction_result);
+  if (smooth_view_angle_index_.empty()) {
     plan_success = false;
     goto end_process;
   }
@@ -1120,7 +1463,7 @@ void TrajectoryPlanner3D::CalculateBestIndex() {
   //      best_index_ = min_jerk_pair_temp[i].first;
   //    }
   //  }
-  best_index_ = visible_total_index_[0];
+  best_index_ = dynamically_feasible_index_[0];
 }
 void TrajectoryPlanner3D::CalculateCloseObstacleIndex(
     const DroneState &drone_state, const PrimitiveList &structured_obstacle_trajectory_list) {
@@ -1261,4 +1604,138 @@ void TrajectoryPlanner3D::CalculateBestIndexSubProcess(const int &start_idx, con
     }
   }
 }
-void TrajectoryPlanner3D::CheckDynamicLimits() { TrajectoryPlanner::CheckDynamicLimits(); }
+void TrajectoryPlanner3D::CheckDynamicLimits() {
+  dynamically_feasible_index_.clear();
+  int num_chunk = visible_total_index_.size() / param_.sampling.num_thread;
+  vector<thread> worker_thread;
+  IndexListSet dynamic_feasible_index_temp(param_.sampling.num_thread);
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    worker_thread.emplace_back(&TrajectoryPlanner3D::CheckDynamicLimitsSubProcess, this,
+                               num_chunk * (i), num_chunk * (i + 1),
+                               std::ref(dynamic_feasible_index_temp[i]));
+  }
+  for (int i = 0; i < param_.sampling.num_thread; i++)
+    worker_thread[i].join();
+
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    for (int j = 0; j < dynamic_feasible_index_temp[i].size(); j++) {
+      dynamically_feasible_index_.push_back(dynamic_feasible_index_temp[i][j]);
+    }
+  }
+}
+void TrajectoryPlanner3D::CheckDynamicLimitsSubProcess(const int &start_idx, const int &end_idx,
+                                                       IndexList &good_dynamic_index) {
+  bool flag_store = true;
+  float T_inv = 1.0f / param_.horizon.planning;
+  float T_inv_squared = T_inv * T_inv;
+  for (int i = start_idx; i < end_idx; i++) {
+    flag_store = true;
+    // Velocity Limit Check
+    for (int j = 0; j < 5; j++) {
+      if (5 * T_inv *
+                  (primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j + 1] -
+                   primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j]) >
+              param_.dynamic_limits.vel_max or
+          5 * T_inv *
+                  (primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j + 1] -
+                   primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j]) <
+              -param_.dynamic_limits.vel_max) {
+        flag_store = false;
+        break;
+      } // velocity x components
+      if (5 * T_inv *
+                  (primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j + 1] -
+                   primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j]) >
+              param_.dynamic_limits.vel_max or
+          5 * T_inv *
+                  (primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j + 1] -
+                   primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j]) <
+              -param_.dynamic_limits.vel_max) {
+        flag_store = false;
+        break;
+      } // velocity y components
+      if (5 * T_inv *
+                  (primitives_list_[visible_total_index_[i]].pz.GetBernsteinCoefficient()[j + 1] -
+                   primitives_list_[visible_total_index_[i]].pz.GetBernsteinCoefficient()[j]) >
+              param_.dynamic_limits.vel_max or
+          5 * T_inv *
+                  (primitives_list_[visible_total_index_[i]].pz.GetBernsteinCoefficient()[j + 1] -
+                   primitives_list_[visible_total_index_[i]].pz.GetBernsteinCoefficient()[j]) <
+              -param_.dynamic_limits.vel_max) {
+        flag_store = false;
+        break;
+      } // velocity z components
+    }
+    if (not flag_store)
+      continue;
+    // Acceleration Limit Check
+    for (int j = 0; j < 4; j++) {
+      if (20 * T_inv_squared *
+                  (primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j + 2] -
+                   2 * primitives_list_[visible_total_index_[i]]
+                           .px.GetBernsteinCoefficient()[j + 1] +
+                   primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j]) >
+              param_.dynamic_limits.acc_max or
+          20 * T_inv_squared *
+                  (primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j + 2] -
+                   2 * primitives_list_[visible_total_index_[i]]
+                           .px.GetBernsteinCoefficient()[j + 1] +
+                   primitives_list_[visible_total_index_[i]].px.GetBernsteinCoefficient()[j]) <
+              -param_.dynamic_limits.acc_max) {
+        flag_store = false;
+        break;
+      } // acceleration x components
+      if (20 * T_inv_squared *
+                  (primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j + 2] -
+                   2 * primitives_list_[visible_total_index_[i]]
+                           .py.GetBernsteinCoefficient()[j + 1] +
+                   primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j]) >
+              param_.dynamic_limits.acc_max or
+          20 * T_inv_squared *
+                  (primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j + 2] -
+                   2 * primitives_list_[visible_total_index_[i]]
+                           .py.GetBernsteinCoefficient()[j + 1] +
+                   primitives_list_[visible_total_index_[i]].py.GetBernsteinCoefficient()[j]) <
+              -param_.dynamic_limits.acc_max) {
+        flag_store = false;
+        break;
+      } // acceleration y components
+      if (20 * T_inv_squared *
+                  (primitives_list_[visible_total_index_[i]].pz.GetBernsteinCoefficient()[j + 2] -
+                   2 * primitives_list_[visible_total_index_[i]]
+                           .pz.GetBernsteinCoefficient()[j + 1] +
+                   primitives_list_[visible_total_index_[i]].pz.GetBernsteinCoefficient()[j]) >
+              param_.dynamic_limits.acc_max or
+          20 * T_inv_squared *
+                  (primitives_list_[visible_total_index_[i]].pz.GetBernsteinCoefficient()[j + 2] -
+                   2 * primitives_list_[visible_total_index_[i]]
+                           .pz.GetBernsteinCoefficient()[j + 1] +
+                   primitives_list_[visible_total_index_[i]].pz.GetBernsteinCoefficient()[j]) <
+              -param_.dynamic_limits.acc_max) {
+        flag_store = false;
+        break;
+      } // acceleration z components
+    }
+    if (flag_store)
+      good_dynamic_index.push_back(visible_total_index_[i]);
+  }
+}
+void TrajectoryPlanner3D::CheckViewAngleRate(const PrimitiveList &target_prediction_list) {
+  smooth_view_angle_index_.clear();
+  int num_chunk = dynamically_feasible_index_.size() / param_.sampling.num_thread;
+  vector<thread> worker_thread;
+  IndexListSet smooth_view_angle_index_temp(param_.sampling.num_thread);
+  for (int i = 0; i < param_.sampling.num_thread; i++)
+    worker_thread.emplace_back(&TrajectoryPlanner3D::CheckViewAngleRateSubProcess, this,
+                               num_chunk * (i), num_chunk * (i + 1), target_prediction_list,
+                               std::ref(smooth_view_angle_index_temp[i]));
+  for (int i = 0; i < param_.sampling.num_thread; i++)
+    worker_thread[i].join();
+  for (int i = 0; i < param_.sampling.num_thread; i++) {
+    for (int j = 0; j < smooth_view_angle_index_temp[i].size(); j++)
+      smooth_view_angle_index_.push_back(smooth_view_angle_index_temp[i][j]);
+  }
+}
+void TrajectoryPlanner3D::CheckViewAngleRateSubProcess(const int &start_idx, const int &end_idx,
+                                                       const PrimitiveList &target_prediction_list,
+                                                       IndexList &smooth_angle_rate_idx) {}

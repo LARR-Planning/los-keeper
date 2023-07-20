@@ -34,6 +34,8 @@ protected:
   IndexList visible_total_index_;
   IndexList visible_structured_index_;
   IndexList visible_pcl_index_;
+  IndexList dynamically_feasible_index_;
+  IndexList smooth_view_angle_index_;
   int best_index_{-1};
 
   // RefinePcl
@@ -72,6 +74,12 @@ protected:
       const PrimitiveList &target_prediction_list, IndexList &visible_idx);
   virtual void CheckVisibilityAgainstPcl();
   virtual void CheckDynamicLimits();
+  virtual void CheckDynamicLimitsSubProcess(const int &start_idx, const int &end_idx,
+                                            IndexList &good_dynamic_index);
+  virtual void CheckViewAngleRate(const PrimitiveList &target_prediction_list);
+  virtual void CheckViewAngleRateSubProcess(const int &start_idx, const int &end_idx,
+                                            const PrimitiveList &target_prediction_list,
+                                            IndexList &smooth_angle_rate_idx);
   virtual void CalculateBestIndex();
   virtual void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                             pair<int, float> &min_jerk_pair);
@@ -120,6 +128,12 @@ private:
       const PrimitiveList &target_prediction_list, IndexList &visible_idx) override;
   void CheckVisibilityAgainstPcl() override;
   void CheckDynamicLimits() override;
+  void CheckDynamicLimitsSubProcess(const int &start_idx, const int &end_idx,
+                                    IndexList &good_dynamic_index) override;
+  void CheckViewAngleRate(const PrimitiveList &target_prediction_list) override;
+  void CheckViewAngleRateSubProcess(const int &start_idx, const int &end_idx,
+                                    const PrimitiveList &target_prediction_list,
+                                    IndexList &smooth_angle_rate_idx) override;
   void CalculateBestIndex() override;
   void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                     pair<int, float> &min_jerk_pair) override;
@@ -162,6 +176,12 @@ private:
       const PrimitiveList &target_prediction_list, IndexList &visible_idx) override;
   void CheckVisibilityAgainstPcl() override;
   void CheckDynamicLimits() override;
+  void CheckDynamicLimitsSubProcess(const int &start_idx, const int &end_idx,
+                                    IndexList &good_dynamic_index) override;
+  void CheckViewAngleRate(const PrimitiveList &target_prediction_list) override;
+  void CheckViewAngleRateSubProcess(const int &start_idx, const int &end_idx,
+                                    const PrimitiveList &target_prediction_list,
+                                    IndexList &smooth_angle_rate_idx) override;
   void CalculateBestIndex() override;
   void CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                     pair<int, float> &min_jerk_pair) override;

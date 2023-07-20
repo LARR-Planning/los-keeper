@@ -36,6 +36,7 @@
       dynamic_limits:
         vel_max: 2.0
         acc_max: 10.0
+        yaw_rate_max: 0.7
       safe_distance:
         rx: 0.05
         ry: 0.05

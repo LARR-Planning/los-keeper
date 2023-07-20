@@ -30,6 +30,7 @@ struct PlanningParameter {
   struct {
     float vel_max{2.0f};
     float acc_max{5.0f};
+    float yaw_rate_max{1.0f};
   } dynamic_limits;
   struct {
     float rx{0.2f};
