@@ -272,6 +272,8 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
                        planning_param.dynamic_limits.vel_max);
   get_parameter<float>("trajectory_planner.dynamic_limits.acc_max",
                        planning_param.dynamic_limits.acc_max);
+  get_parameter<float>("trajectory_planner.dynamic_limits.yaw_rate_max",
+                       planning_param.dynamic_limits.yaw_rate_max);
   get_parameter<float>("trajectory_planner.safe_distance.rx", planning_param.safe_distance.rx);
   get_parameter<float>("trajectory_planner.safe_distance.ry", planning_param.safe_distance.ry);
   get_parameter<float>("trajectory_planner.safe_distance.rz", planning_param.safe_distance.rz);
