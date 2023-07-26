@@ -1,10 +1,12 @@
 #ifndef HEADER_LOS_SERVER
 #define HEADER_LOS_SERVER
 #include "los_keeper/wrapper/wrapper.h"
+#include "los_keeper_msgs/msg/accel_control_input.hpp"
 #include "los_keeper_msgs/msg/drone_state.hpp"
 #include "los_keeper_msgs/msg/jerk_control_input.hpp"
 #include "los_keeper_msgs/msg/object_state.hpp"
 #include "los_keeper_msgs/msg/object_state_array.hpp"
+#include "los_keeper_msgs/msg/velocity_control_input.hpp"
 #include "los_keeper_msgs/srv/toggle_activate.hpp"
 
 #include "los_keeper_ros2/visualization/visualizer.h"
@@ -18,6 +20,8 @@
 using namespace std::chrono_literals;
 using DroneStateMsg = los_keeper_msgs::msg::DroneState;
 using InputMsg = los_keeper_msgs::msg::JerkControlInput;
+using VelocityInputMsg = los_keeper_msgs::msg::VelocityControlInput;
+using AccelInputMsg = los_keeper_msgs::msg::AccelControlInput;
 using PointCloudMsg = sensor_msgs::msg::PointCloud2;
 using ObjectStateMsg = los_keeper_msgs::msg::ObjectState;
 using ObjectStateArrayMsg = los_keeper_msgs::msg::ObjectStateArray;
@@ -27,6 +31,8 @@ using PointCloudSubscriber = rclcpp::Subscription<sensor_msgs::msg::PointCloud2>
 using StateSubscriber = rclcpp::Subscription<DroneStateMsg>::SharedPtr;
 using ObjectStateArraySubscriber = rclcpp::Subscription<ObjectStateArrayMsg>::SharedPtr;
 using InputPublisher = rclcpp::Publisher<InputMsg>::SharedPtr;
+using VelociyInputPublisher = rclcpp::Publisher<VelocityInputMsg>::SharedPtr;
+using AccelInputPublihser = rclcpp::Publisher<AccelInputMsg>::SharedPtr;
 using RosTimer = rclcpp::TimerBase::SharedPtr;
 using ToggleActivateService = los_keeper_msgs::srv::ToggleActivate;
 using ToggleActivateServer = rclcpp::Service<ToggleActivateService>::SharedPtr;
@@ -49,6 +55,8 @@ pcl::PointCloud<pcl::PointXYZ> ConvertToPointCloud(const PointCloudMsg &point_cl
 std::vector<ObjectState>
 ConvertToObjectStateArray(const ObjectStateArrayMsg &object_state_array_msg);
 InputMsg ConvertToInputMsg(const JerkControlInput &jerk_control_input);
+AccelInputMsg ConvertToAccelInputMsg(const AccelControlInput &accel_control_input);
+VelocityInputMsg ConvertToVelocityInputMsg(const VelocityControlInput &velocity_control_input);
 
 class LosServer : public rclcpp::Node {
 private:
@@ -60,6 +68,8 @@ private:
   ObjectStateArraySubscriber structured_obstacle_state_array_subscriber_;
   ObjectStateArraySubscriber target_state_array_subscriber_;
   InputPublisher input_publisher_;
+  VelociyInputPublisher velocity_input_publisher_;
+  AccelInputPublihser accel_input_publisher_;
 
   struct {
     //    SomeDebugInfoVisualization some_debug_info;

@@ -97,6 +97,208 @@ std::optional<JerkControlInput> PlanningResult::GetJerkInputAtTime(double t) con
   input.jz = jz_poly.GetValue(t);
   return input;
 }
+std::optional<VelocityControlInput> PlanningResult::GetVelocityInputAtTime(double t) const {
+  VelocityControlInput input;
+  input.seq = seq;
+  input.t_sec = t;
+  if (!chasing_trajectory.has_value()) {
+    input.vx = 0.0f;
+    input.vy = 0.0f;
+    input.vz = 0.0f;
+    return nullopt;
+  }
+  BernsteinCoefficients vx_coeff = {
+      float(5.0 /
+            (chasing_trajectory.value().px.GetTimeInterval()[1] -
+             chasing_trajectory.value().px.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[1] -
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[0])),
+      float(5.0 /
+            (chasing_trajectory.value().px.GetTimeInterval()[1] -
+             chasing_trajectory.value().px.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[2] -
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[1])),
+      float(5.0 /
+            (chasing_trajectory.value().px.GetTimeInterval()[1] -
+             chasing_trajectory.value().px.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[3] -
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[2])),
+      float(5.0 /
+            (chasing_trajectory.value().px.GetTimeInterval()[1] -
+             chasing_trajectory.value().px.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[4] -
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[3])),
+      float(5.0 /
+            (chasing_trajectory.value().px.GetTimeInterval()[1] -
+             chasing_trajectory.value().px.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[5] -
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[4]))};
+  BernsteinCoefficients vy_coeff = {
+      float(5.0 /
+            (chasing_trajectory.value().py.GetTimeInterval()[1] -
+             chasing_trajectory.value().py.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[1] -
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[0])),
+      float(5.0 /
+            (chasing_trajectory.value().py.GetTimeInterval()[1] -
+             chasing_trajectory.value().py.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[2] -
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[1])),
+      float(5.0 /
+            (chasing_trajectory.value().py.GetTimeInterval()[1] -
+             chasing_trajectory.value().py.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[3] -
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[2])),
+      float(5.0 /
+            (chasing_trajectory.value().py.GetTimeInterval()[1] -
+             chasing_trajectory.value().py.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[4] -
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[3])),
+      float(5.0 /
+            (chasing_trajectory.value().py.GetTimeInterval()[1] -
+             chasing_trajectory.value().py.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[5] -
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[4]))};
+  BernsteinCoefficients vz_coeff = {
+      float(5.0 /
+            (chasing_trajectory.value().pz.GetTimeInterval()[1] -
+             chasing_trajectory.value().pz.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[1] -
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[0])),
+      float(5.0 /
+            (chasing_trajectory.value().pz.GetTimeInterval()[1] -
+             chasing_trajectory.value().pz.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[2] -
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[1])),
+      float(5.0 /
+            (chasing_trajectory.value().pz.GetTimeInterval()[1] -
+             chasing_trajectory.value().pz.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[3] -
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[2])),
+      float(5.0 /
+            (chasing_trajectory.value().pz.GetTimeInterval()[1] -
+             chasing_trajectory.value().pz.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[4] -
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[3])),
+      float(5.0 /
+            (chasing_trajectory.value().pz.GetTimeInterval()[1] -
+             chasing_trajectory.value().pz.GetTimeInterval()[0]) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[5] -
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[4]))};
+  BernsteinPoly vx_poly{chasing_trajectory.value().px.GetTimeInterval(), vx_coeff, 4},
+      vy_poly{chasing_trajectory.value().py.GetTimeInterval(), vy_coeff, 4},
+      vz_poly{chasing_trajectory.value().pz.GetTimeInterval(), vz_coeff, 4};
+  input.vx = vx_poly.GetValue(t);
+  input.vy = vy_poly.GetValue(t);
+  input.vz = vz_poly.GetValue(t);
+  return input;
+}
+
+std::optional<AccelControlInput> PlanningResult::GetAccelInputAtTime(double t) const {
+  AccelControlInput input;
+  input.seq = seq;
+  input.t_sec = t;
+  if (!chasing_trajectory.has_value()) {
+    input.ax = 0.0f;
+    input.ay = 0.0f;
+    input.az = 0.0f;
+    return nullopt;
+  }
+  BernsteinCoefficients ax_coeff = {
+      float(20.0 /
+            pow(chasing_trajectory.value().px.GetTimeInterval()[1] -
+                    chasing_trajectory.value().px.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[2] -
+                   2 * chasing_trajectory.value().px.GetBernsteinCoefficient()[1] +
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[0])),
+      float(20.0 /
+            pow(chasing_trajectory.value().px.GetTimeInterval()[1] -
+                    chasing_trajectory.value().px.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[3] -
+                   2 * chasing_trajectory.value().px.GetBernsteinCoefficient()[2] +
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[1])),
+      float(20.0 /
+            pow(chasing_trajectory.value().px.GetTimeInterval()[1] -
+                    chasing_trajectory.value().px.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[4] -
+                   2 * chasing_trajectory.value().px.GetBernsteinCoefficient()[3] +
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[2])),
+      float(20.0 /
+            pow(chasing_trajectory.value().px.GetTimeInterval()[1] -
+                    chasing_trajectory.value().px.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().px.GetBernsteinCoefficient()[5] -
+                   2 * chasing_trajectory.value().px.GetBernsteinCoefficient()[4] +
+                   chasing_trajectory.value().px.GetBernsteinCoefficient()[3]))};
+  BernsteinCoefficients ay_coeff = {
+      float(20.0 /
+            pow(chasing_trajectory.value().py.GetTimeInterval()[1] -
+                    chasing_trajectory.value().py.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[2] -
+                   2 * chasing_trajectory.value().py.GetBernsteinCoefficient()[1] +
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[0])),
+      float(20.0 /
+            pow(chasing_trajectory.value().py.GetTimeInterval()[1] -
+                    chasing_trajectory.value().py.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[3] -
+                   2 * chasing_trajectory.value().py.GetBernsteinCoefficient()[2] +
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[1])),
+      float(20.0 /
+            pow(chasing_trajectory.value().py.GetTimeInterval()[1] -
+                    chasing_trajectory.value().py.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[4] -
+                   2 * chasing_trajectory.value().py.GetBernsteinCoefficient()[3] +
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[2])),
+      float(20.0 /
+            pow(chasing_trajectory.value().py.GetTimeInterval()[1] -
+                    chasing_trajectory.value().py.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().py.GetBernsteinCoefficient()[5] -
+                   2 * chasing_trajectory.value().py.GetBernsteinCoefficient()[4] +
+                   chasing_trajectory.value().py.GetBernsteinCoefficient()[3]))};
+  BernsteinCoefficients az_coeff = {
+      float(20.0 /
+            pow(chasing_trajectory.value().pz.GetTimeInterval()[1] -
+                    chasing_trajectory.value().pz.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[2] -
+                   2 * chasing_trajectory.value().pz.GetBernsteinCoefficient()[1] +
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[0])),
+      float(20.0 /
+            pow(chasing_trajectory.value().pz.GetTimeInterval()[1] -
+                    chasing_trajectory.value().pz.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[3] -
+                   2 * chasing_trajectory.value().pz.GetBernsteinCoefficient()[2] +
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[1])),
+      float(20.0 /
+            pow(chasing_trajectory.value().pz.GetTimeInterval()[1] -
+                    chasing_trajectory.value().pz.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[4] -
+                   2 * chasing_trajectory.value().pz.GetBernsteinCoefficient()[3] +
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[2])),
+      float(20.0 /
+            pow(chasing_trajectory.value().pz.GetTimeInterval()[1] -
+                    chasing_trajectory.value().pz.GetTimeInterval()[0],
+                2) *
+            double(chasing_trajectory.value().pz.GetBernsteinCoefficient()[5] -
+                   2 * chasing_trajectory.value().pz.GetBernsteinCoefficient()[4] +
+                   chasing_trajectory.value().pz.GetBernsteinCoefficient()[3]))};
+  BernsteinPoly ax_poly{chasing_trajectory.value().px.GetTimeInterval(), ax_coeff, 3},
+      ay_poly{chasing_trajectory.value().py.GetTimeInterval(), ay_coeff, 3},
+      az_poly{chasing_trajectory.value().pz.GetTimeInterval(), az_coeff, 3};
+  input.ax = ax_poly.GetValue(t);
+  input.ay = ay_poly.GetValue(t);
+  input.az = az_poly.GetValue(t);
+  return input;
+}
 
 Wrapper::Wrapper() {
   // TODO(@): remove if unnecessary
@@ -253,6 +455,23 @@ std::optional<JerkControlInput> Wrapper::GenerateControlInputFromPlanning(double
   }
   return control_input;
 }
+std::optional<AccelControlInput> Wrapper::GenerateAccelControlInputFromPlanning(double time) {
+  std::optional<AccelControlInput> control_input;
+  {
+    std::unique_lock<std::mutex> lock(mutex_list_.control);
+    control_input = planning_result_.GetAccelInputAtTime(time);
+  }
+  return control_input;
+}
+std::optional<VelocityControlInput> Wrapper::GenerateVelocityControlInputFromPlanning(double time) {
+  std::optional<VelocityControlInput> control_input;
+  {
+    std::unique_lock<std::mutex> lock(mutex_list_.control);
+    control_input = planning_result_.GetVelocityInputAtTime(time);
+  }
+  return control_input;
+}
+
 DebugInfo Wrapper::GetDebugInfo() {
   DebugInfo debug_info{};
   { // obstacle

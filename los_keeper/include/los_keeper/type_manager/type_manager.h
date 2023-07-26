@@ -71,6 +71,7 @@ struct ObstacleParameter {
 struct ProblemParameter {
   bool is_2d{true};
   double replanning_period{0.1};
+  int control_mode{0};
 };
 
 struct Parameters {
@@ -116,6 +117,22 @@ struct JerkControlInput {
   float jx{0.0f};
   float jy{0.0f};
   float jz{0.0f};
+};
+
+struct AccelControlInput {
+  double t_sec{0.0};
+  size_t seq{0};
+  float ax{0.0f};
+  float ay{0.0f};
+  float az{0.0f};
+};
+
+struct VelocityControlInput {
+  double t_sec{0.0};
+  size_t seq{0};
+  float vx{0.0f};
+  float vy{0.0f};
+  float vz{0.0f};
 };
 
 struct Point {
