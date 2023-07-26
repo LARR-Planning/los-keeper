@@ -33,6 +33,8 @@ struct PlanningResult {
   std::optional<StatePoly> chasing_trajectory;
   std::optional<Point> GetPointAtTime(double t) const;
   std::optional<JerkControlInput> GetJerkInputAtTime(double t) const;
+  std::optional<VelocityControlInput> GetVelocityInputAtTime(double t) const;
+  std::optional<AccelControlInput> GetAccelInputAtTime(double t) const;
 };
 
 class Wrapper {
@@ -82,6 +84,8 @@ public:
   void SetObjectStateArray(const std::vector<ObjectState> &object_state_list);
   void SetTargetStateArray(const std::vector<ObjectState> &target_state_list);
   std::optional<JerkControlInput> GenerateControlInputFromPlanning(double time);
+  std::optional<AccelControlInput> GenerateAccelControlInputFromPlanning(double time);
+  std::optional<VelocityControlInput> GenerateVelocityControlInputFromPlanning(double time);
   DebugInfo GetDebugInfo();
   void UpdateTargetDebugInfo();
   void UpdateObstacleDeubgInfo();

@@ -68,7 +68,31 @@ InputMsg los_keeper::ConvertToInputMsg(const JerkControlInput &jerk_control_inpu
   input_msg.jx = jerk_control_input.jx;
   input_msg.jy = jerk_control_input.jy;
   input_msg.jz = jerk_control_input.jz;
+  return input_msg;
+}
 
+AccelInputMsg los_keeper::ConvertToAccelInputMsg(const AccelControlInput &accel_control_input) {
+  AccelInputMsg input_msg;
+  input_msg.seq = accel_control_input.seq;
+  input_msg.header.stamp.sec = std::floor(accel_control_input.t_sec);
+  input_msg.header.stamp.nanosec =
+      std::round((accel_control_input.t_sec - input_msg.header.stamp.sec) * 1E+9);
+  input_msg.ax = accel_control_input.ax;
+  input_msg.ay = accel_control_input.ay;
+  input_msg.az = accel_control_input.az;
+  return input_msg;
+}
+
+VelocityInputMsg
+los_keeper::ConvertToVelocityInputMsg(const VelocityControlInput &velocity_control_input) {
+  VelocityInputMsg input_msg;
+  input_msg.seq = velocity_control_input.seq;
+  input_msg.header.stamp.sec = std::floor(velocity_control_input.t_sec);
+  input_msg.header.stamp.nanosec =
+      std::round((velocity_control_input.t_sec - input_msg.header.stamp.sec) * 1E+9);
+  input_msg.vx = velocity_control_input.vx;
+  input_msg.vy = velocity_control_input.vy;
+  input_msg.vz = velocity_control_input.vz;
   return input_msg;
 }
 
@@ -76,16 +100,38 @@ void LosServer::PlanningTimerCallback() { wrapper_ptr_->OnPlanningTimerCallback(
 
 void LosServer::ControlTimerCallback() {
   auto t = now();
-  auto control_input = wrapper_ptr_->GenerateControlInputFromPlanning(t.seconds());
-  if (control_input.has_value()) {
-    input_publisher_->publish(ConvertToInputMsg(control_input.value()));
+  auto jerk_control_input = wrapper_ptr_->GenerateControlInputFromPlanning(t.seconds());
+  if (jerk_control_input.has_value()) {
+    input_publisher_->publish(ConvertToInputMsg(jerk_control_input.value()));
   } else {
-    JerkControlInput jerk_intput_at_fail;
-    jerk_intput_at_fail.t_sec = t.seconds();
-    jerk_intput_at_fail.jx = 0.0f;
-    jerk_intput_at_fail.jy = 0.0f;
-    jerk_intput_at_fail.jz = 0.0f;
-    input_publisher_->publish(ConvertToInputMsg(jerk_intput_at_fail));
+    JerkControlInput jerk_input_at_fail;
+    jerk_input_at_fail.t_sec = t.seconds();
+    jerk_input_at_fail.jx = 0.0f;
+    jerk_input_at_fail.jy = 0.0f;
+    jerk_input_at_fail.jz = 0.0f;
+    input_publisher_->publish(ConvertToInputMsg(jerk_input_at_fail));
+  }
+  auto velocity_control_input = wrapper_ptr_->GenerateVelocityControlInputFromPlanning(t.seconds());
+  if (velocity_control_input.has_value()) {
+    velocity_input_publisher_->publish(ConvertToVelocityInputMsg(velocity_control_input.value()));
+  } else {
+    VelocityControlInput velocity_input_at_fail;
+    velocity_input_at_fail.t_sec = t.seconds();
+    velocity_input_at_fail.vx = 0.0f;
+    velocity_input_at_fail.vy = 0.0f;
+    velocity_input_at_fail.vz = 0.0f;
+    velocity_input_publisher_->publish(ConvertToVelocityInputMsg(velocity_input_at_fail));
+  }
+  auto accel_control_input = wrapper_ptr_->GenerateAccelControlInputFromPlanning(t.seconds());
+  if (velocity_control_input.has_value()) {
+    accel_input_publisher_->publish(ConvertToAccelInputMsg(accel_control_input.value()));
+  } else {
+    AccelControlInput accel_input_at_fail;
+    accel_input_at_fail.t_sec = t.seconds();
+    accel_input_at_fail.ax = 0.0f;
+    accel_input_at_fail.ay = 0.0f;
+    accel_input_at_fail.az = 0.0f;
+    accel_input_publisher_->publish(ConvertToAccelInputMsg(accel_input_at_fail));
   }
 }
 
@@ -218,6 +264,9 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
       create_publisher<FailVisualizationMsg>("~/visualization/fail_flag", rclcpp::QoS(1));
 
   input_publisher_ = create_publisher<InputMsg>("jerk_control_input", rclcpp::QoS(1));
+  velocity_input_publisher_ =
+      create_publisher<VelocityInputMsg>("velocity_control_input", rclcpp::QoS(1));
+  accel_input_publisher_ = create_publisher<AccelInputMsg>("accel_control_input", rclcpp::QoS(1));
 
   control_timer_ = this->create_wall_timer(20ms, std::bind(&LosServer::ControlTimerCallback, this));
 
@@ -233,6 +282,7 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   // Parameter Settings for Problem
   get_parameter<bool>("problem.is_2d", problem_param.is_2d);
   get_parameter<double>("problem.replanning_period", problem_param.replanning_period);
+  get_parameter<int>("problem.control_mode", problem_param.control_mode);
 
   // Parameter Settings for ObstacleManager
   get_parameter<float>("obstacle_manager.planning_horizon", obstacle_param.planning_horizon);
