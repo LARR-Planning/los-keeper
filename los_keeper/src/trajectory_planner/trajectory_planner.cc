@@ -254,7 +254,6 @@ optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
     plan_success = false;
     goto end_process;
   }
-  //  printf("YAW RATE FEASIBLE INDEX SIZE: %d",smooth_view_angle_index_.size());
   CalculateBestIndex();
   plan_success = true;
   goto end_process;

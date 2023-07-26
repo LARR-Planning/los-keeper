@@ -88,6 +88,7 @@ void los_keeper::TargetManager2D::SampleEndPoints(const vector<ObjectState> &tar
 void los_keeper::TargetManager2D::ComputePrimitives(const vector<ObjectState> &target_state_list) {
   primitives_list_.clear();
   primitives_list_.resize(num_target_);
+
   for (int i = 0; i < num_target_; i++) {
     int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
     vector<thread> worker_thread;
@@ -541,11 +542,11 @@ std::optional<std::vector<StatePoly>> los_keeper::TargetManager2D::PredictTarget
   if (not is_safe_traj_exist) {
     prediction_success = false;
     goto end_process;
-  } else {
-    CalculateCentroid();
-    prediction_success = true;
-    goto end_process;
   }
+  CalculateCentroid();
+  prediction_success = true;
+  goto end_process;
+
 end_process : {
   check_prediction_end = std::chrono::system_clock::now();
   elapsed_check_prediction = check_prediction_end - check_prediction_start;
@@ -650,7 +651,13 @@ bool los_keeper::TargetManager3D::CheckCollision(
       primitive_safe_total_index_.push_back(primitive_safe_total_index_temp);
     }
   }
-  return not primitive_safe_total_index_.empty();
+  if (primitive_safe_total_index_.empty())
+    return false;
+  for (int i = 0; i < primitive_safe_total_index_.size(); i++) {
+    if (primitive_safe_total_index_[i].empty())
+      return false;
+  }
+  return true;
 }
 
 void los_keeper::TargetManager3D::ComputePrimitives(const vector<ObjectState> &target_state_list) {

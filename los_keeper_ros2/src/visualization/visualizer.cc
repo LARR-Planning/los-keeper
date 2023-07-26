@@ -51,10 +51,19 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
     }
   }
   is_primitive_generated = is_primitive_generated and is_primitive_generated_big;
-  if (not is_primitive_generated or not is_best_indices_generated)
+  static int last_num_id = 0;
+  if (not is_primitive_generated or not is_best_indices_generated) {
+    visualization_msgs::msg::Marker erase_marker;
+    for (int i = 0; i < last_num_id; i++) {
+      erase_marker.action = visualization_msgs::msg::Marker::DELETE;
+      erase_marker.ns = line_strips_.target_primitive_best_strip.ns;
+      erase_marker.header.frame_id = parameters_.frame_id;
+      erase_marker.id = i;
+      visual_output.markers.push_back(erase_marker);
+    }
     return visual_output;
+  }
   // prepare ros msgs
-  static vector<int> last_num_id;
   vector<double> time_seq;
   double seg_t0 = primitive_list[0][best_indices[0]].px.GetTimeInterval()[0];
   double seg_tf = primitive_list[0][best_indices[0]].px.GetTimeInterval()[1];
@@ -64,8 +73,8 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
   geometry_msgs::msg::Point temp_point;
   for (int i = 0; i < best_indices.size(); i++) {
     line_strips_.target_primitive_best_strip.points.clear();
-    line_strips_.target_primitive_best_strip.id = 0;
-    line_strips_.target_primitive_best_strip.ns = std::to_string(i) + "-th best_target_prediction";
+    line_strips_.target_primitive_best_strip.id = i;
+    line_strips_.target_primitive_best_strip.ns = "best_target_prediction";
     for (int j = 0; j < parameters_.target.best.num_time_sample; j++) {
       temp_point.x = primitive_list[i][best_indices[i]].px.GetValue(time_seq[j]);
       temp_point.y = primitive_list[i][best_indices[i]].py.GetValue(time_seq[j]);
@@ -74,6 +83,7 @@ Visualizer::VisualizeBestTargetPathArray(const PrimitiveListSet &primitive_list,
     }
     visual_output.markers.push_back(line_strips_.target_primitive_best_strip);
   }
+  last_num_id = best_indices.size();
   return visual_output;
 }
 TargetRawPathVisualizationMsg
@@ -90,8 +100,10 @@ Visualizer::VisualizeRawTargetPathArray(const PrimitiveListSet &primitive_list) 
     }
   }
   is_primitive_generated = is_primitive_generated and is_primitive_generated_big;
+
   if (not is_primitive_generated)
     return visual_output;
+
   // prepare ros msgs
   vector<double> time_seq;
   double seg_t0 = primitive_list[0][0].px.GetTimeInterval()[0];
@@ -146,10 +158,25 @@ Visualizer::VisualizeSafeTargetPathArray(const PrimitiveListSet &primitive_list,
     }
   }
   is_safe_indices_generated = is_safe_indices_generated and is_safe_indices_big;
-  if (not is_primitive_generated or not is_safe_indices_generated)
-    return visual_output;
-
   static vector<int> last_num_id;
+
+  if (not is_primitive_generated or not is_safe_indices_generated) {
+    if (last_num_id.empty())
+      return visual_output;
+    for (int i = 0; i < last_num_id.size(); i++) {
+      visualization_msgs::msg::Marker erase_marker;
+      erase_marker.action = visualization_msgs::msg::Marker::DELETE;
+      erase_marker.ns = std::to_string(i) + "-th safe_target_primitive";
+      erase_marker.header.frame_id = parameters_.frame_id;
+      for (int j = 0; j < last_num_id[i]; j++) {
+        erase_marker.id = j + 1;
+        visual_output.markers.push_back(erase_marker);
+      }
+      last_num_id[i] = 0;
+    }
+    return visual_output;
+  }
+
   vector<double> time_seq;
   double seg_t0 = primitive_list[0][0].px.GetTimeInterval()[0];
   double seg_tf = primitive_list[0][0].px.GetTimeInterval()[1];
@@ -228,10 +255,23 @@ Visualizer::VisualizeSafeKeeperPathArray(const PrimitiveList &primitive_list,
   KeeperSafePathVisualizationMsg visual_output;
   if (not parameters_.keeper.safe.publish)
     return visual_output;
-  if (primitive_list.empty() or safe_indices.empty())
-    return visual_output;
 
-  static int last_num_id;
+  static int last_num_id = -1;
+  if (primitive_list.empty() or safe_indices.empty()) {
+    if (last_num_id < 0)
+      return visual_output;
+    visualization_msgs::msg::Marker erase_marker;
+    erase_marker.action = visualization_msgs::msg::Marker::DELETE;
+    erase_marker.ns = line_strips_.keeper_primitive_safe_strip.ns;
+    erase_marker.header.frame_id = parameters_.frame_id;
+    for (int i = 0; i < last_num_id; i++) {
+      erase_marker.id = i + 1;
+      visual_output.markers.push_back(erase_marker);
+    }
+    last_num_id = 0;
+    return visual_output;
+  }
+
   vector<double> time_seq;
   double seg_t0 = primitive_list[0].px.GetTimeInterval()[0];
   double seg_tf = primitive_list[0].px.GetTimeInterval()[1];
@@ -276,13 +316,13 @@ FailVisualizationMsg Visualizer::VisualizeFailFlagList(const bool &success_flag_
     return visual_output;
   static int last_num_id = 0;
   int num_id = 0;
-  if (not success_flag_planning and success_flag_prediction) {
-    fail_markers_.fail_flag_planning.id = num_id++;
-    visual_output.markers.push_back(fail_markers_.fail_flag_planning);
-  }
   if (not success_flag_prediction) {
     fail_markers_.fail_flag_prediction.id = num_id++;
     visual_output.markers.push_back(fail_markers_.fail_flag_prediction);
+  }
+  if (not success_flag_planning and success_flag_prediction) {
+    fail_markers_.fail_flag_planning.id = num_id++;
+    visual_output.markers.push_back(fail_markers_.fail_flag_planning);
   }
   visualization_msgs::msg::Marker erase_marker;
   erase_marker.action = visualization_msgs::msg::Marker::DELETE;

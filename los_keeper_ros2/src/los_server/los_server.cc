@@ -247,7 +247,7 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   visualization_callback_group_ =
       this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   visualization_timer_ = this->create_wall_timer(
-      50ms, std::bind(&LosServer::VisualizationTimerCallback, this), visualization_callback_group_);
+      40ms, std::bind(&LosServer::VisualizationTimerCallback, this), visualization_callback_group_);
   visualization_.obstacle_path_vis_publisher = create_publisher<ObstaclePathVisualizationMsg>(
       "~/visualization/obstacle_array_info", rclcpp::QoS(1));
   visualization_.target_best_path_vis_publisher = create_publisher<TargetBestPathVisualizationMsg>(
