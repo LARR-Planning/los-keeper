@@ -66,11 +66,16 @@ void TrajectoryPlanner::CheckDistanceFromTargetsSubProcess(
     IndexList &dist_idx_sub) {}
 PlanningDebugInfo TrajectoryPlanner::GetDebugInfo() const {
   PlanningDebugInfo debug_info;
-  debug_info.success_flag = not primitives_list_.empty() and not visible_total_index_.empty();
+  debug_info.success_flag =
+      not primitives_list_.empty() and not good_target_distance_index_list_.empty() and
+      not visible_total_index_.empty() and not dynamically_feasible_index_.empty() and
+      not smooth_view_angle_index_.empty();
   debug_info.planning_time = planning_time_;
   if (debug_info.success_flag) {
     debug_info.primitives_list = primitives_list_;
-    debug_info.safe_visibility_index = visible_total_index_;
+    debug_info.safe_visibility_index =
+        visible_total_index_; // TODO: debug info parameter name change
+    //    printf("SMOOTH VIEW ANGLE SIZE: %d \n",smooth_view_angle_index_.size());
   } else
     debug_info.primitives_list = primitives_list_;
   return debug_info;
@@ -232,18 +237,24 @@ optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
   CheckDistanceFromTargets(target_prediction_result);
   if (good_target_distance_index_list_.empty()) {
     printf("NOT GOOD TARGET DISTANCE \n");
+    visible_total_index_.clear();
+    dynamically_feasible_index_.clear();
+    smooth_view_angle_index_.clear();
     plan_success = false;
     goto end_process;
   }
   CheckVisibility(target_prediction_result, obstacle_points, structured_obstacle_prediction_result);
   if (visible_total_index_.empty()) {
     printf("NOT GOOD VISIBILITY \n");
+    dynamically_feasible_index_.clear();
+    smooth_view_angle_index_.clear();
     plan_success = false;
     goto end_process;
   }
   CheckDynamicLimits();
   if (dynamically_feasible_index_.empty()) {
     printf("NOT GOOD DYNAMICAL LIMITS \n");
+    smooth_view_angle_index_.clear();
     plan_success = false;
     goto end_process;
   }
@@ -258,7 +269,7 @@ optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
   plan_success = true;
   goto end_process;
 
-end_process : {
+end_process: {
   check_planning_end = std::chrono::system_clock::now();
   elapsed_check_planning = check_planning_end - check_planning_start;
   planning_time_ = elapsed_check_planning.count();
@@ -306,26 +317,22 @@ void TrajectoryPlanner2D::CheckDistanceFromTargetsSubProcess(
   float value;
   float target_distance_squared_min = param_.distance.target_min * param_.distance.target_min;
   float target_distance_squared_max = param_.distance.target_max * param_.distance.target_max;
+  float pqx[6], pqy[6];
   for (int idx = start_idx; idx < end_idx; idx++) {
     flag_store_out = true;
     for (int k = 0; k < num_target_; k++) {
       flag_store_in = true;
+      for (int i = 0; i < 6; i++) {
+        pqx[i] = primitives_list_[idx].px.GetBernsteinCoefficient()[i] -
+                 target_trajectory_list[k].px.GetBernsteinCoefficient()[i];
+        pqy[i] = primitives_list_[idx].py.GetBernsteinCoefficient()[i] -
+                 target_trajectory_list[k].py.GetBernsteinCoefficient()[i];
+      }
       for (int i = 0; i <= 10; i++) {
         value = 0.0f;
         for (int j = std::max(0, i - 5); j <= std::min(5, i); j++) {
           value += (float)nchoosek(5, j) * (float)nchoosek(5, i - j) / (float)nchoosek(10, i) *
-                   (primitives_list_[idx].px.GetBernsteinCoefficient()[j] *
-                        primitives_list_[idx].px.GetBernsteinCoefficient()[i - j] -
-                    2 * primitives_list_[idx].px.GetBernsteinCoefficient()[j] *
-                        target_trajectory_list[k].px.GetBernsteinCoefficient()[i - j] +
-                    target_trajectory_list[k].px.GetBernsteinCoefficient()[j] *
-                        target_trajectory_list[k].px.GetBernsteinCoefficient()[i - j] +
-                    primitives_list_[idx].py.GetBernsteinCoefficient()[j] *
-                        primitives_list_[idx].py.GetBernsteinCoefficient()[i - j] -
-                    2 * primitives_list_[idx].py.GetBernsteinCoefficient()[j] *
-                        target_trajectory_list[k].py.GetBernsteinCoefficient()[i - j] +
-                    target_trajectory_list[k].py.GetBernsteinCoefficient()[j] *
-                        target_trajectory_list[k].py.GetBernsteinCoefficient()[i - j]);
+                   (pqx[j] * pqx[i - j] + pqy[j] * pqy[i - j]);
         }
         if (value - target_distance_squared_min < 0.0f or
             value - target_distance_squared_max > 0.0f) {
@@ -407,6 +414,7 @@ void TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacleSubProcess(
   bool flag_store_in2 = true;     // LOS from obstacles (target)
   bool flag_store_in2_sub = true; // LOS from obstacles
   bool flag_store_out = true;     //
+  float pox[6], poy[6], qox[6], qoy[6];
   float rx_enlarged_squared_inverse;
   float ry_enlarged_squared_inverse;
   float rx_squared_inverse;
@@ -425,45 +433,24 @@ void TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacleSubProcess(
                        structured_obstacle_poly_list[close_obstacle_index_[i]].ry +
                        param_.safe_distance.ry,
                    2);
+      for (int j = 0; j < 6; j++) {
+        pox[j] =
+            primitives_list_[good_target_distance_index_list_[idx]]
+                .px.GetBernsteinCoefficient()[j] -
+            structured_obstacle_poly_list[close_obstacle_index_[i]].px.GetBernsteinCoefficient()[j];
+        poy[j] =
+            primitives_list_[good_target_distance_index_list_[idx]]
+                .py.GetBernsteinCoefficient()[j] -
+            structured_obstacle_poly_list[close_obstacle_index_[i]].py.GetBernsteinCoefficient()[j];
+      }
+
       flag_store_in1 = true;
       for (int j = 0; j <= 10; j++) {
         value = 0.0f;
         for (int k = std::max(0, j - 5); k <= std::min(5, j); k++) {
           value += (float)nchoosek(5, k) * (float)nchoosek(5, j - k) / (float)nchoosek(10, j) *
-                   ((primitives_list_[good_target_distance_index_list_[idx]]
-                             .px.GetBernsteinCoefficient()[k] *
-                         primitives_list_[good_target_distance_index_list_[idx]]
-                             .px.GetBernsteinCoefficient()[j - k] -
-                     primitives_list_[good_target_distance_index_list_[idx]]
-                             .px.GetBernsteinCoefficient()[k] *
-                         structured_obstacle_poly_list[close_obstacle_index_[i]]
-                             .px.GetBernsteinCoefficient()[j - k] -
-                     primitives_list_[good_target_distance_index_list_[idx]]
-                             .px.GetBernsteinCoefficient()[j - k] *
-                         structured_obstacle_poly_list[close_obstacle_index_[i]]
-                             .px.GetBernsteinCoefficient()[k] +
-                     structured_obstacle_poly_list[close_obstacle_index_[i]]
-                             .px.GetBernsteinCoefficient()[k] *
-                         structured_obstacle_poly_list[close_obstacle_index_[i]]
-                             .px.GetBernsteinCoefficient()[j - k]) *
-                        rx_enlarged_squared_inverse + // x-components
-                    (primitives_list_[good_target_distance_index_list_[idx]]
-                             .py.GetBernsteinCoefficient()[k] *
-                         primitives_list_[good_target_distance_index_list_[idx]]
-                             .py.GetBernsteinCoefficient()[j - k] -
-                     primitives_list_[good_target_distance_index_list_[idx]]
-                             .py.GetBernsteinCoefficient()[k] *
-                         structured_obstacle_poly_list[close_obstacle_index_[i]]
-                             .py.GetBernsteinCoefficient()[j - k] -
-                     primitives_list_[good_target_distance_index_list_[idx]]
-                             .py.GetBernsteinCoefficient()[j - k] *
-                         structured_obstacle_poly_list[close_obstacle_index_[i]]
-                             .py.GetBernsteinCoefficient()[k] +
-                     structured_obstacle_poly_list[close_obstacle_index_[i]]
-                             .py.GetBernsteinCoefficient()[k] *
-                         structured_obstacle_poly_list[close_obstacle_index_[i]]
-                             .py.GetBernsteinCoefficient()[j - k]) *
-                        ry_enlarged_squared_inverse);
+                   ((pox[k] * pox[j - k]) * rx_enlarged_squared_inverse + // x-components
+                    (poy[k] * poy[j - k]) * ry_enlarged_squared_inverse); // y-components
         }
         if (value < 1.0f) {
           flag_store_in1 = false;
@@ -484,41 +471,29 @@ void TrajectoryPlanner2D::CheckVisibilityAgainstStructuredObstacleSubProcess(
             1 / powf(structured_obstacle_poly_list[close_obstacle_index_[j]].rx, 2);
         ry_squared_inverse =
             1 / powf(structured_obstacle_poly_list[close_obstacle_index_[j]].ry, 2);
+        for (int k = 0; k < 6; k++) {
+          pox[k] = primitives_list_[good_target_distance_index_list_[idx]]
+                       .px.GetBernsteinCoefficient()[k] -
+                   structured_obstacle_poly_list[close_obstacle_index_[j]]
+                       .px.GetBernsteinCoefficient()[k];
+          poy[k] = primitives_list_[good_target_distance_index_list_[idx]]
+                       .py.GetBernsteinCoefficient()[k] -
+                   structured_obstacle_poly_list[close_obstacle_index_[j]]
+                       .py.GetBernsteinCoefficient()[k];
+          qox[k] = target_prediction_list[i].px.GetBernsteinCoefficient()[k] -
+                   structured_obstacle_poly_list[close_obstacle_index_[j]]
+                       .px.GetBernsteinCoefficient()[k];
+          qoy[k] = target_prediction_list[i].py.GetBernsteinCoefficient()[k] -
+                   structured_obstacle_poly_list[close_obstacle_index_[j]]
+                       .py.GetBernsteinCoefficient()[k];
+        }
         flag_store_in2_sub = true;
         for (int k = 0; k <= 10; k++) {
           value = 0.0f;
           for (int l = std::max(0, k - 5); l <= std::min(5, k); l++) {
             value += (float)nchoosek(5, l) * (float)nchoosek(5, k - l) / (float)nchoosek(10, k) *
-                     ((primitives_list_[good_target_distance_index_list_[idx]]
-                               .px.GetBernsteinCoefficient()[l] *
-                           target_prediction_list[i].px.GetBernsteinCoefficient()[k - l] -
-                       primitives_list_[good_target_distance_index_list_[idx]]
-                               .px.GetBernsteinCoefficient()[l] *
-                           structured_obstacle_poly_list[close_obstacle_index_[j]]
-                               .px.GetBernsteinCoefficient()[k - l] -
-                       structured_obstacle_poly_list[close_obstacle_index_[j]]
-                               .px.GetBernsteinCoefficient()[l] *
-                           target_prediction_list[i].px.GetBernsteinCoefficient()[k - l] +
-                       structured_obstacle_poly_list[close_obstacle_index_[j]]
-                               .px.GetBernsteinCoefficient()[l] *
-                           structured_obstacle_poly_list[close_obstacle_index_[j]]
-                               .px.GetBernsteinCoefficient()[k - l]) *
-                          rx_squared_inverse +
-                      (primitives_list_[good_target_distance_index_list_[idx]]
-                               .py.GetBernsteinCoefficient()[l] *
-                           target_prediction_list[i].py.GetBernsteinCoefficient()[k - l] -
-                       primitives_list_[good_target_distance_index_list_[idx]]
-                               .py.GetBernsteinCoefficient()[l] *
-                           structured_obstacle_poly_list[close_obstacle_index_[j]]
-                               .py.GetBernsteinCoefficient()[k - l] -
-                       structured_obstacle_poly_list[close_obstacle_index_[j]]
-                               .py.GetBernsteinCoefficient()[l] *
-                           target_prediction_list[i].py.GetBernsteinCoefficient()[k - l] +
-                       structured_obstacle_poly_list[close_obstacle_index_[j]]
-                               .py.GetBernsteinCoefficient()[l] *
-                           structured_obstacle_poly_list[close_obstacle_index_[j]]
-                               .py.GetBernsteinCoefficient()[k - l]) *
-                          ry_squared_inverse);
+                     (pox[l] * qox[k - l] * rx_squared_inverse +
+                      poy[l] * qoy[k - l] * ry_squared_inverse);
           }
           if (value < 1.0f) {
             flag_store_in2_sub = false;
@@ -1124,7 +1099,7 @@ optional<StatePoly> TrajectoryPlanner3D::ComputeChasingTrajectory(
   plan_success = true;
   goto end_process;
 
-end_process : {
+end_process: {
   check_planning_end = std::chrono::system_clock::now();
   elapsed_check_planning = check_planning_end - check_planning_start;
   planning_time_ = elapsed_check_planning.count();

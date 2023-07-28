@@ -429,6 +429,7 @@ void los_keeper::TargetManager2D::CheckStructuredObstacleCollisionSubProcess(
   float value;
   float rx_squared_inverse;
   float ry_squared_inverse;
+  float qox[4], qoy[4];
   for (int j = start_idx; j < end_idx; j++) {
     for (int k = 0; k < close_obstacle_index_[target_id].size(); k++) {
       flag_store_out = true;
@@ -440,38 +441,21 @@ void los_keeper::TargetManager2D::CheckStructuredObstacleCollisionSubProcess(
           1 / powf(structured_obstacle_poly_list[close_obstacle_index_[target_id][k]].ry +
                        primitives_list_[target_id][j].ry,
                    2);
-
-      for (int l = 0; l <= 2 * 3; l++) {
+      for (int l = 0; l < 4; l++) {
+        qox[l] = primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l] -
+                 structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
+                     .px.GetBernsteinCoefficient()[l];
+        qoy[l] = primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l] -
+                 structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
+                     .py.GetBernsteinCoefficient()[l];
+      }
+      for (int l = 0; l <= 6; l++) {
         flag_store_in = true;
         value = 0.0f;
         for (int m = std::max(0, l - 3); m <= std::min(3, l); m++) {
-          value += (float)nchoosek(3, m) * (float)nchoosek(3, l - m) / (float)nchoosek(2 * 3, l) *
-                   ((primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                         primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] -
-                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .px.GetBernsteinCoefficient()[l - m] -
-                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .px.GetBernsteinCoefficient()[m] +
-                     structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .px.GetBernsteinCoefficient()[m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .px.GetBernsteinCoefficient()[l - m]) *
-                        rx_squared_inverse + // x-component
-                    (primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                         primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] -
-                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .py.GetBernsteinCoefficient()[l - m] -
-                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .py.GetBernsteinCoefficient()[m] +
-                     structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .py.GetBernsteinCoefficient()[m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .py.GetBernsteinCoefficient()[l - m]) *
-                        ry_squared_inverse // y-component
+          value += (float)nchoosek(3, m) * (float)nchoosek(3, l - m) / (float)nchoosek(6, l) *
+                   (qox[m] * qox[l - m] * rx_squared_inverse + // x-component
+                    qoy[m] * qoy[l - m] * ry_squared_inverse   // y-component
                    );
         }
         if (value < 1.0f) {
@@ -547,7 +531,7 @@ std::optional<std::vector<StatePoly>> los_keeper::TargetManager2D::PredictTarget
   prediction_success = true;
   goto end_process;
 
-end_process : {
+end_process: {
   check_prediction_end = std::chrono::system_clock::now();
   elapsed_check_prediction = check_prediction_end - check_prediction_start;
   prediction_time_ = elapsed_check_prediction.count();
@@ -937,6 +921,7 @@ void los_keeper::TargetManager3D::CheckStructuredObstacleCollisionSubProcess(
   bool flag_store_in = true;
   bool flag_store_out = true;
   float value;
+  float qox[4], qoy[4], qoz[4];
   float rx_squared_inverse;
   float ry_squared_inverse;
   float rz_squared_inverse;
@@ -955,50 +940,25 @@ void los_keeper::TargetManager3D::CheckStructuredObstacleCollisionSubProcess(
           1 / powf(structured_obstacle_poly_list[close_obstacle_index_[target_id][k]].rz +
                        primitives_list_[target_id][j].rz,
                    2);
+      for (int l = 0; l < 4; l++) {
+        qox[l] = primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l] -
+                 structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
+                     .px.GetBernsteinCoefficient()[l];
+        qoy[l] = primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l] -
+                 structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
+                     .py.GetBernsteinCoefficient()[l];
+        qoz[l] = primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l] -
+                 structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
+                     .pz.GetBernsteinCoefficient()[l];
+      }
       for (int l = 0; l <= 2 * 3; l++) {
         flag_store_in = true;
         value = 0.0f;
         for (int m = std::max(0, l - 3); m <= std::min(3, l); m++) {
           value += (float)nchoosek(3, m) * (float)nchoosek(3, l - m) / (float)nchoosek(2 * 3, l) *
-                   ((primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                         primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] -
-                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .px.GetBernsteinCoefficient()[l - m] -
-                     primitives_list_[target_id][j].px.GetBernsteinCoefficient()[l - m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .px.GetBernsteinCoefficient()[m] +
-                     structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .px.GetBernsteinCoefficient()[m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .px.GetBernsteinCoefficient()[l - m]) *
-                        rx_squared_inverse + // x-component
-                    (primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                         primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] -
-                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .py.GetBernsteinCoefficient()[l - m] -
-                     primitives_list_[target_id][j].py.GetBernsteinCoefficient()[l - m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .py.GetBernsteinCoefficient()[m] +
-                     structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .py.GetBernsteinCoefficient()[m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .py.GetBernsteinCoefficient()[l - m]) *
-                        ry_squared_inverse + // y-component
-                    (primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[m] *
-                         primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l - m] -
-                     primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .pz.GetBernsteinCoefficient()[l - m] -
-                     primitives_list_[target_id][j].pz.GetBernsteinCoefficient()[l - m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .pz.GetBernsteinCoefficient()[m] +
-                     structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .pz.GetBernsteinCoefficient()[m] *
-                         structured_obstacle_poly_list[close_obstacle_index_[target_id][k]]
-                             .pz.GetBernsteinCoefficient()[l - m]) *
-                        rz_squared_inverse // y-component
+                   (qox[m] * qoy[l - m] * rx_squared_inverse + // x-component
+                    qoy[m] * qoy[l - m] * ry_squared_inverse + // y-component
+                    qoz[m] * qoz[l - m] * rz_squared_inverse   // z-component
                    );
         }
         if (value < 1.0f) {
@@ -1081,7 +1041,7 @@ std::optional<std::vector<StatePoly>> los_keeper::TargetManager3D::PredictTarget
     prediction_success = true;
     goto end_process;
   }
-end_process : {
+end_process: {
   check_prediction_end = std::chrono::system_clock::now();
   elapsed_check_prediction = check_prediction_end - check_prediction_start;
   prediction_time_ = elapsed_check_prediction.count();

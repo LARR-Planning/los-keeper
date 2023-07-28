@@ -277,18 +277,18 @@ Visualizer::VisualizeSafeKeeperPathArray(const PrimitiveList &primitive_list,
   double seg_tf = primitive_list[0].px.GetTimeInterval()[1];
   for (int i = 0; i < parameters_.keeper.safe.num_time_sample; i++)
     time_seq.push_back(seg_t0 + (double)i * (seg_tf - seg_t0) /
-                                    (double)(parameters_.keeper.raw.num_time_sample - 1));
+                                    (double)(parameters_.keeper.safe.num_time_sample - 1));
   geometry_msgs::msg::Point temp_point;
   int id = 0;
-  int num_primitive_vis = int((float)safe_indices.size() * parameters_.keeper.raw.proportion);
+  int num_primitive_vis = int((float)safe_indices.size() * parameters_.keeper.safe.proportion);
   int index_jump = (int)safe_indices.size() / num_primitive_vis;
-  for (int j = 0; j < num_primitive_vis - 1; j++) {
+  for (int i = 0; i < num_primitive_vis - 1; i++) {
     line_strips_.keeper_primitive_safe_strip.points.clear();
     line_strips_.keeper_primitive_safe_strip.id = ++id;
-    for (int k = 0; k < parameters_.target.safe.num_time_sample; k++) {
-      temp_point.x = primitive_list[safe_indices[index_jump * j]].px.GetValue(time_seq[k]);
-      temp_point.y = primitive_list[safe_indices[index_jump * j]].py.GetValue(time_seq[k]);
-      temp_point.z = primitive_list[safe_indices[index_jump * j]].pz.GetValue(time_seq[k]);
+    for (int j = 0; j < parameters_.target.safe.num_time_sample; j++) {
+      temp_point.x = primitive_list[safe_indices[index_jump * i]].px.GetValue(time_seq[j]);
+      temp_point.y = primitive_list[safe_indices[index_jump * i]].py.GetValue(time_seq[j]);
+      temp_point.z = primitive_list[safe_indices[index_jump * i]].pz.GetValue(time_seq[j]);
       line_strips_.keeper_primitive_safe_strip.points.push_back(temp_point);
     }
     visual_output.markers.push_back(line_strips_.keeper_primitive_safe_strip);
@@ -413,14 +413,15 @@ void Visualizer::UpdateParam(const VisualizationParameters &param) {
   line_strips_.keeper_primitive_best_strip.ns = "keeper_best_primitives";
   // Fail flag: planning
   fail_markers_.fail_flag_planning.type = visualization_msgs::msg::Marker::CUBE;
+  fail_markers_.fail_flag_planning.action = visualization_msgs::msg::Marker::ADD;
   fail_markers_.fail_flag_planning.header.frame_id = parameters_.frame_id;
   fail_markers_.fail_flag_planning.color.a = parameters_.fail_flag.planning.color.a;
   fail_markers_.fail_flag_planning.color.r = parameters_.fail_flag.planning.color.r;
   fail_markers_.fail_flag_planning.color.g = parameters_.fail_flag.planning.color.g;
   fail_markers_.fail_flag_planning.color.b = parameters_.fail_flag.planning.color.b;
-  fail_markers_.fail_flag_planning.scale.x = 1000.0;
-  fail_markers_.fail_flag_planning.scale.y = 1000.0;
-  fail_markers_.fail_flag_planning.scale.z = 100.0;
+  fail_markers_.fail_flag_planning.scale.x = 100.0;
+  fail_markers_.fail_flag_planning.scale.y = 100.0;
+  fail_markers_.fail_flag_planning.scale.z = 10.0;
   fail_markers_.fail_flag_planning.pose.position.x = 0.0;
   fail_markers_.fail_flag_planning.pose.position.y = 0.0;
   fail_markers_.fail_flag_planning.pose.position.z = 0.0;
@@ -432,14 +433,15 @@ void Visualizer::UpdateParam(const VisualizationParameters &param) {
   fail_markers_.fail_flag_planning.ns = "fail_flag";
   // Fail flag: prediction
   fail_markers_.fail_flag_prediction.type = visualization_msgs::msg::Marker::CUBE;
+  fail_markers_.fail_flag_prediction.action = visualization_msgs::msg::Marker::ADD;
   fail_markers_.fail_flag_prediction.header.frame_id = parameters_.frame_id;
   fail_markers_.fail_flag_prediction.color.a = parameters_.fail_flag.prediction.color.a;
   fail_markers_.fail_flag_prediction.color.r = parameters_.fail_flag.prediction.color.r;
   fail_markers_.fail_flag_prediction.color.g = parameters_.fail_flag.prediction.color.g;
   fail_markers_.fail_flag_prediction.color.b = parameters_.fail_flag.prediction.color.b;
-  fail_markers_.fail_flag_prediction.scale.x = 1000.0;
-  fail_markers_.fail_flag_prediction.scale.y = 1000.0;
-  fail_markers_.fail_flag_prediction.scale.z = 100.0;
+  fail_markers_.fail_flag_prediction.scale.x = 100.0;
+  fail_markers_.fail_flag_prediction.scale.y = 100.0;
+  fail_markers_.fail_flag_prediction.scale.z = 10.0;
   fail_markers_.fail_flag_prediction.pose.position.x = 0.0;
   fail_markers_.fail_flag_prediction.pose.position.y = 0.0;
   fail_markers_.fail_flag_prediction.pose.position.z = 0.0;
