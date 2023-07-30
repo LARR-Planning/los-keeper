@@ -165,8 +165,8 @@ void LosServer::VisualizationTimerCallback() {
       debug_info.target_manager.success_flag, debug_info.planning.success_flag,
       debug_info.target_manager.seq); // Fail flag
   visualization_.fail_flag_vis_publisher->publish(visualization_.fail_flag_vis);
-  printf("PREDICTION TIME: %f \n", debug_info.target_manager.prediction_time);
-  printf("PLANNING TIME: %f \n", debug_info.planning.planning_time);
+  //  printf("PREDICTION TIME: %f \n", debug_info.target_manager.prediction_time);
+  //  printf("PLANNING TIME: %f \n", debug_info.planning.planning_time);
 }
 
 void los_keeper::LosServer::ToggleActivateCallback(
@@ -247,7 +247,7 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   visualization_callback_group_ =
       this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   visualization_timer_ = this->create_wall_timer(
-      50ms, std::bind(&LosServer::VisualizationTimerCallback, this), visualization_callback_group_);
+      40ms, std::bind(&LosServer::VisualizationTimerCallback, this), visualization_callback_group_);
   visualization_.obstacle_path_vis_publisher = create_publisher<ObstaclePathVisualizationMsg>(
       "~/visualization/obstacle_array_info", rclcpp::QoS(1));
   visualization_.target_best_path_vis_publisher = create_publisher<TargetBestPathVisualizationMsg>(
