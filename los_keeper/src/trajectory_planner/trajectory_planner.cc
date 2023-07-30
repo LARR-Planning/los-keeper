@@ -268,7 +268,7 @@ optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
   plan_success = true;
   goto end_process;
 
-end_process: {
+end_process : {
   check_planning_end = std::chrono::system_clock::now();
   elapsed_check_planning = check_planning_end - check_planning_start;
   planning_time_ = elapsed_check_planning.count();
@@ -1051,7 +1051,7 @@ optional<StatePoly> TrajectoryPlanner3D::ComputeChasingTrajectory(
   plan_success = true;
   goto end_process;
 
-end_process: {
+end_process : {
   check_planning_end = std::chrono::system_clock::now();
   elapsed_check_planning = check_planning_end - check_planning_start;
   planning_time_ = elapsed_check_planning.count();

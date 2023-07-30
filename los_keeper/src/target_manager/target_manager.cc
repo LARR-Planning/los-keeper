@@ -524,7 +524,7 @@ std::optional<std::vector<StatePoly>> los_keeper::TargetManager2D::PredictTarget
   prediction_success = true;
   goto end_process;
 
-end_process: {
+end_process : {
   check_prediction_end = std::chrono::system_clock::now();
   elapsed_check_prediction = check_prediction_end - check_prediction_start;
   prediction_time_ = elapsed_check_prediction.count();
@@ -1025,7 +1025,7 @@ std::optional<std::vector<StatePoly>> los_keeper::TargetManager3D::PredictTarget
     prediction_success = true;
     goto end_process;
   }
-end_process: {
+end_process : {
   check_prediction_end = std::chrono::system_clock::now();
   elapsed_check_prediction = check_prediction_end - check_prediction_start;
   prediction_time_ = elapsed_check_prediction.count();
