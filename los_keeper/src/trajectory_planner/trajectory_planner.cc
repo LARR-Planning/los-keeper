@@ -258,14 +258,12 @@ optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
     plan_success = false;
     goto end_process;
   }
-  //  printf("DYNAMIC FEASIBLE INDEX SIZE: %d",dynamically_feasible_index_.size());
   CheckViewAngleRate(target_prediction_result);
   if (smooth_view_angle_index_.empty()) {
     printf("NOT GOOD YAW RATE \n");
     plan_success = false;
     goto end_process;
   }
-  //  printf("SMOOTH YAW RATE INDEX SIZE: %d\n",smooth_view_angle_index_.size());
   CalculateBestIndex();
   plan_success = true;
   goto end_process;
