@@ -483,26 +483,19 @@ void los_keeper::TargetManager2D::CalculateCentroidSubProcess(const int &target_
     distance_sum_list[i] = 0.0f;
     for (int j = 0; j < primitive_safe_total_index_[target_id].size(); j++) {
       distance_sum_list[i] +=
-          (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
-               .px.GetTerminalValue() -
-           primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
-               .px.GetTerminalValue()) *
-              (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
-                   .px.GetTerminalValue() -
-               primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
-                   .px.GetTerminalValue()) +
-          (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
-               .py.GetTerminalValue() -
-           primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
-               .py.GetTerminalValue()) *
-              (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
-                   .py.GetTerminalValue() -
-               primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
-                   .py.GetTerminalValue());
+          powf(primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
+                       .px.GetTerminalValue() -
+                   primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+                       .px.GetTerminalValue(),
+               2) +
+          powf(primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
+                       .py.GetTerminalValue() -
+                   primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+                       .py.GetTerminalValue(),
+               2);
     }
   }
-
-  min_dist.second = 99999.0f;
+  min_dist.second = 999999.0f;
   for (int i = 0; i < chunk_size; i++) {
     if (min_dist.second > distance_sum_list[i]) {
       min_dist.second = distance_sum_list[i];
@@ -986,30 +979,21 @@ void los_keeper::TargetManager3D::CalculateCentroidSubProcess(const int &target_
     distance_sum_list[i] = 0.0f;
     for (int j = 0; j < primitive_safe_total_index_[target_id].size(); j++) {
       distance_sum_list[i] +=
-          (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
-               .px.GetTerminalValue() -
-           primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
-               .px.GetTerminalValue()) *
-              (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
-                   .px.GetTerminalValue() -
-               primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
-                   .px.GetTerminalValue()) +
-          (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
-               .py.GetTerminalValue() -
-           primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
-               .py.GetTerminalValue()) *
-              (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
-                   .py.GetTerminalValue() -
-               primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
-                   .py.GetTerminalValue()) +
-          (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
-               .pz.GetTerminalValue() -
-           primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
-               .pz.GetTerminalValue()) *
-              (primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
-                   .pz.GetTerminalValue() -
-               primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
-                   .pz.GetTerminalValue());
+          powf(primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
+                       .px.GetTerminalValue() -
+                   primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+                       .px.GetTerminalValue(),
+               2) +
+          powf(primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
+                       .py.GetTerminalValue() -
+                   primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+                       .py.GetTerminalValue(),
+               2) +
+          powf(primitives_list_[target_id][primitive_safe_total_index_[target_id][i + start_idx]]
+                       .pz.GetTerminalValue() -
+                   primitives_list_[target_id][primitive_safe_total_index_[target_id][j]]
+                       .pz.GetTerminalValue(),
+               2);
     }
   }
   min_dist.second = 999999.0f;

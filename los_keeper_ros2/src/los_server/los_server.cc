@@ -165,8 +165,8 @@ void LosServer::VisualizationTimerCallback() {
       debug_info.target_manager.success_flag, debug_info.planning.success_flag,
       debug_info.target_manager.seq); // Fail flag
   visualization_.fail_flag_vis_publisher->publish(visualization_.fail_flag_vis);
-  printf("PREDICTION TIME: %f \n", debug_info.target_manager.prediction_time);
-  printf("PLANNING TIME: %f \n", debug_info.planning.planning_time);
+  //  printf("PREDICTION TIME: %f \n", debug_info.target_manager.prediction_time);
+  //  printf("PLANNING TIME: %f \n", debug_info.planning.planning_time);
 }
 
 void los_keeper::LosServer::ToggleActivateCallback(

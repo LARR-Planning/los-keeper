@@ -2,7 +2,7 @@
   ros__parameters:
     problem:
       is_2d: true
-      replanning_period: 0.07
+      replanning_period: 0.06
       control_mode: 0 # 0: jerk input, 1: accel input, 2: velocity input
     obstacle_manager:
       planning_horizon: 1.0 # TODO: (1)
@@ -32,16 +32,16 @@
         obstacle_max: 1.5
         end_points_min: 0.4
         end_points_max: 0.8
-        target_min: 0.3
+        target_min: 0.25
         target_max: 1.5
       dynamic_limits:
-        vel_max: 3.0
-        acc_max: 5.0
-        yaw_rate_max: 4.0
+        vel_max: 5.0
+        acc_max: 10.0
+        yaw_rate_max: 5.0
       safe_distance:
-        rx: 0.1
-        ry: 0.1
-        rz: 0.1
+        rx: 0.15
+        ry: 0.15
+        rz: 0.15
       virtual_pcl_bbox:
         width: 5.0
         height: 3.0
