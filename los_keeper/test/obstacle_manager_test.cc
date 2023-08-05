@@ -31,7 +31,7 @@ TEST_F(ApiTestFixtureObstacle, CheckCollisionBetweenPointsAndObstacles) {
   vector<ObjectState> obstacle_array;
   obstacle_array.push_back(single_obstacle);
   obstace_manager->SetStructuredObstacleState(obstacle_array);
-  DroneState drone_state;
+  KeeperState drone_state;
   drone_state.px = 4, drone_state.vx = 0, drone_state.ax = 0;
   drone_state.py = 4, drone_state.vy = 0, drone_state.ay = 0;
   drone_state.py = 4, drone_state.vz = 0, drone_state.az = 0;

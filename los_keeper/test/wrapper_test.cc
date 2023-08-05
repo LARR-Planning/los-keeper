@@ -58,7 +58,7 @@ TEST_F(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived) {
   planning_param.safe_distance.ry = 0.1f;
   planning_param.safe_distance.rz = 0.1f;
 
-  DroneState drone_state;
+  KeeperState drone_state;
   //  std::vector<ObjectState> object_state_list(2);
   std::vector<ObjectState> target_state_list(1);
   target_state_list[0].id = 0;
@@ -86,7 +86,7 @@ TEST_F(ApiTestFixture, PlanningShouldTriedWhenActivatedAndReceived) {
   drone_state.ry = 0.1;
   drone_state.rz = 0.15;
 
-  wrapper_.SetDroneState(drone_state);
+  wrapper_.SetKeeperState(drone_state);
   wrapper_.SetTargetStateArray(target_state_list);
   //  wrapper_.SetObjectStateArray(object_state_list);
 
@@ -139,7 +139,7 @@ TEST_F(ApiTestFixture, RePlanningShouldTriedWhenSomethingWrong) {
   planning_param.safe_distance.ry = 0.1f;
   planning_param.safe_distance.rz = 0.1f;
 
-  DroneState drone_state;
+  KeeperState drone_state;
   //  std::vector<ObjectState> object_state_list(2);
   std::vector<ObjectState> target_state_list(1);
   target_state_list[0].id = 0;
@@ -166,7 +166,7 @@ TEST_F(ApiTestFixture, RePlanningShouldTriedWhenSomethingWrong) {
   drone_state.rx = 0.1;
   drone_state.ry = 0.1;
   drone_state.rz = 0.15;
-  wrapper_.SetDroneState(drone_state);
+  wrapper_.SetKeeperState(drone_state);
   //  wrapper_.SetObjectStateArray(object_state_list);
   wrapper_.SetTargetStateArray(target_state_list);
   wrapper_.OnToggleActivateServiceCallback();
@@ -201,10 +201,10 @@ TEST_F(ApiTestFixture, RePlanningShouldTriedWhenSomethingWrong) {
 }
 
 TEST_F(ApiTestFixture, ControlInput) {
-  DroneState drone_state;
+  KeeperState drone_state;
   std::vector<ObjectState> object_state_list(2);
   drone_state.t_sec = 1.0;
-  wrapper_.SetDroneState(drone_state);
+  wrapper_.SetKeeperState(drone_state);
   wrapper_.SetTargetStateArray(object_state_list);
 
   wrapper_.OnToggleActivateServiceCallback();

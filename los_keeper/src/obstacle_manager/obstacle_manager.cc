@@ -101,14 +101,14 @@ bool ObstacleManager::CheckCollisionAlongTrajectory(const StatePoly &trajectory)
   else
     return true;
 }
-bool ObstacleManager::CheckCollisionWithPoint(const DroneState &drone_state) {
+bool ObstacleManager::CheckCollisionWithPoint(const KeeperState &keeper_state) {
   bool safe_pcl = true;
   bool safe_structured = true;
   if (not cloud_.points.empty()) {
     for (int i = 0; i < cloud_.points.size(); i++) {
-      if (powf(drone_state.px - cloud_.points[i].x, 2) / powf(drone_state.rx, 2) +
-              powf(drone_state.py - cloud_.points[i].y, 2) / powf(drone_state.ry, 2) +
-              powf(drone_state.pz - cloud_.points[i].z, 2) / powf(drone_state.rz, 2) <
+      if (powf(keeper_state.px - cloud_.points[i].x, 2) / powf(keeper_state.rx, 2) +
+              powf(keeper_state.py - cloud_.points[i].y, 2) / powf(keeper_state.ry, 2) +
+              powf(keeper_state.pz - cloud_.points[i].z, 2) / powf(keeper_state.rz, 2) <
           1.0f) {
         safe_pcl = false;
         break;
@@ -117,12 +117,12 @@ bool ObstacleManager::CheckCollisionWithPoint(const DroneState &drone_state) {
   }
   if (not structured_obstacle_state_list_.empty()) {
     for (int i = 0; i < structured_obstacle_state_list_.size(); i++) {
-      if (powf(drone_state.px - structured_obstacle_state_list_[i].px, 2) /
-                  powf(drone_state.rx, 2) +
-              powf(drone_state.py - structured_obstacle_state_list_[i].py, 2) /
-                  powf(drone_state.ry, 2) +
-              powf(drone_state.pz - structured_obstacle_state_list_[i].pz, 2) /
-                  powf(drone_state.rz, 2) <
+      if (powf(keeper_state.px - structured_obstacle_state_list_[i].px, 2) /
+                  powf(keeper_state.rx, 2) +
+              powf(keeper_state.py - structured_obstacle_state_list_[i].py, 2) /
+                  powf(keeper_state.ry, 2) +
+              powf(keeper_state.pz - structured_obstacle_state_list_[i].pz, 2) /
+                  powf(keeper_state.rz, 2) <
           1.0f) {
         safe_structured = false;
         break;

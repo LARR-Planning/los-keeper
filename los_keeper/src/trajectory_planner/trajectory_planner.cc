@@ -3,7 +3,7 @@
 using namespace los_keeper;
 
 std::optional<StatePoly> TrajectoryPlanner::ComputeChasingTrajectory(
-    const DroneState &drone_state, const std::vector<StatePoly> &target_prediction_list,
+    const KeeperState &keeper_state, const std::vector<StatePoly> &target_prediction_list,
     const los_keeper::PclPointCloud &obstacle_points,
     const std::vector<StatePoly> &structured_obstacle_poly_list) {
   return std::nullopt;
@@ -53,10 +53,10 @@ void TrajectoryPlanner::SampleShootingPointsSubProcess(const PrimitiveList &targ
                                                        const int &target_id, const int &chunk_size,
                                                        PointList &shooting_points_sub) {}
 
-void TrajectoryPlanner::ComputePrimitives(const DroneState &drone_state) {}
+void TrajectoryPlanner::ComputePrimitives(const KeeperState &keeper_state) {}
 
 void TrajectoryPlanner::ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
-                                                    const DroneState &drone_state,
+                                                    const KeeperState &keeper_state,
                                                     PrimitiveList &primitive_list_sub) {}
 TrajectoryPlanner::TrajectoryPlanner(const PlanningParameter &param) { param_ = param; }
 StatePoly TrajectoryPlanner::GetBestKeeperTrajectory() { return primitives_list_[best_index_]; }
@@ -91,7 +91,7 @@ void TrajectoryPlanner::CheckVisibilityAgainstStructuredObstacleSubProcess(
     const PrimitiveList &target_prediction_list, IndexList &visible_idx) {}
 void TrajectoryPlanner::CalculateBestIndex() {}
 void TrajectoryPlanner::CalculateCloseObstacleIndex(
-    const DroneState &drone_state, const PrimitiveList &structured_obstacle_trajectory_list) {}
+    const KeeperState &keeper_state, const PrimitiveList &structured_obstacle_trajectory_list) {}
 void TrajectoryPlanner::CalculateBestIndexSubProcess(const int &start_idx, const int &end_idx,
                                                      pair<int, float> &min_jerk_pair) {}
 void TrajectoryPlanner::CheckDynamicLimits() {}
@@ -145,14 +145,14 @@ void TrajectoryPlanner2D::SampleShootingPointsSubProcess(
   }
 }
 
-void TrajectoryPlanner2D::ComputePrimitives(const DroneState &drone_state) {
+void TrajectoryPlanner2D::ComputePrimitives(const KeeperState &keeper_state) {
   primitives_list_.clear();
   int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
   vector<thread> worker_thread;
   PrimitiveListSet primitive_list_temp(param_.sampling.num_thread);
   for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread.emplace_back(&TrajectoryPlanner2D::ComputePrimitivesSubProcess, this,
-                               num_chunk * (i), num_chunk * (i + 1), drone_state,
+                               num_chunk * (i), num_chunk * (i + 1), keeper_state,
                                std::ref(primitive_list_temp[i]));
   for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread[i].join();
@@ -164,56 +164,58 @@ void TrajectoryPlanner2D::ComputePrimitives(const DroneState &drone_state) {
 }
 
 void TrajectoryPlanner2D::ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
-                                                      const DroneState &drone_state,
+                                                      const KeeperState &keeper_state,
                                                       PrimitiveList &primitive_list_sub) {
   StatePoly primitive_temp;
   primitive_temp.SetDegree(5);
-  double time_interval_temp[2]{drone_state.t_sec, drone_state.t_sec + param_.horizon.planning};
+  double time_interval_temp[2]{keeper_state.t_sec, keeper_state.t_sec + param_.horizon.planning};
   primitive_temp.SetTimeInterval(time_interval_temp);
   BernsteinCoefficients bernstein_coeff_temp(6);
   float param_horizon_planning_square = param_.horizon.planning * param_.horizon.planning;
 
   for (int i = start_idx; i < end_idx; i++) {
     { // x-component
-      bernstein_coeff_temp[0] = drone_state.px;
-      bernstein_coeff_temp[1] = drone_state.px + 0.2f * param_.horizon.planning * drone_state.vx;
-      bernstein_coeff_temp[2] = drone_state.px + 0.4f * param_.horizon.planning * drone_state.vx +
-                                0.05f * param_horizon_planning_square * drone_state.ax;
-      bernstein_coeff_temp[3] = 0.16666667f * shooting_points_[i].x + 0.83333333f * drone_state.px +
-                                0.43333333f * param_.horizon.planning * drone_state.vx +
-                                0.06666667f * param_horizon_planning_square * drone_state.ax;
-      bernstein_coeff_temp[4] = 0.5f * shooting_points_[i].x + 0.5f * drone_state.px +
-                                0.3f * param_.horizon.planning * drone_state.vx +
-                                0.05f * param_horizon_planning_square * drone_state.ax;
+      bernstein_coeff_temp[0] = keeper_state.px;
+      bernstein_coeff_temp[1] = keeper_state.px + 0.2f * param_.horizon.planning * keeper_state.vx;
+      bernstein_coeff_temp[2] = keeper_state.px + 0.4f * param_.horizon.planning * keeper_state.vx +
+                                0.05f * param_horizon_planning_square * keeper_state.ax;
+      bernstein_coeff_temp[3] = 0.16666667f * shooting_points_[i].x +
+                                0.83333333f * keeper_state.px +
+                                0.43333333f * param_.horizon.planning * keeper_state.vx +
+                                0.06666667f * param_horizon_planning_square * keeper_state.ax;
+      bernstein_coeff_temp[4] = 0.5f * shooting_points_[i].x + 0.5f * keeper_state.px +
+                                0.3f * param_.horizon.planning * keeper_state.vx +
+                                0.05f * param_horizon_planning_square * keeper_state.ax;
       bernstein_coeff_temp[5] = shooting_points_[i].x;
       primitive_temp.px.SetBernsteinCoeff(bernstein_coeff_temp);
     }
     { // y-component
-      bernstein_coeff_temp[0] = drone_state.py;
-      bernstein_coeff_temp[1] = drone_state.py + 0.2f * param_.horizon.planning * drone_state.vy;
-      bernstein_coeff_temp[2] = drone_state.py + 0.4f * param_.horizon.planning * drone_state.vy +
-                                0.05f * param_horizon_planning_square * drone_state.ay;
-      bernstein_coeff_temp[3] = 0.16666667f * shooting_points_[i].y + 0.83333333f * drone_state.py +
-                                0.43333333f * param_.horizon.planning * drone_state.vy +
-                                0.06666667f * param_horizon_planning_square * drone_state.ay;
-      bernstein_coeff_temp[4] = 0.5f * shooting_points_[i].y + 0.5f * drone_state.py +
-                                0.3f * param_.horizon.planning * drone_state.vy +
-                                0.05f * param_horizon_planning_square * drone_state.ay;
+      bernstein_coeff_temp[0] = keeper_state.py;
+      bernstein_coeff_temp[1] = keeper_state.py + 0.2f * param_.horizon.planning * keeper_state.vy;
+      bernstein_coeff_temp[2] = keeper_state.py + 0.4f * param_.horizon.planning * keeper_state.vy +
+                                0.05f * param_horizon_planning_square * keeper_state.ay;
+      bernstein_coeff_temp[3] = 0.16666667f * shooting_points_[i].y +
+                                0.83333333f * keeper_state.py +
+                                0.43333333f * param_.horizon.planning * keeper_state.vy +
+                                0.06666667f * param_horizon_planning_square * keeper_state.ay;
+      bernstein_coeff_temp[4] = 0.5f * shooting_points_[i].y + 0.5f * keeper_state.py +
+                                0.3f * param_.horizon.planning * keeper_state.vy +
+                                0.05f * param_horizon_planning_square * keeper_state.ay;
       bernstein_coeff_temp[5] = shooting_points_[i].y;
       primitive_temp.py.SetBernsteinCoeff(bernstein_coeff_temp);
     }
     { // z-component
-      bernstein_coeff_temp[0] = drone_state.pz;
-      bernstein_coeff_temp[1] = drone_state.pz + 0.2f * param_.horizon.planning * drone_state.vz;
-      bernstein_coeff_temp[2] = drone_state.pz + 0.4f * param_.horizon.planning * drone_state.vz;
-      bernstein_coeff_temp[3] = drone_state.pz + 0.6f * param_.horizon.planning * drone_state.vz;
-      bernstein_coeff_temp[4] = drone_state.pz + 0.8f * param_.horizon.planning * drone_state.vz;
-      bernstein_coeff_temp[5] = drone_state.pz + 1.0f * param_.horizon.planning * drone_state.vz;
+      bernstein_coeff_temp[0] = keeper_state.pz;
+      bernstein_coeff_temp[1] = keeper_state.pz + 0.2f * param_.horizon.planning * keeper_state.vz;
+      bernstein_coeff_temp[2] = keeper_state.pz + 0.4f * param_.horizon.planning * keeper_state.vz;
+      bernstein_coeff_temp[3] = keeper_state.pz + 0.6f * param_.horizon.planning * keeper_state.vz;
+      bernstein_coeff_temp[4] = keeper_state.pz + 0.8f * param_.horizon.planning * keeper_state.vz;
+      bernstein_coeff_temp[5] = keeper_state.pz + 1.0f * param_.horizon.planning * keeper_state.vz;
       primitive_temp.pz.SetBernsteinCoeff(bernstein_coeff_temp);
     }
-    primitive_temp.rx = drone_state.rx;
-    primitive_temp.ry = drone_state.ry;
-    primitive_temp.rz = drone_state.rz;
+    primitive_temp.rx = keeper_state.rx;
+    primitive_temp.ry = keeper_state.ry;
+    primitive_temp.rz = keeper_state.rz;
     primitive_list_sub.push_back(primitive_temp);
   }
 }
@@ -222,7 +224,7 @@ TrajectoryPlanner2D::TrajectoryPlanner2D(const PlanningParameter &param)
     : TrajectoryPlanner(param) {}
 
 optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
-    const DroneState &drone_state, const vector<StatePoly> &target_prediction_list,
+    const KeeperState &keeper_state, const vector<StatePoly> &target_prediction_list,
     const PclPointCloud &obstacle_points, const vector<StatePoly> &structured_obstacle_poly_list) {
   bool plan_success;
   auto check_planning_start = std::chrono::system_clock::now();
@@ -232,8 +234,8 @@ optional<StatePoly> TrajectoryPlanner2D::ComputeChasingTrajectory(
       TranslateStructuredObstaclePrediction(structured_obstacle_poly_list);
   PrimitiveList target_prediction_result = TranslateTargetPrediction(target_prediction_list);
   SampleShootingPoints(target_prediction_result);
-  ComputePrimitives(drone_state);
-  CalculateCloseObstacleIndex(drone_state, structured_obstacle_prediction_result);
+  ComputePrimitives(keeper_state);
+  CalculateCloseObstacleIndex(keeper_state, structured_obstacle_prediction_result);
   CheckDistanceFromTargets(target_prediction_result);
   if (good_target_distance_index_list_.empty()) {
     printf("NOT GOOD TARGET DISTANCE \n");
@@ -279,13 +281,13 @@ end_process : {
     return std::nullopt;
 }
 void TrajectoryPlanner2D::CalculateCloseObstacleIndex(
-    const DroneState &drone_state, const PrimitiveList &structured_obstacle_trajectory_list) {
+    const KeeperState &keeper_state, const PrimitiveList &structured_obstacle_trajectory_list) {
   close_obstacle_index_.clear();
   bool is_close;
   for (int j = 0; j < structured_obstacle_trajectory_list.size(); j++) {
     is_close =
-        powf(drone_state.px - structured_obstacle_trajectory_list[j].px.GetInitialValue(), 2) +
-            powf(drone_state.py - structured_obstacle_trajectory_list[j].py.GetInitialValue(), 2) <
+        powf(keeper_state.px - structured_obstacle_trajectory_list[j].px.GetInitialValue(), 2) +
+            powf(keeper_state.py - structured_obstacle_trajectory_list[j].py.GetInitialValue(), 2) <
         param_.distance.obstacle_max * param_.distance.obstacle_max;
     if (is_close)
       close_obstacle_index_.push_back(j);
@@ -935,14 +937,14 @@ void TrajectoryPlanner3D::SampleShootingPointsSubProcess(
   }
 }
 
-void TrajectoryPlanner3D::ComputePrimitives(const DroneState &drone_state) {
+void TrajectoryPlanner3D::ComputePrimitives(const KeeperState &keeper_state) {
   primitives_list_.clear();
   int num_chunk = param_.sampling.num_sample / param_.sampling.num_thread;
   vector<thread> worker_thread;
   PrimitiveListSet primitive_list_temp(param_.sampling.num_thread);
   for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread.emplace_back(&TrajectoryPlanner3D::ComputePrimitivesSubProcess, this,
-                               num_chunk * (i), num_chunk * (i + 1), drone_state,
+                               num_chunk * (i), num_chunk * (i + 1), keeper_state,
                                std::ref(primitive_list_temp[i]));
   for (int i = 0; i < param_.sampling.num_thread; i++)
     worker_thread[i].join();
@@ -954,57 +956,60 @@ void TrajectoryPlanner3D::ComputePrimitives(const DroneState &drone_state) {
 }
 
 void TrajectoryPlanner3D::ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
-                                                      const DroneState &drone_state,
+                                                      const KeeperState &keeper_state,
                                                       PrimitiveList &primitive_list_sub) {
   StatePoly primitive_temp;
   primitive_temp.SetDegree(5);
-  double time_interval_temp[2]{drone_state.t_sec, drone_state.t_sec + param_.horizon.planning};
+  double time_interval_temp[2]{keeper_state.t_sec, keeper_state.t_sec + param_.horizon.planning};
   primitive_temp.SetTimeInterval(time_interval_temp);
   BernsteinCoefficients bernstein_coeff_temp(6);
   float param_horizon_planning_square = param_.horizon.planning * param_.horizon.planning;
-  primitive_temp.rx = drone_state.rx;
-  primitive_temp.ry = drone_state.ry;
-  primitive_temp.rz = drone_state.rz;
+  primitive_temp.rx = keeper_state.rx;
+  primitive_temp.ry = keeper_state.ry;
+  primitive_temp.rz = keeper_state.rz;
   for (int i = start_idx; i < end_idx; i++) {
     { // x-component
-      bernstein_coeff_temp[0] = drone_state.px;
-      bernstein_coeff_temp[1] = drone_state.px + 0.2f * param_.horizon.planning * drone_state.vx;
-      bernstein_coeff_temp[2] = drone_state.px + 0.4f * param_.horizon.planning * drone_state.vx +
-                                0.05f * param_horizon_planning_square * drone_state.ax;
-      bernstein_coeff_temp[3] = 0.16666667f * shooting_points_[i].x + 0.83333333f * drone_state.px +
-                                0.43333333f * param_.horizon.planning * drone_state.vx +
-                                0.06666667f * param_horizon_planning_square * drone_state.ax;
-      bernstein_coeff_temp[4] = 0.5f * shooting_points_[i].x + 0.5f * drone_state.px +
-                                0.3f * param_.horizon.planning * drone_state.vx +
-                                0.05f * param_horizon_planning_square * drone_state.ax;
+      bernstein_coeff_temp[0] = keeper_state.px;
+      bernstein_coeff_temp[1] = keeper_state.px + 0.2f * param_.horizon.planning * keeper_state.vx;
+      bernstein_coeff_temp[2] = keeper_state.px + 0.4f * param_.horizon.planning * keeper_state.vx +
+                                0.05f * param_horizon_planning_square * keeper_state.ax;
+      bernstein_coeff_temp[3] = 0.16666667f * shooting_points_[i].x +
+                                0.83333333f * keeper_state.px +
+                                0.43333333f * param_.horizon.planning * keeper_state.vx +
+                                0.06666667f * param_horizon_planning_square * keeper_state.ax;
+      bernstein_coeff_temp[4] = 0.5f * shooting_points_[i].x + 0.5f * keeper_state.px +
+                                0.3f * param_.horizon.planning * keeper_state.vx +
+                                0.05f * param_horizon_planning_square * keeper_state.ax;
       bernstein_coeff_temp[5] = shooting_points_[i].x;
       primitive_temp.px.SetBernsteinCoeff(bernstein_coeff_temp);
     }
     { // y-component
-      bernstein_coeff_temp[0] = drone_state.py;
-      bernstein_coeff_temp[1] = drone_state.py + 0.2f * param_.horizon.planning * drone_state.vy;
-      bernstein_coeff_temp[2] = drone_state.py + 0.4f * param_.horizon.planning * drone_state.vy +
-                                0.05f * param_horizon_planning_square * drone_state.ay;
-      bernstein_coeff_temp[3] = 0.16666667f * shooting_points_[i].y + 0.83333333f * drone_state.py +
-                                0.43333333f * param_.horizon.planning * drone_state.vy +
-                                0.06666667f * param_horizon_planning_square * drone_state.ay;
-      bernstein_coeff_temp[4] = 0.5f * shooting_points_[i].y + 0.5f * drone_state.py +
-                                0.3f * param_.horizon.planning * drone_state.vy +
-                                0.05f * param_horizon_planning_square * drone_state.ay;
+      bernstein_coeff_temp[0] = keeper_state.py;
+      bernstein_coeff_temp[1] = keeper_state.py + 0.2f * param_.horizon.planning * keeper_state.vy;
+      bernstein_coeff_temp[2] = keeper_state.py + 0.4f * param_.horizon.planning * keeper_state.vy +
+                                0.05f * param_horizon_planning_square * keeper_state.ay;
+      bernstein_coeff_temp[3] = 0.16666667f * shooting_points_[i].y +
+                                0.83333333f * keeper_state.py +
+                                0.43333333f * param_.horizon.planning * keeper_state.vy +
+                                0.06666667f * param_horizon_planning_square * keeper_state.ay;
+      bernstein_coeff_temp[4] = 0.5f * shooting_points_[i].y + 0.5f * keeper_state.py +
+                                0.3f * param_.horizon.planning * keeper_state.vy +
+                                0.05f * param_horizon_planning_square * keeper_state.ay;
       bernstein_coeff_temp[5] = shooting_points_[i].y;
       primitive_temp.py.SetBernsteinCoeff(bernstein_coeff_temp);
     }
     { // z-component
-      bernstein_coeff_temp[0] = drone_state.pz;
-      bernstein_coeff_temp[1] = drone_state.pz + 0.2f * param_.horizon.planning * drone_state.vz;
-      bernstein_coeff_temp[2] = drone_state.pz + 0.4f * param_.horizon.planning * drone_state.vz +
-                                0.05f * param_horizon_planning_square * drone_state.az;
-      bernstein_coeff_temp[3] = 0.16666667f * shooting_points_[i].z + 0.83333333f * drone_state.pz +
-                                0.43333333f * param_.horizon.planning * drone_state.vz +
-                                0.06666667f * param_horizon_planning_square * drone_state.az;
-      bernstein_coeff_temp[4] = 0.5f * shooting_points_[i].z + 0.5f * drone_state.pz +
-                                0.3f * param_.horizon.planning * drone_state.vz +
-                                0.05f * param_horizon_planning_square * drone_state.az;
+      bernstein_coeff_temp[0] = keeper_state.pz;
+      bernstein_coeff_temp[1] = keeper_state.pz + 0.2f * param_.horizon.planning * keeper_state.vz;
+      bernstein_coeff_temp[2] = keeper_state.pz + 0.4f * param_.horizon.planning * keeper_state.vz +
+                                0.05f * param_horizon_planning_square * keeper_state.az;
+      bernstein_coeff_temp[3] = 0.16666667f * shooting_points_[i].z +
+                                0.83333333f * keeper_state.pz +
+                                0.43333333f * param_.horizon.planning * keeper_state.vz +
+                                0.06666667f * param_horizon_planning_square * keeper_state.az;
+      bernstein_coeff_temp[4] = 0.5f * shooting_points_[i].z + 0.5f * keeper_state.pz +
+                                0.3f * param_.horizon.planning * keeper_state.vz +
+                                0.05f * param_horizon_planning_square * keeper_state.az;
       bernstein_coeff_temp[5] = shooting_points_[i].z;
       primitive_temp.pz.SetBernsteinCoeff(bernstein_coeff_temp);
     }
@@ -1015,7 +1020,7 @@ TrajectoryPlanner3D::TrajectoryPlanner3D(const PlanningParameter &param)
     : TrajectoryPlanner(param) {}
 
 optional<StatePoly> TrajectoryPlanner3D::ComputeChasingTrajectory(
-    const DroneState &drone_state, const vector<StatePoly> &target_prediction_list,
+    const KeeperState &keeper_state, const vector<StatePoly> &target_prediction_list,
     const PclPointCloud &obstacle_points, const vector<StatePoly> &structured_obstacle_poly_list) {
   bool plan_success;
   auto check_planning_start = std::chrono::system_clock::now();
@@ -1025,8 +1030,8 @@ optional<StatePoly> TrajectoryPlanner3D::ComputeChasingTrajectory(
       TranslateStructuredObstaclePrediction(structured_obstacle_poly_list);
   PrimitiveList target_prediction_result = TranslateTargetPrediction(target_prediction_list);
   SampleShootingPoints(target_prediction_result);
-  ComputePrimitives(drone_state);
-  CalculateCloseObstacleIndex(drone_state, structured_obstacle_prediction_result);
+  ComputePrimitives(keeper_state);
+  CalculateCloseObstacleIndex(keeper_state, structured_obstacle_prediction_result);
   CheckDistanceFromTargets(target_prediction_result);
   if (good_target_distance_index_list_.empty()) {
     plan_success = false;
@@ -1392,14 +1397,14 @@ void TrajectoryPlanner3D::CalculateBestIndex() {
   best_index_ = dynamically_feasible_index_[0];
 }
 void TrajectoryPlanner3D::CalculateCloseObstacleIndex(
-    const DroneState &drone_state, const PrimitiveList &structured_obstacle_trajectory_list) {
+    const KeeperState &keeper_state, const PrimitiveList &structured_obstacle_trajectory_list) {
   close_obstacle_index_.clear();
   bool is_close;
   for (int j = 0; j < structured_obstacle_trajectory_list.size(); j++) {
     is_close =
-        powf(drone_state.px - structured_obstacle_trajectory_list[j].px.GetInitialValue(), 2) +
-            powf(drone_state.py - structured_obstacle_trajectory_list[j].py.GetInitialValue(), 2) +
-            powf(drone_state.pz - structured_obstacle_trajectory_list[j].pz.GetInitialValue(), 2) <
+        powf(keeper_state.px - structured_obstacle_trajectory_list[j].px.GetInitialValue(), 2) +
+            powf(keeper_state.py - structured_obstacle_trajectory_list[j].py.GetInitialValue(), 2) +
+            powf(keeper_state.pz - structured_obstacle_trajectory_list[j].pz.GetInitialValue(), 2) <
         param_.distance.obstacle_max * param_.distance.obstacle_max;
     if (is_close)
       close_obstacle_index_.push_back(j);

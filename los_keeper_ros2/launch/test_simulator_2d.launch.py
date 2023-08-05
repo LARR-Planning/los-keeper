@@ -12,6 +12,7 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    logging_path = str(os.path.join(get_package_share_directory("los_keeper_ros2"), 'log', 'logging_2d.txt'))
     planning_param_dir = LaunchConfiguration(
         'param_dir',
         default=os.path.join(
@@ -42,7 +43,7 @@ def generate_launch_description():
         namespace='los_keeper',
         name='los_server_node',
         output='screen',
-        parameters=[planning_param_dir, visualization_param_dir],
+        parameters=[planning_param_dir, visualization_param_dir, {"logging_file_name": logging_path}],
         emulate_tty=True,
         remappings=[("~/state", "/drone_state"),
                     ("~/points", "/point_cloud"),

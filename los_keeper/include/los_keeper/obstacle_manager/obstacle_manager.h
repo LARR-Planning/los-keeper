@@ -37,7 +37,7 @@ public:
   std::vector<StatePoly> GetStructuredObstaclePolyList() { return structured_obstacle_poly_list_; };
   PclPointCloud GetPointCloud();
   bool CheckCollisionAlongTrajectory(const StatePoly &trajectory);
-  bool CheckCollisionWithPoint(const DroneState &drone_state);
+  bool CheckCollisionWithPoint(const KeeperState &keeper_state);
   ObstacleManagerDebugInfo GetDebugInfo() const;
 };
 } // namespace los_keeper

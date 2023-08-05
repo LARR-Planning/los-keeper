@@ -95,7 +95,7 @@ struct ObjectState {
   float ry;
   float rz;
 };
-struct DroneState {
+struct KeeperState {
   double t_sec{0.0};
   float px;
   float py;

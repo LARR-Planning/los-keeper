@@ -21,7 +21,7 @@ struct DebugInfo {
 };
 
 struct PlanningProblem {
-  DroneState drone_state;
+  KeeperState keeper_state;
   PclPointCloud point_cloud;
   std::vector<StatePoly> structured_obstacle_poly_list;
   std::vector<ObjectState> target_state_list;
@@ -46,7 +46,7 @@ class Wrapper {
 
 private:
   Parameters parameters_;
-  DroneState drone_state_;
+  KeeperState keeper_state_;
   store::State state_;
   std::vector<ObjectState> object_state_list_;
   std::vector<ObjectState> target_state_list_;
@@ -54,7 +54,7 @@ private:
   DebugInfo debug_info_;
 
   struct {
-    std::mutex drone_state;
+    std::mutex keeper_state;
     std::mutex object_state_list;
     std::mutex target_state_list;
     std::mutex point_cloud;
@@ -80,7 +80,7 @@ public:
   explicit Wrapper(const Parameters &parameters);
 
   void SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points);
-  void SetDroneState(const DroneState &drone_state);
+  void SetKeeperState(const KeeperState &keeper_state);
   void SetObjectStateArray(const std::vector<ObjectState> &object_state_list);
   void SetTargetStateArray(const std::vector<ObjectState> &target_state_list);
   std::optional<JerkControlInput> GenerateControlInputFromPlanning(double time);

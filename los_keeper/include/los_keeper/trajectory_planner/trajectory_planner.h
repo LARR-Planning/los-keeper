@@ -51,13 +51,13 @@ protected:
   virtual void SampleShootingPointsSubProcess(const PrimitiveList &target_prediction_list,
                                               const int &target_id, const int &chunk_size,
                                               PointList &shooting_points_sub);
-  virtual void ComputePrimitives(const DroneState &drone_state);
+  virtual void ComputePrimitives(const KeeperState &keeper_state);
 
   virtual void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
-                                           const DroneState &drone_state,
+                                           const KeeperState &keeper_state,
                                            PrimitiveList &primitive_list_sub);
   virtual void
-  CalculateCloseObstacleIndex(const DroneState &drone_state,
+  CalculateCloseObstacleIndex(const KeeperState &keeper_state,
                               const PrimitiveList &structured_obstacle_trajectory_list);
   virtual void CheckDistanceFromTargets(const PrimitiveList &target_trajectory_list);
   virtual void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
@@ -93,7 +93,7 @@ public:
   TrajectoryPlanner() = default;
   explicit TrajectoryPlanner(const PlanningParameter &param);
   virtual optional<StatePoly>
-  ComputeChasingTrajectory(const DroneState &drone_state,
+  ComputeChasingTrajectory(const KeeperState &keeper_state,
                            const vector<StatePoly> &target_prediction_list,
                            const PclPointCloud &obstacle_points,
                            const vector<StatePoly> &structured_obstacle_poly_list) = 0;
@@ -106,12 +106,12 @@ private:
   void SampleShootingPointsSubProcess(const PrimitiveList &target_prediction_list,
                                       const int &target_id, const int &chunk_size,
                                       PointList &shooting_points_sub) override;
-  void ComputePrimitives(const DroneState &drone_state) override;
+  void ComputePrimitives(const KeeperState &keeper_state) override;
   void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
-                                   const DroneState &drone_state,
+                                   const KeeperState &keeper_state,
                                    PrimitiveList &primitive_list_sub) override;
   void
-  CalculateCloseObstacleIndex(const DroneState &drone_state,
+  CalculateCloseObstacleIndex(const KeeperState &keeper_state,
                               const PrimitiveList &structured_obstacle_trajectory_list) override;
   void CheckDistanceFromTargets(const PrimitiveList &target_trajectory_list) override;
   void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
@@ -142,7 +142,7 @@ public:
   TrajectoryPlanner2D() = default;
   explicit TrajectoryPlanner2D(const PlanningParameter &param);
   optional<StatePoly>
-  ComputeChasingTrajectory(const DroneState &drone_state,
+  ComputeChasingTrajectory(const KeeperState &keeper_state,
                            const vector<StatePoly> &target_prediction_list,
                            const PclPointCloud &obstacle_points,
                            const vector<StatePoly> &structured_obstacle_poly_list) override;
@@ -154,12 +154,12 @@ private:
   void SampleShootingPointsSubProcess(const PrimitiveList &target_prediction_list,
                                       const int &target_id, const int &chunk_size,
                                       PointList &shooting_points_sub) override;
-  void ComputePrimitives(const DroneState &drone_state) override;
+  void ComputePrimitives(const KeeperState &keeper_state) override;
   void ComputePrimitivesSubProcess(const int &start_idx, const int &end_idx,
-                                   const DroneState &drone_state,
+                                   const KeeperState &keeper_state,
                                    PrimitiveList &primitive_list_sub) override;
   void
-  CalculateCloseObstacleIndex(const DroneState &drone_state,
+  CalculateCloseObstacleIndex(const KeeperState &keeper_state,
                               const PrimitiveList &structured_obstacle_trajectory_list) override;
   void CheckDistanceFromTargets(const PrimitiveList &target_trajectory_list) override;
   void CheckDistanceFromTargetsSubProcess(const int &start_idx, const int &end_idx,
@@ -190,7 +190,7 @@ public:
   TrajectoryPlanner3D() = default;
   explicit TrajectoryPlanner3D(const PlanningParameter &param);
   optional<StatePoly>
-  ComputeChasingTrajectory(const DroneState &drone_state,
+  ComputeChasingTrajectory(const KeeperState &keeper_state,
                            const vector<StatePoly> &target_prediction_list,
                            const PclPointCloud &obstacle_points,
                            const vector<StatePoly> &structured_obstacle_poly_list) override;

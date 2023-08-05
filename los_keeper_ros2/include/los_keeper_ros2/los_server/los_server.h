@@ -2,7 +2,7 @@
 #define HEADER_LOS_SERVER
 #include "los_keeper/wrapper/wrapper.h"
 #include "los_keeper_msgs/msg/accel_control_input.hpp"
-#include "los_keeper_msgs/msg/drone_state.hpp"
+#include "los_keeper_msgs/msg/chaser_state.hpp"
 #include "los_keeper_msgs/msg/jerk_control_input.hpp"
 #include "los_keeper_msgs/msg/object_state.hpp"
 #include "los_keeper_msgs/msg/object_state_array.hpp"
@@ -18,7 +18,7 @@
 #include <chrono>
 
 using namespace std::chrono_literals;
-using DroneStateMsg = los_keeper_msgs::msg::DroneState;
+using KeeperStateMsg = los_keeper_msgs::msg::ChaserState;
 using InputMsg = los_keeper_msgs::msg::JerkControlInput;
 using VelocityInputMsg = los_keeper_msgs::msg::VelocityControlInput;
 using AccelInputMsg = los_keeper_msgs::msg::AccelControlInput;
@@ -28,7 +28,7 @@ using ObjectStateArrayMsg = los_keeper_msgs::msg::ObjectStateArray;
 using VisualizationMsg = visualization_msgs::msg::Marker;
 
 using PointCloudSubscriber = rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr;
-using StateSubscriber = rclcpp::Subscription<DroneStateMsg>::SharedPtr;
+using StateSubscriber = rclcpp::Subscription<KeeperStateMsg>::SharedPtr;
 using ObjectStateArraySubscriber = rclcpp::Subscription<ObjectStateArrayMsg>::SharedPtr;
 using InputPublisher = rclcpp::Publisher<InputMsg>::SharedPtr;
 using VelociyInputPublisher = rclcpp::Publisher<VelocityInputMsg>::SharedPtr;
@@ -50,7 +50,7 @@ using FailFlagVisPUblisher = rclcpp::Publisher<FailVisualizationMsg>::SharedPtr;
 
 namespace los_keeper {
 
-DroneState ConvertToDroneState(const DroneStateMsg &drone_state_msg);
+KeeperState ConvertToKeeperState(const KeeperStateMsg &keeper_state_msg);
 pcl::PointCloud<pcl::PointXYZ> ConvertToPointCloud(const PointCloudMsg &point_cloud_msg);
 std::vector<ObjectState>
 ConvertToObjectStateArray(const ObjectStateArrayMsg &object_state_array_msg);
@@ -63,6 +63,7 @@ private:
   Wrapper *wrapper_ptr_;
   Visualizer visualizer_;
 
+  string logging_file_name_;
   PointCloudSubscriber points_subscriber_;
   StateSubscriber state_subscriber_;
   ObjectStateArraySubscriber structured_obstacle_state_array_subscriber_;
@@ -106,7 +107,7 @@ private:
 
   ToggleActivateServer toggle_activate_server_;
 
-  void DroneStateCallback(const DroneStateMsg::SharedPtr msg);
+  void KeeperStateCallback(const KeeperStateMsg::SharedPtr msg);
   void PointsCallback(const PointCloudMsg::SharedPtr msg);
   void ObjectStateArrayCallback(const ObjectStateArrayMsg::SharedPtr msg);
   void TargetStateArrayCallback(const ObjectStateArrayMsg::SharedPtr msg);
@@ -115,9 +116,11 @@ private:
   void VisualizationTimerCallback();
   void ToggleActivateCallback(const std::shared_ptr<ToggleActivateService::Request> reqeust,
                               std::shared_ptr<ToggleActivateService::Response> response);
+  void log_planning();
 
 public:
   LosServer(const rclcpp::NodeOptions &options_input);
+  ~LosServer();
 };
 
 } // namespace los_keeper

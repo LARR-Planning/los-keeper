@@ -2,28 +2,28 @@
 
 using namespace los_keeper;
 
-DroneState los_keeper::ConvertToDroneState(const DroneStateMsg &drone_state_msg) {
-  DroneState drone_state;
-  drone_state.t_sec =
-      drone_state_msg.header.stamp.sec + drone_state_msg.header.stamp.nanosec * 1E-9;
+KeeperState los_keeper::ConvertToKeeperState(const KeeperStateMsg &keeper_state_msg) {
+  KeeperState keeper_state;
+  keeper_state.t_sec =
+      keeper_state_msg.header.stamp.sec + keeper_state_msg.header.stamp.nanosec * 1E-9;
 
-  drone_state.px = drone_state_msg.px;
-  drone_state.py = drone_state_msg.py;
-  drone_state.pz = drone_state_msg.pz;
+  keeper_state.px = keeper_state_msg.px;
+  keeper_state.py = keeper_state_msg.py;
+  keeper_state.pz = keeper_state_msg.pz;
 
-  drone_state.vx = drone_state_msg.vx;
-  drone_state.vy = drone_state_msg.vy;
-  drone_state.vz = drone_state_msg.vz;
+  keeper_state.vx = keeper_state_msg.vx;
+  keeper_state.vy = keeper_state_msg.vy;
+  keeper_state.vz = keeper_state_msg.vz;
 
-  drone_state.ax = drone_state_msg.ax;
-  drone_state.ay = drone_state_msg.ay;
-  drone_state.az = drone_state_msg.az;
+  keeper_state.ax = keeper_state_msg.ax;
+  keeper_state.ay = keeper_state_msg.ay;
+  keeper_state.az = keeper_state_msg.az;
 
-  drone_state.rx = drone_state_msg.rx;
-  drone_state.ry = drone_state_msg.ry;
-  drone_state.rz = drone_state_msg.rz;
+  keeper_state.rx = keeper_state_msg.rx;
+  keeper_state.ry = keeper_state_msg.ry;
+  keeper_state.rz = keeper_state_msg.rz;
 
-  return drone_state;
+  return keeper_state;
 }
 
 pcl::PointCloud<pcl::PointXYZ>
@@ -175,9 +175,9 @@ void los_keeper::LosServer::ToggleActivateCallback(
   wrapper_ptr_->OnToggleActivateServiceCallback();
 }
 
-void LosServer::DroneStateCallback(const DroneStateMsg::SharedPtr msg) {
-  auto drone_state = ConvertToDroneState(*msg);
-  wrapper_ptr_->SetDroneState(drone_state);
+void LosServer::KeeperStateCallback(const KeeperStateMsg::SharedPtr msg) {
+  auto keeper_state = ConvertToKeeperState(*msg);
+  wrapper_ptr_->SetKeeperState(keeper_state);
 };
 
 void LosServer::PointsCallback(const PointCloudMsg::SharedPtr msg) {
@@ -200,9 +200,9 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   rclcpp::SubscriptionOptions options;
   {
     options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    state_subscriber_ = create_subscription<DroneStateMsg>(
+    state_subscriber_ = create_subscription<KeeperStateMsg>(
         "~/state", rclcpp::QoS(1),
-        std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1), options);
+        std::bind(&LosServer::KeeperStateCallback, this, std::placeholders::_1), options);
 
     options.callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     points_subscriber_ = create_subscription<PointCloudMsg>(
@@ -221,9 +221,9 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   {
     //            options.callback_group =
     //            create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    //            state_subscriber_ = create_subscription<DroneStateMsg>(
-    //                "/drone_state", rclcpp::QoS(1),
-    //                std::bind(&LosServer::DroneStateCallback, this, std::placeholders::_1),
+    //            state_subscriber_ = create_subscription<KeeperStateMsg>(
+    //                "/keeper_state", rclcpp::QoS(1),
+    //                std::bind(&LosServer::KeeperStateCallback, this, std::placeholders::_1),
     //                options);
     //            options.callback_group =
     //            create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -280,6 +280,7 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
   PlanningParameter planning_param;
   ProblemParameter problem_param;
   // Parameter Settings for Problem
+  get_parameter<string>("logging_file_name", logging_file_name_);
   get_parameter<bool>("problem.is_2d", problem_param.is_2d);
   get_parameter<double>("problem.replanning_period", problem_param.replanning_period);
   get_parameter<int>("problem.control_mode", problem_param.control_mode);
@@ -409,3 +410,7 @@ LosServer::LosServer(const rclcpp::NodeOptions &options_input)
       this->create_wall_timer(std::chrono::duration<double>(problem_param.replanning_period),
                               std::bind(&LosServer::PlanningTimerCallback, this));
 }
+LosServer::~LosServer() {
+  log_planning(); // TODO (Lee): Implement Logging Functions
+}
+void LosServer::log_planning() {}

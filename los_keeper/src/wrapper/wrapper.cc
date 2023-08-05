@@ -325,7 +325,7 @@ std::optional<Point> PlanningResult::GetPointAtTime(double t) const {
 }
 
 void Wrapper::UpdateState(store::State &state) {
-  state.is_data_received = drone_state_.t_sec > 0.0 && target_state_list_.size() > 0;
+  state.is_data_received = keeper_state_.t_sec > 0.0 && target_state_list_.size() > 0;
   double t_current =
       std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
 
@@ -334,9 +334,9 @@ void Wrapper::UpdateState(store::State &state) {
 
   // TODO(Lee): implement these
   // state.is_currently_safe =
-  //     obstacle_manager_->CheckCollisionOnPosition(drone_state);
+  //     obstacle_manager_->CheckCollisionOnPosition(keeper_state);
   // state.is_planning_safe =
-  //     obstacle_manager_->CheckCollisionAlongTrajectory(drone_state);
+  //     obstacle_manager_->CheckCollisionAlongTrajectory(keeper_state);
 }
 
 void Wrapper::HandleStopAction() { state_.is_activated = false; }
@@ -345,8 +345,8 @@ void Wrapper::HandleReplanAction() {
   //      printf("Handle ReplanAction\n");
   PlanningProblem planning_problem;
   { // Update Drone State
-    std::scoped_lock lock(mutex_list_.drone_state);
-    planning_problem.drone_state = drone_state_;
+    std::scoped_lock lock(mutex_list_.keeper_state);
+    planning_problem.keeper_state = keeper_state_;
     //    printf("drone state time: %f \n",drone_state_.t_sec);
   }
 
@@ -369,7 +369,7 @@ void Wrapper::HandleReplanAction() {
   UpdateTargetDebugInfo();
   if (target_prediction_list) {
     new_planning_result.chasing_trajectory = trajectory_planner_->ComputeChasingTrajectory(
-        drone_state_, target_prediction_list.value(), planning_problem.point_cloud,
+        keeper_state_, target_prediction_list.value(), planning_problem.point_cloud,
         planning_problem.structured_obstacle_poly_list);
     UpdatePlanningDebugInfo();
   } else {
@@ -425,10 +425,10 @@ void Wrapper::SetPoints(const pcl::PointCloud<pcl::PointXYZ> &points) {
   }
 }
 
-void Wrapper::SetDroneState(const DroneState &drone_state) {
-  std::unique_lock<std::mutex> lock(mutex_list_.drone_state, std::defer_lock);
+void Wrapper::SetKeeperState(const KeeperState &keeper_state) {
+  std::unique_lock<std::mutex> lock(mutex_list_.keeper_state, std::defer_lock);
   if (lock.try_lock()) {
-    drone_state_ = drone_state;
+    keeper_state_ = keeper_state;
   }
 }
 
